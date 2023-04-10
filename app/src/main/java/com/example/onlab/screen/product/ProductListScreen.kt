@@ -3,7 +3,6 @@ package com.example.onlab.screen
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,25 +14,50 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.CreateList
-import com.example.onlab.data.ProductDataSource
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
+import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.screen.product.NewProductScreen
+import com.example.onlab.screen.product.ProductViewModel
 import com.example.onlab.model.Category as Categ
 
-@Preview
 @Composable
-fun ProductListScreen() {
+fun ProductListScreen(navController: NavController, productViewModel: ProductViewModel = viewModel()) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
-    val products: MutableList<Product> = ProductDataSource().loadProducts().toMutableList()
-
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
+    val showDialog = remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
 
-    var filteredProducts = if (selectedCategory != null) {
-        products.filter { it.category == selectedCategory }
-    } else {
-        products
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = {
+                Column(modifier = Modifier.padding(5.dp)) {
+                    Text("Biztos törölni szeretnéd a következő terméket?")
+                    Text(text = selectedProduct!!.title)}
+                },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedProduct?.let { productViewModel.removeProduct(it) }
+                        showDialog.value = false
+                    }
+                ) {
+                    Text("Igen")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showDialog.value = false }
+                ) {
+                    Text("Nem")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -52,19 +76,22 @@ fun ProductListScreen() {
             ExtendedFloatingActionButton(
                 modifier =  Modifier.padding(bottom = 60.dp),
                 text = { Text(text = "Új termék") },
-                onClick = {  },
+                onClick = {
+                          navController.navigate(route = ProductScreens.NewProductScreen.name)
+                },
                 shape = RoundedCornerShape(20.dp),
                 backgroundColor = MaterialTheme.colors.primary,
             )
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
-        content = {
+        content = { it ->
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
+                    .padding(bottom = it.calculateBottomPadding())
             ) {
                 MenuBar(
                     categories = categoryList,
@@ -72,14 +99,29 @@ fun ProductListScreen() {
                     onCategorySelected = { category -> selectedCategory = category }
                 )
 
-                CreateList(data = filteredProducts, {
-                    products.remove(it)
-                }) { product ->
+                val products = if (selectedCategory != null) {
+                    productViewModel.getProductByCategory(selectedCategory!!)
+                } else {
+                    productViewModel.getAllProduct()
+                }
+
+                CreateList(data = products, {
+                    Log.d("TAG", "ProductListScreen: ${it.id}")
+                    showDialog.value = true
+                    selectedProduct = it
+//                    productViewModel.removeProduct(it)
+
+                }, {
+                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.title}")
+//                    navController.navigate(
+//                        "${ProductScreens.NewProductScreen.name}?product=${it.id}"
+//                    )
+                }
+                ) { product ->
                     Text(text = product.title, fontWeight = FontWeight.Bold)
                     Text(text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF", style = MaterialTheme.typography.caption)
                 }
             }
-
         }
     )
 }
@@ -114,5 +156,6 @@ fun MenuBar(
         }
     }
 }
+
 
 

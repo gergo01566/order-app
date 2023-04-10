@@ -17,8 +17,6 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,10 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.onlab.R
 import com.example.onlab.model.Product
-import com.example.onlab.navigation.AppScreens
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
 
@@ -96,11 +92,7 @@ fun BottomNavBar(){
 @Composable
 fun CreatePicture(modifier: Modifier = Modifier) {
     Surface(
-        modifier = Modifier
-            .size(60.dp)
-            .padding(5.dp),
-        shape = CircleShape
-
+        modifier = modifier
     ) {
         Image(
             painter = painterResource(id = R.drawable.picture_placeholder),
@@ -109,10 +101,11 @@ fun CreatePicture(modifier: Modifier = Modifier) {
         )
 
     }
+
 }
 
 @Composable
-fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, itemContent: @Composable (item: Product) -> Unit) {
+fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Product) -> Unit ,itemContent: @Composable (item: Product) -> Unit) {
     LazyColumn {
         items(data) { item ->
             Card(
@@ -128,7 +121,7 @@ fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, itemContent: @C
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    CreatePicture()
+                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
                     Column(
                         modifier = Modifier
                             .width(200.dp)
@@ -139,6 +132,7 @@ fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, itemContent: @C
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         CreateIcon(Icons.Rounded.Edit){
+                            onEdit(item)
                             Log.d("TAG", "Edit Icon Clicked on ${item.title}")
                         }
                         CreateIcon(Icons.Rounded.Delete){
