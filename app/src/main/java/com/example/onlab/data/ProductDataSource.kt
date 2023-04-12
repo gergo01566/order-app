@@ -1,5 +1,6 @@
 package com.example.onlab.data
 
+import android.util.Log
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
 

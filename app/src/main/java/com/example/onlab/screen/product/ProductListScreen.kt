@@ -18,20 +18,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.CreateList
+import com.example.onlab.data.ProductDataSource
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductViewModel
+import javax.sql.DataSource
 import com.example.onlab.model.Category as Categ
 
 @Composable
-fun ProductListScreen(navController: NavController, productViewModel: ProductViewModel = viewModel()) {
+fun ProductListScreen(navController: NavController, productViewModel: ProductViewModel) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
     val showDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
-
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },
@@ -100,22 +101,17 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                 )
 
                 val products = if (selectedCategory != null) {
-                    productViewModel.getProductByCategory(selectedCategory!!)
+                    productViewModel.getProductsByCategory(selectedCategory.toString())
                 } else {
-                    productViewModel.getAllProduct()
+                    productViewModel.productList.collectAsState().value
                 }
 
                 CreateList(data = products, {
                     Log.d("TAG", "ProductListScreen: ${it.id}")
                     showDialog.value = true
                     selectedProduct = it
-//                    productViewModel.removeProduct(it)
-
                 }, {
-                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.title}")
-//                    navController.navigate(
-//                        "${ProductScreens.NewProductScreen.name}?product=${it.id}"
-//                    )
+                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id.toString()}")
                 }
                 ) { product ->
                     Text(text = product.title, fontWeight = FontWeight.Bold)

@@ -5,7 +5,6 @@ enum class Category {
     Sütemények,
     Tészták,
     Csokoládék,
-    Cukorkák
 }
 
 fun <T : Enum<T>> getCategoryTypes(enumClass: Class<T>): List<T> {

@@ -1,12 +1,10 @@
 package com.example.onlab.screen.product
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -17,59 +15,38 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.onlab.R
 import com.example.onlab.components.BottomNavBar
-import com.example.onlab.navigation.AppNavigation
+import com.example.onlab.model.Category
+import com.example.onlab.model.Product
+import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.ui.theme.OnlabTheme
-import java.util.*
 
+@ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @Composable
-fun NewProductScreen(navController: NavController, productID: String? = null, productViewModel: ProductViewModel = viewModel()) {
-    var value by remember {
-        mutableStateOf("")
-    }
-    val showDialog = remember { mutableStateOf(false) }
-    val product = if (productID == null) null else ProductViewModel().getAllProduct().filter { product -> product.title == productID}
+fun NewProductScreen(navController: NavController, productViewModel: ProductViewModel) {
+    val listItems = getCategoryTypes(Category::class.java)
+    val contextForToast = LocalContext.current.applicationContext
 
-    Log.d("TAG", "NewProductScreen: ")
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = {
-                Column(modifier = Modifier.padding(5.dp)) {
-                    Text("Biztos törölni szeretnéd a következő terméket?")
-                    Text(text = product!![0].title)}
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        product!![0].title?.let { ProductViewModel().removeProduct(product[0]) }
-                        showDialog.value = false
-                        navController.navigate(route = ProductScreens.ListScreen.name)
-                    }
-                ) {
-                    Text("Igen")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog.value = false }
-                ) {
-                    Text("Nem")
-                }
-            }
-        )
+    // state of the menu
+    var expanded by remember {
+        mutableStateOf(false)
     }
+
+    // remember the selected item
+    var selectedItem by remember {
+        mutableStateOf(listItems[0])
+    }
+
+    var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok)) }
 
     Scaffold(
         topBar = {
@@ -84,6 +61,8 @@ fun NewProductScreen(navController: NavController, productID: String? = null, pr
                         modifier = Modifier.clickable {
                             navController.popBackStack()
                         })
+                    Spacer(modifier = Modifier.padding(10.dp))
+                    Text(text = "Új termék", fontSize = 27.sp, fontWeight = FontWeight.Normal)
                 }
             }
         },
@@ -105,10 +84,9 @@ fun NewProductScreen(navController: NavController, productID: String? = null, pr
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-
-                    value = if (product != null) product!![0].title else "",
+                    value = product.title,
                     onValueChange = { newValue ->
-                        value = newValue;
+                        product = product.copy(title = newValue)
                     },
                     label = { Text(text = "Termék neve") },
                     placeholder = { Text(text = "Add meg a termék nevét!") }
@@ -117,24 +95,71 @@ fun NewProductScreen(navController: NavController, productID: String? = null, pr
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = if (product != null) product!![0].pricePerPiece.toString() else value,
+                    value = product.pricePerPiece.toString(),
                     onValueChange = { newValue ->
-                        value = newValue;
+                        product = product.copy(pricePerPiece = newValue.toInt())
                     },
                     label = { Text(text = "Termék ára/db") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     placeholder = { Text(text = "Add meg a termék darab árát!") }
                 )
                 TextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = if (product != null) product!![0].pricePerKarton.toString() else value,
+                    value = product.pricePerKarton.toString(),
                     onValueChange = { newValue ->
-                        value = newValue;
+                        product = product.copy(pricePerKarton = newValue.toInt())
                     },
                     label = { Text(text = "Termék ára/karton") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     placeholder = { Text(text = "Add meg a termék karton árát!") }
                 )
+                // category type drop-down list
+                // box
+                ExposedDropdownMenuBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding((10.dp)),
+                    expanded = expanded,
+                    onExpandedChange = {
+                        expanded = !expanded
+                    }
+                ) {
+                    // text field
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = selectedItem.toString(),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(text = "Kategória") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expanded
+                            )
+                        },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors()
+                    )
+
+                    // menu
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        // this is a column scope
+                        // all the items are added vertically
+                        listItems.forEach { selectedOption ->
+                            // menu item
+                            DropdownMenuItem(onClick = {
+                                selectedItem = selectedOption
+                                product = product.copy(category = selectedItem)
+                                expanded = false
+                            }) {
+                                Text(text = selectedOption.toString())
+                            }
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,81 +191,14 @@ fun NewProductScreen(navController: NavController, productID: String? = null, pr
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
-                    .height(40.dp),text = "Termék mentése", onClick = { /*TODO*/ })
-                ProductButton(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),
-                    text = "Termék törlése",
-                    onClick = { showDialog.value = true},
-
-                color = Color.Red)
-
-
+                    .height(40.dp),text = "Termék mentése", onClick = {
+                    Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
+                    productViewModel.addProduct(product = product)
+                    navController.navigate(route = ProductScreens.ListScreen.name)
+                    })
             }
         }
     )
 }
 
-@Composable
-fun ProductButton(
-    modifier: Modifier = Modifier,
-    text: String,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    color: Color = MaterialTheme.colors.primary
-){
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(15.dp),
-        enabled = enabled,
-        modifier = modifier,
-        colors = ButtonDefaults.buttonColors(backgroundColor = color)
-    ) {
-        Text(color = Color.White, text = text)
-
-    }
-}
-
-@Composable
-fun OutLineTextFieldSample(modifier: Modifier = Modifier, text: String, label: String) {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
-    OutlinedTextField(
-        modifier = modifier,
-        value = text,
-        label = { Text(text = label) },
-        onValueChange = {
-            text = it
-        }
-    )
-}
-
-@ExperimentalComposeUiApi
-@Composable
-fun ProductInputText(
-    modifier: Modifier = Modifier,
-    text: String,
-    label: String,
-    maxLine: Int = 1,
-    onTextChange: (String) -> Unit,
-    onImeAction: () -> Unit = {}){
-
-    val keyBoardController = LocalSoftwareKeyboardController.current
-    TextField(
-        value = text,
-        onValueChange = onTextChange,
-        colors = TextFieldDefaults.textFieldColors(
-            backgroundColor = Color.Transparent),
-        maxLines = maxLine,
-        label = { Text(text = label)},
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(onDone = {
-            onImeAction()
-            keyBoardController?.hide()
-        }),
-        modifier = modifier
-    )
-}
 
