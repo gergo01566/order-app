@@ -1,5 +1,14 @@
 package com.example.onlab.screen.product
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.DocumentsContract
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,17 +22,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.onlab.R
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.navigation.ProductScreens
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.io.IOException
 
+@OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
 fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: ProductViewModel) {
@@ -31,6 +48,42 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
     var product by remember { mutableStateOf(productViewModel.getProductById(productID!!)) }
 
     val showDialog = remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
+    var loadedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+    )
+
+
+    LaunchedEffect(permissionsState) {
+        if (!permissionsState.allPermissionsGranted) {
+            permissionsState.launchMultiplePermissionRequest()
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/*"
+            }
+            Log.d("not granted", "ProductDetailsScreen: NOT ALL PERMISSION GRANTED")
+        } else {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "image/*"
+            }
+            Log.d("granted", "ProductDetailsScreen: ALL PERMISSION GRANTED")
+            try {
+                val inputStream = context.contentResolver.openInputStream(Uri.parse(product!!.image))
+                loadedBitmap = BitmapFactory.decodeStream(inputStream)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
     if (showDialog.value) {
         AlertDialog(
@@ -148,12 +201,14 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                             .fillMaxHeight(),
                         shape = RoundedCornerShape(15.dp)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.picture_placeholder),
-                            contentDescription = "profile image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        loadedBitmap?.let {
+                            Image(
+                                bitmap = it!!.asImageBitmap(),
+                                contentDescription = "profile image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                 }
 

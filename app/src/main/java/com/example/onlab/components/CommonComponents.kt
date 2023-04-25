@@ -1,5 +1,8 @@
 package com.example.onlab.components
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -17,11 +20,14 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,24 +96,27 @@ fun BottomNavBar(){
 }
 
 @Composable
-fun CreatePicture(modifier: Modifier = Modifier) {
+fun CreatePicture(modifier: Modifier = Modifier, bitmap: Bitmap) {
     Surface(
         modifier = modifier
-    ) {
+    ) {bitmap?.let {
         Image(
-            painter = painterResource(id = R.drawable.picture_placeholder),
+            bitmap = bitmap!!.asImageBitmap(),
             contentDescription = "profile image",
-            modifier = Modifier.size(13.dp), contentScale = ContentScale.Crop
+            modifier = Modifier.size(13.dp), contentScale = ContentScale.Fit
         )
-
+    }
     }
 
 }
 
 @Composable
 fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Product) -> Unit ,itemContent: @Composable (item: Product) -> Unit) {
+    val appContext = LocalContext.current.applicationContext
     LazyColumn {
         items(data) { item ->
+            val inputStream = appContext.contentResolver.openInputStream(Uri.parse(item!!.image))
+            val loadedBitmap = BitmapFactory.decodeStream(inputStream)
             Card(
                 modifier = Modifier
                     .padding(13.dp)
@@ -121,7 +130,7 @@ fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Produc
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
+                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp), loadedBitmap)
                     Column(
                         modifier = Modifier
                             .width(200.dp)

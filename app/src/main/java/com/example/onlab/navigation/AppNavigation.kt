@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalPermissionsApi::class)
+
 package com.example.onlab.navigation
 
 import androidx.compose.material.ExperimentalMaterialApi
@@ -16,6 +18,7 @@ import com.example.onlab.screen.ProductListScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.product.ProductViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @ExperimentalMaterialApi
 @OptIn(ExperimentalComposeUiApi::class)

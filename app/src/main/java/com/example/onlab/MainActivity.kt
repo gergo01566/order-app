@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterialApi::class)
+
 package com.example.onlab
 
 import android.os.Bundle
@@ -12,6 +14,7 @@ import com.example.onlab.navigation.AppNavigation
 import com.example.onlab.ui.theme.OnlabTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+@OptIn(ExperimentalMaterialApi::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

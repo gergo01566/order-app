@@ -1,6 +1,10 @@
-package com.example.onlab.screen.product
+@file:OptIn(ExperimentalPermissionsApi::class)
 
+package com.example.onlab.screen.product
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,19 +20,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
-import com.example.onlab.R
+import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
+import com.google.accompanist.permissions.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 
+
+@ExperimentalPermissionsApi
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @Composable
@@ -46,7 +58,83 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         mutableStateOf(listItems[0])
     }
 
+
     var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok)) }
+
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+    )
+
+    var hasImage by remember {
+        mutableStateOf(false)
+    }
+    // 2
+    var imageUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+//    val imagePicker = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent(),
+//        onResult = { uri ->
+//            // 3
+//            hasImage = uri != null
+//            imageUri = uri
+//            product = product.copy(image = imageUri.toString())
+//        }
+//    )
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            if (uri != null) {
+                val inputStream = contextForToast.contentResolver.openInputStream(uri)
+                var outputStream: OutputStream? = null
+                try {
+                    // Create a file in app-specific storage directory
+                    val uniqueId = UUID.randomUUID().toString()
+                    val imageFile = File(contextForToast.filesDir, "image_$uniqueId.jpg")
+                    outputStream = FileOutputStream(imageFile)
+
+                    // Copy the selected image to the file
+                    inputStream?.copyTo(outputStream)
+
+                    // Update the product object with the file URI
+                    product = product.copy(image = imageFile.toUri().toString())
+                    imageUri = imageFile.toUri()
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    inputStream?.close()
+                    outputStream?.close()
+                }
+            }
+        }
+    )
+
+
+
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun MyPermission(
+        multiplePermissionState: MultiplePermissionsState,
+    ) {
+        PermissionsRequired(
+            multiplePermissionsState = multiplePermissionState,
+            permissionsNotGrantedContent = {
+                Toast.makeText(contextForToast, "Permissions not granted", Toast.LENGTH_SHORT).show()
+                                           },
+            permissionsNotAvailableContent = {
+                Toast.makeText(contextForToast, "Permissions not available", Toast.LENGTH_SHORT).show()
+            }
+        ) {
+        }
+    }
+
+    MyPermission(multiplePermissionState = permissionsState)
 
     Scaffold(
         topBar = {
@@ -171,20 +259,22 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                             .padding(end = 10.dp)
                             .height(40.dp),
                         text = "Kép hozzáadása",
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            permissionsState.launchMultiplePermissionRequest()
+                            imagePicker.launch("image/*")
+                        }
                     )
                     Surface(
                         modifier = Modifier
-                            .weight(1f)
                             .fillMaxHeight(),
                         shape = RoundedCornerShape(15.dp)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.picture_placeholder),
-                            contentDescription = "profile image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "profile image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
                     }
                 }
 
@@ -200,5 +290,11 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         }
     )
 }
+
+
+
+
+
+
 
 
