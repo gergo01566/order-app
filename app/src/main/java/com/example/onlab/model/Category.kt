@@ -8,5 +8,5 @@ enum class Category {
 }
 
 fun <T : Enum<T>> getCategoryTypes(enumClass: Class<T>): List<T> {
-    return enumClass.enumConstants.toList()
+    return enumClass.enumConstants!!.toList()
 }

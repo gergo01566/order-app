@@ -1,9 +1,5 @@
 package com.example.onlab.screen
 
-import android.Manifest
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,24 +10,18 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.CreateList
-import com.example.onlab.data.ProductDataSource
+import com.example.onlab.components.createTopBar
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductViewModel
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import java.io.IOException
-import javax.sql.DataSource
 import com.example.onlab.model.Category as Categ
 
 @Composable
@@ -41,6 +31,14 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
     val showDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
 
+    val products = if (selectedCategory != null) {
+        productViewModel.getProductsByCategory(selectedCategory.toString())
+    } else {
+        productViewModel.productList.collectAsState().value
+    }
+
+    val searchText by productViewModel.searchText.collectAsState()
+
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },
@@ -48,7 +46,7 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                 Column(modifier = Modifier.padding(5.dp)) {
                     Text("Biztos törölni szeretnéd a következő terméket?")
                     Text(text = selectedProduct!!.title)}
-                },
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -71,22 +69,17 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Termékek", fontSize = 37.sp, fontWeight = FontWeight.Bold) },
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            )
+            createTopBar(navController = navController, text = "Termékek", withIcon = false)
         },
         bottomBar = {
-            BottomNavBar()
+            BottomNavBar(navController as NavHostController)
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier =  Modifier.padding(bottom = 60.dp),
                 text = { Text(text = "Új termék") },
                 onClick = {
-                          navController.navigate(route = ProductScreens.NewProductScreen.name)
+                    navController.navigate(route = ProductScreens.NewProductScreen.name)
                 },
                 shape = RoundedCornerShape(20.dp),
                 backgroundColor = MaterialTheme.colors.primary,
@@ -108,10 +101,14 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                     onCategorySelected = { category -> selectedCategory = category }
                 )
 
-                val products = if (selectedCategory != null) {
-                    productViewModel.getProductsByCategory(selectedCategory.toString())
-                } else {
-                    productViewModel.productList.collectAsState().value
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)) {
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = searchText,
+                        onValueChange = productViewModel::onSearchTextChange,
+                        placeholder = { Text(text = "Keresés")})
                 }
 
                 CreateList(data = products, {
@@ -119,7 +116,7 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                     showDialog.value = true
                     selectedProduct = it
                 }, {
-                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id.toString()}")
+                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
                 }
                 ) { product ->
                     Text(text = product.title, fontWeight = FontWeight.Bold)
@@ -160,6 +157,8 @@ fun MenuBar(
         }
     }
 }
+
+
 
 
 

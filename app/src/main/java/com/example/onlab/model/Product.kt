@@ -23,5 +23,12 @@ data class Product(
     var pricePerKarton: Int,
 
     @ColumnInfo(name = "product_image")
-    val image: String = "https://images-na.ssl-images-amazon.com/images/M/MV5BNzM2MDk3MTcyMV5BMl5BanBnXkFtZTcwNjg0MTUzNA@@._V1_SX1777_CR0,0,1777,999_AL_.jpg"
-)
+    val image: String,
+){
+    fun doesMatchSearchQuery(query: String): Boolean{
+        val matchingCombinations = listOf("$title", "${title.first()}")
+        return matchingCombinations.any{
+            it.contains(query, ignoreCase = true)
+        }
+    }
+}

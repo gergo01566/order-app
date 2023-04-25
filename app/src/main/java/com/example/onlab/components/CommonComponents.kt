@@ -2,7 +2,8 @@ package com.example.onlab.components
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -13,39 +14,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.onlab.R
-import com.example.onlab.model.Product
+import com.example.onlab.navigation.ProductScreens
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
-
-@Composable
-fun CreateTopBar(topBarName: String){
-    Column(modifier = Modifier.padding(top = 10.dp).height(70.dp)) {
-    }
-        TopAppBar(title = {
-            Text(text = topBarName, fontWeight = FontWeight.Bold, fontSize = 40.sp)
-        }, backgroundColor = Color.Transparent, elevation = 0.dp)
-}
 
 @Composable
 private fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
@@ -71,9 +59,9 @@ private fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClic
     }
 }
 
-@Preview
+
 @Composable
-fun BottomNavBar(){
+fun BottomNavBar(navController: NavController){
     val items = listOf(
         BottomNavItem("Rendelések", Icons.Default.Done),
         BottomNavItem("Ügyfelek", Icons.Default.Person),
@@ -84,39 +72,74 @@ fun BottomNavBar(){
         items.forEach{ item ->
             BottomNavigationItem(
                 selected = false,
-                onClick = { Log.d("TAG", "BottomNavBar: Clicked") },
+                onClick = {
+                    if (item.name == "Ügyfelek") {
+                        navController.navigate("CustomerScreen") // navigate to CustomerScreen
+                    } else {
+                        Log.d("TAG", "BottomNavBar: Clicked")
+                    }
+                    if (item.name == "Rendelések") {
+                        navController.navigate(ProductScreens.ListScreen.name) // navigate to CustomerScreen
+                    } else {
+                        Log.d("TAG", "BottomNavBar: Clicked")
+                    }
+                },
                 icon = { Icon(modifier = Modifier.padding(bottom = 8.dp).size(30.dp), imageVector = item.icon, contentDescription = "Bottom Nav Icon")},
                 label = { Text(text = item.name, fontSize = 14.sp, modifier = Modifier.padding(top = 5.dp))},
                 selectedContentColor = Color.White,
                 unselectedContentColor = Color.White.copy(0.4f),
                 alwaysShowLabel = true,
-                )
+            )
+        }
+    }
+}
+
+
+
+@Composable
+fun CreatePicture(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.picture_placeholder),
+            contentDescription = "profile image",
+            modifier = Modifier.size(13.dp), contentScale = ContentScale.Crop
+        )
+
+    }
+}
+
+@Composable
+fun createTopBar(modifier: Modifier = Modifier, navController: NavController, text: String, withIcon: Boolean){
+    TopAppBar(
+        backgroundColor = MaterialTheme.colors.primary,
+        contentColor = Color.White,
+        modifier = Modifier.height(70.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
+            if (withIcon){
+                Icon(imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Icon",
+                    modifier = Modifier.clickable {
+                        navController.popBackStack()
+                    })
+            }
+            Spacer(modifier = Modifier.padding(10.dp))
+            Text(modifier = modifier, text = text, fontSize = 27.sp, fontWeight = FontWeight.Normal)
         }
     }
 }
 
 @Composable
-fun CreatePicture(modifier: Modifier = Modifier, bitmap: Bitmap) {
-    Surface(
-        modifier = modifier
-    ) {bitmap?.let {
-        Image(
-            bitmap = bitmap!!.asImageBitmap(),
-            contentDescription = "profile image",
-            modifier = Modifier.size(13.dp), contentScale = ContentScale.Fit
-        )
-    }
-    }
-
-}
-
-@Composable
-fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Product) -> Unit ,itemContent: @Composable (item: Product) -> Unit) {
-    val appContext = LocalContext.current.applicationContext
+fun <T> CreateList(
+    data: List<T>,
+    onDelete: (T) -> Unit,
+    onEdit: (T) -> Unit,
+    itemContent: @Composable (item: T) -> Unit
+) {
     LazyColumn {
         items(data) { item ->
-            val inputStream = appContext.contentResolver.openInputStream(Uri.parse(item!!.image))
-            val loadedBitmap = BitmapFactory.decodeStream(inputStream)
             Card(
                 modifier = Modifier
                     .padding(13.dp)
@@ -130,7 +153,7 @@ fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Produc
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp), loadedBitmap)
+                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
                     Column(
                         modifier = Modifier
                             .width(200.dp)
@@ -142,11 +165,11 @@ fun CreateList(data: List<Product> ,onDelete: (Product) -> Unit, onEdit: (Produc
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         CreateIcon(Icons.Rounded.Edit){
                             onEdit(item)
-                            Log.d("TAG", "Edit Icon Clicked on ${item.title}")
+                            Log.d("TAG", "Edit Icon Clicked on ${item.toString()}")
                         }
                         CreateIcon(Icons.Rounded.Delete){
                             onDelete(item)
-                            Log.d("TAG", "Delete Icon Clicked on ${item.title}")
+                            Log.d("TAG", "Delete Icon Clicked on ${item.toString()}")
                         }
                     }
 

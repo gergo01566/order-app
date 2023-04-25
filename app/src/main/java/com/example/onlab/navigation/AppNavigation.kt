@@ -11,10 +11,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.onlab.data.ProductDataSource
-import com.example.onlab.model.Category
-import com.example.onlab.model.Product
+
 import com.example.onlab.screen.ProductListScreen
+import com.example.onlab.screen.customer.CustomerScreen
+import com.example.onlab.screen.customer.CustomerViewModel
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.product.ProductViewModel
@@ -26,6 +26,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 fun AppNavigation(){
     val navController = rememberNavController()
     val productViewModel = viewModel<ProductViewModel>()
+    val customerViewModel = viewModel<CustomerViewModel>()
     NavHost(navController = navController, startDestination = ProductScreens.ListScreen.name){
         composable(ProductScreens.ListScreen.name){
             ProductListScreen(navController = navController, productViewModel = productViewModel)
@@ -38,6 +39,9 @@ fun AppNavigation(){
         arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
         ){ navBackStackEntry ->  
             ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = productViewModel)
+        }
+        composable("CustomerScreen") { // add CustomerScreen composable
+            CustomerScreen(navController = navController, customerViewModel = customerViewModel)
         }
     }
 }

@@ -3,16 +3,12 @@ package com.example.onlab.screen.product
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.onlab.data.ProductDataSource
-import com.example.onlab.model.Category
+
 import com.example.onlab.model.Product
 import com.example.onlab.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -20,9 +16,26 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductViewModel @Inject constructor(private val repository: ProductRepository) : ViewModel() {
 
+    val _searchText = MutableStateFlow("")
+    val searchText = _searchText.asStateFlow()
+
+    val _isSearching = MutableStateFlow(false)
+
     private val _productList = MutableStateFlow<List<Product>>(emptyList())
-    val productList = _productList.asStateFlow()
-    //private var productList = mutableListOf<Product>()
+    val productList = searchText
+        .debounce(300L)
+        .onEach { _isSearching.update { true } }
+        .combine(_productList) { text, products ->
+            if(text.isBlank()) {
+                products
+            } else {
+                products.filter { product->
+                    product.doesMatchSearchQuery(text)
+                }
+            }
+        }
+        .onEach { _isSearching.update { false } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _productList.value )
 
     init {
         //making sure our highway has a lot of different lanes
@@ -50,6 +63,10 @@ class ProductViewModel @Inject constructor(private val repository: ProductReposi
         return productList.value.find {
             it.id.toString() == id
         }
+    }
+
+    fun onSearchTextChange(text: String){
+        _searchText.value = text
     }
 
 }

@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,13 +34,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.onlab.R
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.navigation.ProductScreens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
@@ -59,6 +68,12 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     )
+
+    var imageUri by remember {
+        mutableStateOf<Uri?>(product!!.image.toUri())
+    }
+
+    val contextForToast = LocalContext.current.applicationContext
 
 
     LaunchedEffect(permissionsState) {
@@ -83,6 +98,35 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             }
         }
     }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            if (uri != null) {
+                val inputStream = contextForToast.contentResolver.openInputStream(uri)
+                var outputStream: OutputStream? = null
+                try {
+                    // Create a file in app-specific storage directory
+                    val uniqueId = UUID.randomUUID().toString()
+                    val imageFile = File(contextForToast.filesDir, "image_$uniqueId.jpg")
+                    outputStream = FileOutputStream(imageFile)
+
+                    // Copy the selected image to the file
+                    inputStream?.copyTo(outputStream)
+
+                    // Update the product object with the file URI
+                    product = product!!.copy(image = imageFile.toUri().toString())
+                    imageUri = imageFile.toUri()
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    inputStream?.close()
+                    outputStream?.close()
+                }
+            }
+        }
+    )
 
 
     if (showDialog.value) {
@@ -134,7 +178,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             }
         },
         bottomBar = {
-            BottomNavBar()
+            BottomNavBar(navController = navController as NavHostController)
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -193,7 +237,10 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                             .padding(end = 10.dp)
                             .height(40.dp),
                         text = "Kép hozzáadása",
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            permissionsState.launchMultiplePermissionRequest()
+                            imagePicker.launch("image/*")
+                        }
                     )
                     Surface(
                         modifier = Modifier
@@ -201,14 +248,12 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                             .fillMaxHeight(),
                         shape = RoundedCornerShape(15.dp)
                     ) {
-                        loadedBitmap?.let {
-                            Image(
-                                bitmap = it!!.asImageBitmap(),
-                                contentDescription = "profile image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = "profile image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
 

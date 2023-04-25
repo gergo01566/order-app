@@ -1,6 +1,7 @@
 @file:OptIn(ExperimentalPermissionsApi::class)
 
 package com.example.onlab.screen.product
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.model.Category
@@ -33,10 +35,7 @@ import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
 import com.google.accompanist.permissions.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
+import java.io.*
 import java.util.*
 
 
@@ -59,7 +58,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
     }
 
 
-    var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok)) }
+    var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok, image = "")) }
 
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -68,23 +67,10 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         )
     )
 
-    var hasImage by remember {
-        mutableStateOf(false)
-    }
     // 2
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
     }
-
-//    val imagePicker = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.GetContent(),
-//        onResult = { uri ->
-//            // 3
-//            hasImage = uri != null
-//            imageUri = uri
-//            product = product.copy(image = imageUri.toString())
-//        }
-//    )
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -155,7 +141,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
             }
         },
         bottomBar = {
-            BottomNavBar()
+            BottomNavBar(navController = navController as NavHostController)
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -269,6 +255,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                             .fillMaxHeight(),
                         shape = RoundedCornerShape(15.dp)
                     ) {
+
                             AsyncImage(
                                 model = imageUri,
                                 contentDescription = "profile image",
@@ -290,6 +277,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         }
     )
 }
+
 
 
 

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.onlab.data.ProductDatabase
 import com.example.onlab.data.ProductDatabaseDao
+import com.example.onlab.data.customer.CustomerDatabaseDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +20,10 @@ object AppModule {
     @Singleton
     @Provides
     fun provideProductDao(productDatabase: ProductDatabase): ProductDatabaseDao = productDatabase.productDao()
+
+    @Singleton
+    @Provides
+    fun provideCustomerDao(customerDatabase: ProductDatabase): CustomerDatabaseDao = customerDatabase.customerDao()
 
     @Singleton
     @Provides
