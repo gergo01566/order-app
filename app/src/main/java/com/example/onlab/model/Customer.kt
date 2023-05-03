@@ -25,6 +25,8 @@ data class Customer(
     @ColumnInfo(name = "customer_image")
     val image: String,
 ){
+
+
     fun doesMatchSearchQuery(query: String): Boolean{
         val matchingCombinations = listOf("$firstName", "${firstName.first()}", "$lastName", "${lastName.first()}" )
         return matchingCombinations.any{

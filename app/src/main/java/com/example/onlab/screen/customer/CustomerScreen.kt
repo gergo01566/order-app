@@ -5,21 +5,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.onlab.R
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.CreateList
-import com.example.onlab.components.createTopBar
+import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.Customer
 import com.example.onlab.model.Product
@@ -71,14 +75,14 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
             createTopBar(navController = navController, text = "Ügyfelek", withIcon = false)
         },
         bottomBar = {
-            BottomNavBar(navController as NavHostController)
+            BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier =  Modifier.padding(bottom = 60.dp),
                 text = { Text(text = "Új ügyfél") },
                 onClick = {
-                    //navController.navigate(route = ProductScreens.NewProductScreen.name)
+                    navController.navigate(route = "NewCustomerScreen")
                 },
                 shape = RoundedCornerShape(20.dp),
                 backgroundColor = MaterialTheme.colors.primary,
@@ -97,7 +101,7 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
 
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)) {
+                    .padding(16.dp)) {
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = searchText,
@@ -109,10 +113,35 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
                     showDialog.value = true
                     selectedCustomer = it
                 }, {
-                    //navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
+                    navController.navigate(route = "CustomerDetailsScreen" + "/${it.id}")
+                },{
+                    CreateIcon(Icons.Rounded.ShoppingCart){
+                    }
                 }
                 ) { customer ->
-                    Text(text = customer.firstName + " " + customer.lastName, fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.size(70.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            AsyncImage(
+                                model = customer.image.toUri(),
+                                contentDescription = "profile image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                        ){
+                            Text(text = customer.firstName + " " + customer.lastName, fontWeight = FontWeight.Bold)
+                            }
+                        }
                 }
             }
         }

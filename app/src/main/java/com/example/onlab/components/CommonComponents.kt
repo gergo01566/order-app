@@ -1,10 +1,10 @@
 package com.example.onlab.components
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,26 +17,38 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
 import com.example.onlab.R
+import com.example.onlab.model.Category
+import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.screen.product.ProductButton
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
 
 @Composable
-private fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .size(40.dp)
@@ -59,54 +71,54 @@ private fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClic
     }
 }
 
+val items = listOf(
+    BottomNavItem("Rendelések", Icons.Default.Done),
+    BottomNavItem("Ügyfelek", Icons.Default.Person),
+    BottomNavItem("Termékek", Icons.Default.ShoppingCart),
+    BottomNavItem("Beállítások", Icons.Default.Settings)
+)
+
 
 @Composable
-fun BottomNavBar(navController: NavController){
-    val items = listOf(
-        BottomNavItem("Rendelések", Icons.Default.Done),
-        BottomNavItem("Ügyfelek", Icons.Default.Person),
-        BottomNavItem("Termékek", Icons.Default.ShoppingCart),
-        BottomNavItem("Beállítások", Icons.Default.Settings)
-    )
-    BottomNavigation(modifier = Modifier.height(70.dp), backgroundColor = MaterialTheme.colors.primary) {
-        items.forEach{ item ->
+fun BottomNavBar(
+    navController: NavController,
+    selectedItem: BottomNavItem,
+) {
+    BottomNavigation(
+        modifier = Modifier.height(70.dp),
+        backgroundColor = MaterialTheme.colors.primary
+    ) {
+        items.forEach { item ->
             BottomNavigationItem(
-                selected = false,
+                selected = selectedItem == item,
                 onClick = {
-                    if (item.name == "Ügyfelek") {
-                        navController.navigate("CustomerScreen") // navigate to CustomerScreen
-                    } else {
-                        Log.d("TAG", "BottomNavBar: Clicked")
-                    }
-                    if (item.name == "Rendelések") {
-                        navController.navigate(ProductScreens.ListScreen.name) // navigate to CustomerScreen
-                    } else {
-                        Log.d("TAG", "BottomNavBar: Clicked")
+                    when (item.name) {
+                        "Ügyfelek" -> navController.navigate("CustomerScreen")
+                        "Termékek" -> navController.navigate(ProductScreens.ListScreen.name)
+                        else -> Log.d("TAG", "BottomNavBar: Clicked")
                     }
                 },
-                icon = { Icon(modifier = Modifier.padding(bottom = 8.dp).size(30.dp), imageVector = item.icon, contentDescription = "Bottom Nav Icon")},
-                label = { Text(text = item.name, fontSize = 14.sp, modifier = Modifier.padding(top = 5.dp))},
-                selectedContentColor = Color.White,
-                unselectedContentColor = Color.White.copy(0.4f),
-                alwaysShowLabel = true,
+                icon = {
+                    Icon(
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .size(30.dp),
+                        imageVector = item.icon,
+                        contentDescription = "Bottom Nav Icon",
+                        tint = if (selectedItem == item) Color.White else Color.White.copy(alpha = 0.4f)
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.name,
+                        fontSize = 14.sp,
+                        fontWeight = if (selectedItem == item) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier.padding(top = 5.dp)
+                    )
+                },
+                alwaysShowLabel = true
             )
         }
-    }
-}
-
-
-
-@Composable
-fun CreatePicture(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.picture_placeholder),
-            contentDescription = "profile image",
-            modifier = Modifier.size(13.dp), contentScale = ContentScale.Crop
-        )
-
     }
 }
 
@@ -130,12 +142,97 @@ fun createTopBar(modifier: Modifier = Modifier, navController: NavController, te
         }
     }
 }
+@ExperimentalMaterialApi
+@Composable
+fun CategoryDropDownMenu(
+    selectedCategory: Category,
+    onCategorySelected: (Category) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = selectedCategory.toString(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(text = "Kategória") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            colors = ExposedDropdownMenuDefaults.textFieldColors()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            getCategoryTypes(Category::class.java).forEach { category ->
+                DropdownMenuItem(onClick = {
+                    onCategorySelected(category)
+                    expanded = false
+                }) {
+                    Text(text = category.toString())
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImagePickerButton(onImageSelected: (Uri) -> Unit) {
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            if (uri != null) {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                var outputStream: OutputStream? = null
+                try {
+                    // Create a file in app-specific storage directory
+                    val uniqueId = UUID.randomUUID().toString()
+                    val imageFile = File(context.filesDir, "image_$uniqueId.jpg")
+                    outputStream = FileOutputStream(imageFile)
+
+                    // Copy the selected image to the file
+                    inputStream?.copyTo(outputStream)
+
+                    // Call the onImageSelected callback with the file URI
+                    onImageSelected(imageFile.toUri())
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    inputStream?.close()
+                    outputStream?.close()
+                }
+            }
+        }
+    )
+    ProductButton(modifier = Modifier.padding(end = 10.dp).height(40.dp),
+        text = "Kép hozzáadása",
+        onClick = {
+            imagePicker.launch("image/*")
+        }
+    )
+}
+
+
 
 @Composable
 fun <T> CreateList(
     data: List<T>,
     onDelete: (T) -> Unit,
     onEdit: (T) -> Unit,
+    iconContent: @Composable (item: T) -> Unit = {},
     itemContent: @Composable (item: T) -> Unit
 ) {
     LazyColumn {
@@ -153,7 +250,8 @@ fun <T> CreateList(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
+
+                    //CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
                     Column(
                         modifier = Modifier
                             .width(200.dp)
@@ -163,6 +261,7 @@ fun <T> CreateList(
                         itemContent(item)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        iconContent(item)
                         CreateIcon(Icons.Rounded.Edit){
                             onEdit(item)
                             Log.d("TAG", "Edit Icon Clicked on ${item.toString()}")

@@ -13,8 +13,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
 import com.example.onlab.screen.ProductListScreen
+import com.example.onlab.screen.customer.CustomerDetailsScreen
 import com.example.onlab.screen.customer.CustomerScreen
 import com.example.onlab.screen.customer.CustomerViewModel
+import com.example.onlab.screen.customer.NewCustomerScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.product.ProductViewModel
@@ -42,6 +44,15 @@ fun AppNavigation(){
         }
         composable("CustomerScreen") { // add CustomerScreen composable
             CustomerScreen(navController = navController, customerViewModel = customerViewModel)
+        }
+        composable("NewCustomerScreen"){
+            NewCustomerScreen(navController = navController, customerViewModel = customerViewModel)
+        }
+        composable("CustomerDetailsScreen" + "/{customer}",
+            arguments = listOf(navArgument(name = "customer"){
+                type = NavType.StringType
+            })){ navBackStackEntry ->
+            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = customerViewModel)
         }
     }
 }

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -40,6 +41,11 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.R
 import com.example.onlab.components.BottomNavBar
+import com.example.onlab.components.CategoryDropDownMenu
+import com.example.onlab.components.ImagePickerButton
+import com.example.onlab.components.items
+import com.example.onlab.model.Category
+import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -49,12 +55,19 @@ import java.io.IOException
 import java.io.OutputStream
 import java.util.*
 
+@ExperimentalMaterialApi
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
 fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: ProductViewModel) {
 
     var product by remember { mutableStateOf(productViewModel.getProductById(productID!!)) }
+
+    val listItems = getCategoryTypes(Category::class.java)
+
+    var selectedItem by remember {
+        mutableStateOf(listItems[0])
+    }
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -68,6 +81,14 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     )
+
+    var pricePerPiece by remember {
+        mutableStateOf(product!!.pricePerPiece.toString())
+    }
+
+    var pricePerKarton by remember {
+        mutableStateOf(product!!.pricePerKarton.toString())
+    }
 
     var imageUri by remember {
         mutableStateOf<Uri?>(product!!.image.toUri())
@@ -98,35 +119,6 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             }
         }
     }
-
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            if (uri != null) {
-                val inputStream = contextForToast.contentResolver.openInputStream(uri)
-                var outputStream: OutputStream? = null
-                try {
-                    // Create a file in app-specific storage directory
-                    val uniqueId = UUID.randomUUID().toString()
-                    val imageFile = File(contextForToast.filesDir, "image_$uniqueId.jpg")
-                    outputStream = FileOutputStream(imageFile)
-
-                    // Copy the selected image to the file
-                    inputStream?.copyTo(outputStream)
-
-                    // Update the product object with the file URI
-                    product = product!!.copy(image = imageFile.toUri().toString())
-                    imageUri = imageFile.toUri()
-
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                } finally {
-                    inputStream?.close()
-                    outputStream?.close()
-                }
-            }
-        }
-    )
 
 
     if (showDialog.value) {
@@ -178,7 +170,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController)
+            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -206,9 +198,10 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding((10.dp)),
-                value = product?.pricePerPiece.toString(),
+                value = pricePerPiece,
                 onValueChange = { newValue ->
-                    product = product?.copy(pricePerPiece = newValue.toInt()) ?: product
+                    pricePerPiece = newValue
+                    product = product!!.copy(pricePerPiece = pricePerPiece.toIntOrNull() ?: 0)
                 },
                 label = { Text(text = "Termék ára/db") },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -218,13 +211,21 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = product?.pricePerKarton.toString(),
+                    value = pricePerKarton,
                     onValueChange = { newValue ->
-                        product = product?.copy(pricePerKarton = newValue.toInt()) ?: product
+                        pricePerKarton = newValue
+                        product = product!!.copy(pricePerPiece = pricePerKarton.toIntOrNull() ?: 0)
                     },
                     label = { Text(text = "Termék ára/karton") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     placeholder = { Text(text = "Add meg a termék karton árát!") }
+                )
+                CategoryDropDownMenu(
+                    selectedCategory = product!!.category,
+                    onCategorySelected = { category ->
+                        selectedItem = category
+                        product = product!!.copy(category = category)
+                    }
                 )
                 Row(
                     modifier = Modifier
@@ -232,16 +233,10 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         .padding(start = 10.dp, end = 10.dp, top = 10.dp)
                         .height(150.dp)
                 ) {
-                    ProductButton(
-                        modifier = Modifier
-                            .padding(end = 10.dp)
-                            .height(40.dp),
-                        text = "Kép hozzáadása",
-                        onClick = {
-                            permissionsState.launchMultiplePermissionRequest()
-                            imagePicker.launch("image/*")
-                        }
-                    )
+                    ImagePickerButton(onImageSelected = {
+                        imageUri = it
+                        product = product!!.copy(image = it.toString())
+                    })
                     Surface(
                         modifier = Modifier
                             .weight(1f)
@@ -260,9 +255,18 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
-                    .height(40.dp),text = "Termék mentése", onClick = { productViewModel.updateProduct(
-                    product!!
-                ) })
+                    .height(40.dp),
+                    text = "Termék mentése",
+                    onClick = {
+                        if (product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0) {
+                            Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+                            productViewModel.updateProduct(product!!)
+                            navController.navigate(route = ProductScreens.ListScreen.name)
+                        }else {
+                            Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))

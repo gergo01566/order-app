@@ -8,16 +8,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.CreateList
 import com.example.onlab.components.createTopBar
+import com.example.onlab.components.items
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
@@ -72,7 +77,7 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
             createTopBar(navController = navController, text = "Termékek", withIcon = false)
         },
         bottomBar = {
-            BottomNavBar(navController as NavHostController)
+            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -117,15 +122,40 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                     selectedProduct = it
                 }, {
                     navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
-                }
+                },
                 ) { product ->
-                    Text(text = product.title, fontWeight = FontWeight.Bold)
-                    Text(text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF", style = MaterialTheme.typography.caption)
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.size(70.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            AsyncImage(
+                                model = product.image.toUri(),
+                                contentDescription = "profile image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f).padding(10.dp)
+                        ) {
+                            Text(text = product.title, fontWeight = FontWeight.Bold)
+                            Text(text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF", style = MaterialTheme.typography.caption)
+
+                        }
+                    }
+
+
+
                 }
             }
         }
     )
 }
+
 
 @Composable
 fun MenuBar(

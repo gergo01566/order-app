@@ -30,6 +30,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
+import com.example.onlab.components.CategoryDropDownMenu
+import com.example.onlab.components.ImagePickerButton
+import com.example.onlab.components.items
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
@@ -44,21 +47,29 @@ import java.util.*
 @ExperimentalComposeUiApi
 @Composable
 fun NewProductScreen(navController: NavController, productViewModel: ProductViewModel) {
+
     val listItems = getCategoryTypes(Category::class.java)
     val contextForToast = LocalContext.current.applicationContext
-
-    // state of the menu
-    var expanded by remember {
-        mutableStateOf(false)
-    }
 
     // remember the selected item
     var selectedItem by remember {
         mutableStateOf(listItems[0])
     }
 
-
     var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok, image = "")) }
+
+    // 2
+    var imageUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+    var pricePerPiece by remember {
+        mutableStateOf("null")
+    }
+
+    var pricePerKarton by remember {
+        mutableStateOf("null")
+    }
 
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -66,42 +77,6 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     )
-
-    // 2
-    var imageUri by remember {
-        mutableStateOf<Uri?>(null)
-    }
-
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            if (uri != null) {
-                val inputStream = contextForToast.contentResolver.openInputStream(uri)
-                var outputStream: OutputStream? = null
-                try {
-                    // Create a file in app-specific storage directory
-                    val uniqueId = UUID.randomUUID().toString()
-                    val imageFile = File(contextForToast.filesDir, "image_$uniqueId.jpg")
-                    outputStream = FileOutputStream(imageFile)
-
-                    // Copy the selected image to the file
-                    inputStream?.copyTo(outputStream)
-
-                    // Update the product object with the file URI
-                    product = product.copy(image = imageFile.toUri().toString())
-                    imageUri = imageFile.toUri()
-
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                } finally {
-                    inputStream?.close()
-                    outputStream?.close()
-                }
-            }
-        }
-    )
-
-
 
     @OptIn(ExperimentalPermissionsApi::class)
     @Composable
@@ -111,8 +86,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         PermissionsRequired(
             multiplePermissionsState = multiplePermissionState,
             permissionsNotGrantedContent = {
-                Toast.makeText(contextForToast, "Permissions not granted", Toast.LENGTH_SHORT).show()
-                                           },
+                Toast.makeText(contextForToast, "Permissions not granted", Toast.LENGTH_SHORT).show() },
             permissionsNotAvailableContent = {
                 Toast.makeText(contextForToast, "Permissions not available", Toast.LENGTH_SHORT).show()
             }
@@ -141,7 +115,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
             }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController)
+            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -169,9 +143,11 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = product.pricePerPiece.toString(),
+                    //value = if (product.pricePerPiece == 0) "" else product.pricePerPiece.toString(),
+                    value = if (pricePerPiece == "null") "" else pricePerPiece,
                     onValueChange = { newValue ->
-                        product = product.copy(pricePerPiece = newValue.toInt())
+                        pricePerPiece = newValue
+                        product = product.copy(pricePerPiece = pricePerPiece.toIntOrNull() ?: 0)
                     },
                     label = { Text(text = "Termék ára/db") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -181,81 +157,39 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = product.pricePerKarton.toString(),
+                    value = if (pricePerKarton == "null") "" else pricePerKarton,
                     onValueChange = { newValue ->
-                        product = product.copy(pricePerKarton = newValue.toInt())
+                        pricePerKarton = newValue
+                        product = product.copy(pricePerKarton = pricePerKarton.toIntOrNull() ?: 0)
                     },
                     label = { Text(text = "Termék ára/karton") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     placeholder = { Text(text = "Add meg a termék karton árát!") }
                 )
-                // category type drop-down list
-                // box
-                ExposedDropdownMenuBox(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    expanded = expanded,
-                    onExpandedChange = {
-                        expanded = !expanded
-                    }
-                ) {
-                    // text field
-                    TextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = selectedItem.toString(),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text(text = "Kategória") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expanded
-                            )
-                        },
-                        colors = ExposedDropdownMenuDefaults.textFieldColors()
-                    )
 
-                    // menu
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        // this is a column scope
-                        // all the items are added vertically
-                        listItems.forEach { selectedOption ->
-                            // menu item
-                            DropdownMenuItem(onClick = {
-                                selectedItem = selectedOption
-                                product = product.copy(category = selectedItem)
-                                expanded = false
-                            }) {
-                                Text(text = selectedOption.toString())
-                            }
-                        }
+                CategoryDropDownMenu(
+                    selectedCategory = selectedItem,
+                    onCategorySelected = { category ->
+                        selectedItem = category
+                        product = product.copy(category = category)
                     }
-                }
+                )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 10.dp, end = 10.dp, top = 10.dp)
                         .height(150.dp)
                 ) {
-                    ProductButton(
-                        modifier = Modifier
-                            .padding(end = 10.dp)
-                            .height(40.dp),
-                        text = "Kép hozzáadása",
-                        onClick = {
-                            permissionsState.launchMultiplePermissionRequest()
-                            imagePicker.launch("image/*")
-                        }
-                    )
+                    ImagePickerButton(onImageSelected = {
+                        imageUri = it
+                        product = product!!.copy(image = it.toString())
+                    })
                     Surface(
                         modifier = Modifier
                             .fillMaxHeight(),
                         shape = RoundedCornerShape(15.dp)
                     ) {
-
                             AsyncImage(
                                 model = imageUri,
                                 contentDescription = "profile image",
@@ -269,9 +203,14 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),text = "Termék mentése", onClick = {
-                    Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
-                    productViewModel.addProduct(product = product)
-                    navController.navigate(route = ProductScreens.ListScreen.name)
+                    if(product.pricePerPiece != 0 && product.pricePerKarton != 0){
+                        Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
+                        productViewModel.addProduct(product = product)
+                        navController.navigate(route = ProductScreens.ListScreen.name)
+                    } else {
+                        Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
+                    }
+
                     })
             }
         }
