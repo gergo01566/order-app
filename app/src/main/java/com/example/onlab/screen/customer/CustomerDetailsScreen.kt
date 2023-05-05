@@ -27,6 +27,8 @@ import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
+import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.screen.product.ProductButton
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -50,6 +52,21 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
+    )
+
+    val showDialog = remember { mutableStateOf(false) }
+
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a következő terméket?",
+        onConfirm = {
+            customerViewModel.removeCustomer(customer!!)
+            showDialog.value = false
+            navController.navigate(route = "CustomerScreen")
+        },
+        onDismiss = {
+            showDialog.value = false
+        }
     )
 
     Scaffold(
@@ -170,14 +187,15 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                         }
                     }
                 )
+
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),
                     text = "Termék törlése",
                     onClick = {
-                        //showDialog.value = true
-                              },
+                        showDialog.value = true
+                    },
                     color = Color.Red)
             }
         }

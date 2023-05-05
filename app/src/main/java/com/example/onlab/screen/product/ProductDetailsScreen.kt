@@ -40,10 +40,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.R
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.CategoryDropDownMenu
-import com.example.onlab.components.ImagePickerButton
-import com.example.onlab.components.items
+import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
@@ -120,36 +117,18 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
         }
     }
 
-
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = {
-                Column(modifier = Modifier.padding(5.dp)) {
-                    Text("Biztos törölni szeretnéd a következő terméket?")
-                    //Text(text = product?.get(0)!!.title)
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        productViewModel.removeProduct(product!!)
-                        showDialog.value = false
-                        navController.navigate(route = ProductScreens.ListScreen.name)
-                    }
-                ) {
-                    Text("Igen")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog.value = false }
-                ) {
-                    Text("Nem")
-                }
-            }
-        )
-    }
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a következő terméket?",
+        onConfirm = {
+            productViewModel.removeProduct(product!!)
+            showDialog.value = false
+            navController.navigate(route = ProductScreens.ListScreen.name)
+        },
+        onDismiss = {
+            showDialog.value = false
+        }
+    )
 
     Scaffold(
         topBar = {

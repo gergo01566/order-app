@@ -19,10 +19,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.CreateList
-import com.example.onlab.components.createTopBar
-import com.example.onlab.components.items
+import com.example.onlab.components.*
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
@@ -44,32 +41,16 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
 
     val searchText by productViewModel.searchText.collectAsState()
 
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = {
-                Column(modifier = Modifier.padding(5.dp)) {
-                    Text("Biztos törölni szeretnéd a következő terméket?")
-                    Text(text = selectedProduct!!.title)}
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        selectedProduct?.let { productViewModel.removeProduct(it) }
-                        showDialog.value = false
-                    }
-                ) {
-                    Text("Igen")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog.value = false }
-                ) {
-                    Text("Nem")
-                }
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a következő terméket?",
+        onConfirm = {
+            selectedProduct?.let {
+                productViewModel.removeProduct(it)
             }
-        )
+            showDialog.value = false }
+    ) {
+        showDialog.value = false
     }
 
     Scaffold(
@@ -140,7 +121,9 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                             )
                         }
                         Column(
-                            modifier = Modifier.weight(1f).padding(10.dp)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp)
                         ) {
                             Text(text = product.title, fontWeight = FontWeight.Bold)
                             Text(text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF", style = MaterialTheme.typography.caption)

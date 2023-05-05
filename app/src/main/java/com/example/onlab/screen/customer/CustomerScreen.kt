@@ -42,33 +42,17 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
 
     val searchText by customerViewModel.searchText.collectAsState()
 
-    if (showDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDialog.value = false },
-            title = {
-                Column(modifier = Modifier.padding(5.dp)) {
-                    Text("Biztos törölni szeretnéd a következő ügyfelet?")
-                    Text(text = selectedCustomer!!.firstName + selectedCustomer!!.lastName)}
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        selectedCustomer?.let { customerViewModel.removeCustomer(it) }
-                        showDialog.value = false
-                    }
-                ) {
-                    Text("Igen")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog.value = false }
-                ) {
-                    Text("Nem")
-                }
-            }
-        )
-    }
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a következő terméket?",
+        onConfirm = {
+            selectedCustomer?.let { customerViewModel.removeCustomer(it) }
+            showDialog.value = false
+        },
+        onDismiss = {
+            showDialog.value = false
+        }
+    )
 
     Scaffold(
         topBar = {

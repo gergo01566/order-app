@@ -225,6 +225,44 @@ fun ImagePickerButton(onImageSelected: (Uri) -> Unit) {
     )
 }
 
+@Composable
+fun showConfirmationDialog(
+    showDialog: MutableState<Boolean>,
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = {
+                Column(modifier = Modifier.padding(5.dp)) {
+                    Text(message)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirm()
+                        showDialog.value = false
+                    }
+                ) {
+                    Text("Igen")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        showDialog.value = false
+                    }
+                ) {
+                    Text("Nem")
+                }
+            }
+        )
+    }
+}
 
 
 @Composable
