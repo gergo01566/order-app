@@ -10,8 +10,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -26,16 +28,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.example.onlab.R
 import com.example.onlab.model.Category
+import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.screen.product.ProductButton
@@ -44,6 +53,11 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.util.*
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
 
@@ -94,7 +108,7 @@ fun BottomNavBar(
                 onClick = {
                     when (item.name) {
                         "Ügyfelek" -> navController.navigate("CustomerScreen")
-                        "Termékek" -> navController.navigate(ProductScreens.ListScreen.name)
+                        "Termékek" -> navController.navigate("${ProductScreens.ListScreen.name}/false")
                         else -> Log.d("TAG", "BottomNavBar: Clicked")
                     }
                 },
@@ -112,6 +126,7 @@ fun BottomNavBar(
                     Text(
                         text = item.name,
                         fontSize = 14.sp,
+                        color = if (selectedItem == item) Color.White else Color.White.copy(alpha = 0.4f),
                         fontWeight = if (selectedItem == item) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.padding(top = 5.dp)
                     )
@@ -217,7 +232,9 @@ fun ImagePickerButton(onImageSelected: (Uri) -> Unit) {
             }
         }
     )
-    ProductButton(modifier = Modifier.padding(end = 10.dp).height(40.dp),
+    ProductButton(modifier = Modifier
+        .padding(end = 10.dp)
+        .height(40.dp),
         text = "Kép hozzáadása",
         onClick = {
             imagePicker.launch("image/*")
@@ -264,12 +281,160 @@ fun showConfirmationDialog(
     }
 }
 
+@Composable
+fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product, onClose:()->Unit) {
+    if (showDialog.value) {
+        Dialog(onDismissRequest =  onClose , ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+
+                        .padding(start = 20.dp, end = 20.dp),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        AsyncImage(
+                            model = selectedProduct.image.toUri(),
+                            contentDescription = "profile image",
+                            modifier = Modifier
+                                .height(200.dp)
+                                .fillMaxWidth(),
+                            contentScale = ContentScale.FillWidth
+                        )
+                    }
+                    Column(modifier = Modifier
+                        .fillMaxWidth()) {
+                        Text(
+                            modifier = Modifier.padding(bottom = 20.dp, top = 20.dp),
+                            text = selectedProduct.title,
+                            textAlign = TextAlign.Start,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.h4
+                        )
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = selectedProduct.pricePerPiece.toString()+" HUF/db",
+                                textAlign = TextAlign.Start,
+                                letterSpacing = 2.sp,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.subtitle2,
+                                color = MaterialTheme.colors.primary
+                            )
+                            Text(
+                                text = selectedProduct.pricePerKarton.toString()+" HUF/karton",
+                                textAlign = TextAlign.End,
+                                letterSpacing = 2.sp,
+                                fontWeight = FontWeight.Normal,
+                                style = MaterialTheme.typography.subtitle1,
+                                color = Color.Gray
+                            )
+                        }
+                        var state by remember { mutableStateOf(true) }
+                        var value by remember { mutableStateOf("") }
+                        // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior.
+                        // We also set a content description for this sample, but note that a RadioButton would usually
+                        // be part of a higher level component, such as a raw with text, and that component would need
+                        // to provide an appropriate content description. See RadioGroupSample.
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            TextField(
+                                value = value,
+                                onValueChange = { newValue ->
+                                    value = newValue
+                                },
+                                label = { Text(text = "Mennyiség") },
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(30.dp))
+                            Row(Modifier.selectableGroup()) {
+                                RadioButton(
+                                    selected = state,
+                                    onClick = { state = true },
+                                    modifier = Modifier.semantics { contentDescription = "Localized Description" } ,
+                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
+                                )
+                                Text(
+                                    textAlign = TextAlign.Center,
+                                    text = "Darab",
+                                    modifier = Modifier
+                                        .clickable(onClick = { state = true })
+                                        .align(Alignment.CenterVertically)
+                                )
+                                Spacer(modifier = Modifier.width(30.dp))
+                                RadioButton(
+                                    selected = !state,
+                                    onClick = { state = false },
+                                    modifier = Modifier.semantics { contentDescription = "Localized Description" },
+                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
+                                )
+                                Text(
+                                    text = "Karton",
+                                    modifier = Modifier
+                                        .clickable(onClick = { state = false })
+                                        .align(Alignment.CenterVertically),
+                                )
+                            }
+
+                        }
+
+                    }
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        Button(
+                            modifier = Modifier.padding(top = 20.dp),
+                            onClick = { /* Do something! */ },
+                            contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = "Localized description",
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text("Hozzáadás")
+                        }
+
+                        Button(
+                            modifier = Modifier.padding(top = 20.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                            onClick = { showDialog.value = false },
+                            contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
+                        ) {
+                            Text("Mégsem")
+                        }
+                    }
+
+
+                }
+
+                
+            }
+        }
+    }
+}
+
 
 @Composable
 fun <T> CreateList(
     data: List<T>,
     onDelete: (T) -> Unit,
     onEdit: (T) -> Unit,
+    onClick: (T) -> Unit = {},
     iconContent: @Composable (item: T) -> Unit = {},
     itemContent: @Composable (item: T) -> Unit
 ) {
@@ -278,7 +443,8 @@ fun <T> CreateList(
             Card(
                 modifier = Modifier
                     .padding(13.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .clickable(onClick = { onClick(item) }),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
@@ -302,11 +468,9 @@ fun <T> CreateList(
                         iconContent(item)
                         CreateIcon(Icons.Rounded.Edit){
                             onEdit(item)
-                            Log.d("TAG", "Edit Icon Clicked on ${item.toString()}")
                         }
                         CreateIcon(Icons.Rounded.Delete){
                             onDelete(item)
-                            Log.d("TAG", "Delete Icon Clicked on ${item.toString()}")
                         }
                     }
 

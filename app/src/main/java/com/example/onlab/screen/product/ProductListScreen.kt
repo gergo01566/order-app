@@ -27,10 +27,11 @@ import com.example.onlab.screen.product.ProductViewModel
 import com.example.onlab.model.Category as Categ
 
 @Composable
-fun ProductListScreen(navController: NavController, productViewModel: ProductViewModel) {
+fun ProductListScreen(navController: NavController, list: Boolean? = null, productViewModel: ProductViewModel) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
     val showDialog = remember { mutableStateOf(false) }
+    val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
 
     val products = if (selectedCategory != null) {
@@ -53,12 +54,24 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
         showDialog.value = false
     }
 
+    selectedProduct?.let {
+        FullScreenDialog(showDialog = showFullScreenDialog, selectedProduct = it) {
+            showFullScreenDialog.value = false
+    }
+    }
+
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text = "Termékek", withIcon = false)
+            if (list == true ) createTopBar(navController = navController, text = "Új rendelés", withIcon = true)
+            else {
+                createTopBar(navController = navController, text = "Termékek", withIcon = false)            }
+
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
+            if (list == true ) BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
+            else {
+                BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
+            }
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -97,43 +110,54 @@ fun ProductListScreen(navController: NavController, productViewModel: ProductVie
                         placeholder = { Text(text = "Keresés")})
                 }
 
-                CreateList(data = products, {
+                CreateList(
+                    data = products,
+                    onDelete = {
                     Log.d("TAG", "ProductListScreen: ${it.id}")
                     showDialog.value = true
-                    selectedProduct = it
-                }, {
-                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
-                },
-                ) { product ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.size(70.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            AsyncImage(
-                                model = product.image.toUri(),
-                                contentDescription = "profile image",
+                    selectedProduct = it },
+                    onEdit = {
+                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}") },
+                    onClick = {
+                        if(list == true) {
+                            selectedProduct = it
+                            showFullScreenDialog.value = true
+
+                        }
+                        else{
+                            Log.d("TAG", "ProductListScreen: ez nem jott ossze")
+                        }
+                    }, itemContent = { product ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier.size(70.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                AsyncImage(
+                                    model = product.image.toUri(),
+                                    contentDescription = "profile image",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(80.dp),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp),
-                                contentScale = ContentScale.Crop
-                            )
+                                    .weight(1f)
+                                    .padding(10.dp)
+                            ) {
+                                Text(text = product.title, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
+                                    style = MaterialTheme.typography.caption
+                                )
+
+                            }
                         }
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(10.dp)
-                        ) {
-                            Text(text = product.title, fontWeight = FontWeight.Bold)
-                            Text(text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF", style = MaterialTheme.typography.caption)
+                    })
 
-                        }
-                    }
-
-
-
-                }
             }
         }
     )

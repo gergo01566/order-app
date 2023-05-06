@@ -2,6 +2,7 @@
 
 package com.example.onlab.navigation
 
+import android.os.Bundle
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -17,6 +18,7 @@ import com.example.onlab.screen.customer.CustomerDetailsScreen
 import com.example.onlab.screen.customer.CustomerScreen
 import com.example.onlab.screen.customer.CustomerViewModel
 import com.example.onlab.screen.customer.NewCustomerScreen
+import com.example.onlab.screen.order.NewOrderScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.product.ProductViewModel
@@ -31,7 +33,7 @@ fun AppNavigation(){
     val customerViewModel = viewModel<CustomerViewModel>()
     NavHost(navController = navController, startDestination = ProductScreens.ListScreen.name){
         composable(ProductScreens.ListScreen.name){
-            ProductListScreen(navController = navController, productViewModel = productViewModel)
+            ProductListScreen(navController = navController,list = false, productViewModel = productViewModel)
         }
         composable(ProductScreens.NewProductScreen.name)
         {
@@ -53,6 +55,16 @@ fun AppNavigation(){
                 type = NavType.StringType
             })){ navBackStackEntry ->
             CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = customerViewModel)
+        }
+        composable("NewOrderScreen"){
+            NewOrderScreen(navController = navController)
+        }
+        composable(
+            route = "${ProductScreens.ListScreen.name}/{list}",
+            arguments = listOf(navArgument("list") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            val list = backStackEntry.arguments?.getBoolean("list") ?: false
+            ProductListScreen(navController = navController, list = list, productViewModel = productViewModel)
         }
     }
 }

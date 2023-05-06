@@ -93,15 +93,20 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
                         placeholder = { Text(text = "Keresés")})
                 }
 
-                CreateList(data = customers, {
+                CreateList(
+                    data = customers,
+                    onDelete = {
                     showDialog.value = true
                     selectedCustomer = it
-                }, {
+                    },
+                    onEdit = {
                     navController.navigate(route = "CustomerDetailsScreen" + "/${it.id}")
-                },{
+                    },
+                    iconContent = {
                     CreateIcon(Icons.Rounded.ShoppingCart){
+                        navController.navigate("${ProductScreens.ListScreen.name}/true")
                     }
-                }
+                    }
                 ) { customer ->
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Column(
