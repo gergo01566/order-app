@@ -3,8 +3,6 @@ package com.example.onlab.screen.customer
 import android.Manifest
 import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,26 +20,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
-import com.example.onlab.model.Category
 import com.example.onlab.model.Customer
-import com.example.onlab.model.Product
-import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.screen.product.ProductButton
-import com.example.onlab.screen.product.ProductViewModel
+import com.example.onlab.viewModels.CustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
 
 @ExperimentalPermissionsApi
 @Composable

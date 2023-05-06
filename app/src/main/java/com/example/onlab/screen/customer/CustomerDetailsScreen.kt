@@ -28,8 +28,8 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
 import com.example.onlab.components.showConfirmationDialog
-import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.screen.product.ProductButton
+import com.example.onlab.viewModels.CustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 

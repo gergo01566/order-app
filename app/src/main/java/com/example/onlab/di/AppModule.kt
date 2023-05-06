@@ -2,6 +2,7 @@ package com.example.onlab.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.onlab.data.OrderItemDatabaseDao
 import com.example.onlab.data.ProductDatabase
 import com.example.onlab.data.ProductDatabaseDao
 import com.example.onlab.data.customer.CustomerDatabaseDao
@@ -24,6 +25,10 @@ object AppModule {
     @Singleton
     @Provides
     fun provideCustomerDao(customerDatabase: ProductDatabase): CustomerDatabaseDao = customerDatabase.customerDao()
+
+    @Singleton
+    @Provides
+    fun provideOrderItemDao(customerDatabase: ProductDatabase): OrderItemDatabaseDao = customerDatabase.orderItemDao()
 
     @Singleton
     @Provides

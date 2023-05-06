@@ -1,12 +1,10 @@
-package com.example.onlab.screen.customer
+package com.example.onlab.viewModels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.model.Customer
-import com.example.onlab.model.Product
 import com.example.onlab.repository.CustomerRepository
-import com.example.onlab.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

@@ -1,36 +1,25 @@
 package com.example.onlab.screen.customer
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.onlab.R
 import com.example.onlab.components.*
-import com.example.onlab.model.Category
 import com.example.onlab.model.Customer
-import com.example.onlab.model.Product
-import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.MenuBar
-import com.example.onlab.screen.product.ProductViewModel
+import com.example.onlab.viewModels.CustomerViewModel
+import java.util.*
 
 @Composable
 fun CustomerScreen(navController: NavController, customerViewModel: CustomerViewModel) {
@@ -104,7 +93,8 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
                     },
                     iconContent = {
                     CreateIcon(Icons.Rounded.ShoppingCart){
-                        navController.navigate("${ProductScreens.ListScreen.name}/true")
+                        val orderID: String = UUID.randomUUID().toString()
+                        navController.navigate(route = "NewOrderScreen" + "/${it.id}" + "/${orderID}")
                     }
                     }
                 ) { customer ->

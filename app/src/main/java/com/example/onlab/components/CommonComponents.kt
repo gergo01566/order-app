@@ -1,11 +1,9 @@
 package com.example.onlab.components
 
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,25 +21,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberImagePainter
 import com.example.onlab.R
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
@@ -282,7 +275,14 @@ fun showConfirmationDialog(
 }
 
 @Composable
-fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product, onClose:()->Unit) {
+fun FullScreenDialog(
+    showDialog: MutableState<Boolean>, selectedProduct: Product,
+    onAdd: (karton: Boolean,Boolean,Int) -> Unit, onClose:()->Unit) {
+    var state by remember { mutableStateOf(true) }
+    var karton by remember { mutableStateOf(false) }
+    var piece by remember { mutableStateOf(true) }
+    var value by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf(0) }
     if (showDialog.value) {
         Dialog(onDismissRequest =  onClose , ) {
             Surface(
@@ -337,12 +337,7 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product
                                 color = Color.Gray
                             )
                         }
-                        var state by remember { mutableStateOf(true) }
-                        var value by remember { mutableStateOf("") }
-                        // Note that Modifier.selectableGroup() is essential to ensure correct accessibility behavior.
-                        // We also set a content description for this sample, but note that a RadioButton would usually
-                        // be part of a higher level component, such as a raw with text, and that component would need
-                        // to provide an appropriate content description. See RadioGroupSample.
+
                         Row(modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 20.dp),
@@ -352,6 +347,7 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product
                                 value = value,
                                 onValueChange = { newValue ->
                                     value = newValue
+                                    quantity = value.toInt()
                                 },
                                 label = { Text(text = "Mennyiség") },
                                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -361,7 +357,11 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product
                             Row(Modifier.selectableGroup()) {
                                 RadioButton(
                                     selected = state,
-                                    onClick = { state = true },
+                                    onClick = {
+                                        state = true
+                                        piece = true
+                                        karton = false
+                                              },
                                     modifier = Modifier.semantics { contentDescription = "Localized Description" } ,
                                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
                                 )
@@ -375,7 +375,9 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product
                                 Spacer(modifier = Modifier.width(30.dp))
                                 RadioButton(
                                     selected = !state,
-                                    onClick = { state = false },
+                                    onClick = { state = false
+                                        piece = false
+                                        karton = true},
                                     modifier = Modifier.semantics { contentDescription = "Localized Description" },
                                     colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
                                 )
@@ -397,7 +399,7 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>, selectedProduct: Product
                     ){
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
-                            onClick = { /* Do something! */ },
+                            onClick = { onAdd(karton, piece, quantity) },
                             contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
                         ) {
                             Icon(

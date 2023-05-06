@@ -14,20 +14,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
+import com.example.onlab.model.OrderItem
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.product.ProductViewModel
+import com.example.onlab.viewModels.CustomerViewModel
+import com.example.onlab.viewModels.OrderItemViewModel
+import com.example.onlab.viewModels.ProductViewModel
+import java.util.*
 import com.example.onlab.model.Category as Categ
 
 @Composable
-fun ProductListScreen(navController: NavController, list: Boolean? = null, productViewModel: ProductViewModel) {
+fun ProductListScreen(navController: NavController, orderID: UUID? = null, list: Boolean? = null, productViewModel: ProductViewModel, customerViewModel: CustomerViewModel, orderItemViewModel: OrderItemViewModel) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
     val showDialog = remember { mutableStateOf(false) }
@@ -55,9 +58,23 @@ fun ProductListScreen(navController: NavController, list: Boolean? = null, produ
     }
 
     selectedProduct?.let {
-        FullScreenDialog(showDialog = showFullScreenDialog, selectedProduct = it) {
+        FullScreenDialog(
+            showDialog = showFullScreenDialog,
+            selectedProduct = it,
+            onAdd = { karton: Boolean, piece: Boolean, quantity: Int ->
+                val orderItem = OrderItem(
+                    amount = quantity,
+                    orderID = orderID!!,
+                    productID = selectedProduct!!.id,
+                    statusID = 0,
+                    karton = karton,
+                    db = piece
+                )
+                orderItemViewModel.addOrderItem(orderItem)
+            }
+        ) {
             showFullScreenDialog.value = false
-    }
+        }
     }
 
     Scaffold(
@@ -74,6 +91,17 @@ fun ProductListScreen(navController: NavController, list: Boolean? = null, produ
             }
         },
         floatingActionButton = {
+            if(list == true){
+                ExtendedFloatingActionButton(
+                    modifier =  Modifier.padding(bottom = 60.dp),
+                    text = { Text(text = "Rendelés rögzítése") },
+                    onClick = {
+                        //navController.navigate(route = ProductScreens.NewProductScreen.name)
+                    },
+                    shape = RoundedCornerShape(20.dp),
+                    backgroundColor = MaterialTheme.colors.primary,
+                )
+            }
             ExtendedFloatingActionButton(
                 modifier =  Modifier.padding(bottom = 60.dp),
                 text = { Text(text = "Új termék") },
@@ -122,7 +150,6 @@ fun ProductListScreen(navController: NavController, list: Boolean? = null, produ
                         if(list == true) {
                             selectedProduct = it
                             showFullScreenDialog.value = true
-
                         }
                         else{
                             Log.d("TAG", "ProductListScreen: ez nem jott ossze")
