@@ -24,12 +24,13 @@ import java.util.*
 @Composable
 fun CustomerScreen(navController: NavController, customerViewModel: CustomerViewModel) {
 
-    val showDialog = remember { mutableStateOf(false) }
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
 
     val customers = customerViewModel.customerList.collectAsState().value
 
     val searchText by customerViewModel.searchText.collectAsState()
+
+    val showDialog = remember { mutableStateOf(false) }
 
     showConfirmationDialog(
         showDialog = showDialog,

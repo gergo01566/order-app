@@ -4,6 +4,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,9 +50,14 @@ import java.io.OutputStream
 import java.util.*
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.zIndex
+
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
 
@@ -102,6 +109,7 @@ fun BottomNavBar(
                     when (item.name) {
                         "Ügyfelek" -> navController.navigate("CustomerScreen")
                         "Termékek" -> navController.navigate("${ProductScreens.ListScreen.name}/false")
+                        "Rendelések" -> navController.navigate("OrdersScreen")
                         else -> Log.d("TAG", "BottomNavBar: Clicked")
                     }
                 },
@@ -131,14 +139,22 @@ fun BottomNavBar(
 }
 
 @Composable
-fun createTopBar(modifier: Modifier = Modifier, navController: NavController, text: String, withIcon: Boolean){
+fun createTopBar(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    text: String,
+    withIcon: Boolean
+) {
     TopAppBar(
         backgroundColor = MaterialTheme.colors.primary,
         contentColor = Color.White,
         modifier = Modifier.height(70.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-            if (withIcon){
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (withIcon) {
                 Icon(imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Icon",
                     modifier = Modifier.clickable {
@@ -150,6 +166,7 @@ fun createTopBar(modifier: Modifier = Modifier, navController: NavController, te
         }
     }
 }
+
 @ExperimentalMaterialApi
 @Composable
 fun CategoryDropDownMenu(
@@ -276,21 +293,23 @@ fun showConfirmationDialog(
 
 @Composable
 fun FullScreenDialog(
-    showDialog: MutableState<Boolean>, selectedProduct: Product,
-    onAdd: (karton: Boolean,Boolean,Int) -> Unit, onClose:()->Unit) {
-    var state by remember { mutableStateOf(true) }
-    var karton by remember { mutableStateOf(false) }
-    var piece by remember { mutableStateOf(true) }
-    var value by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf(0) }
+    showDialog: MutableState<Boolean>,
+    selectedProduct: Product,
+    currentQuantity: Int?,
+    isKarton: Boolean?,
+    onAdd: (state: Boolean, quantity: Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var state = remember { mutableStateOf(isKarton != true) }
+    var value by remember { mutableStateOf(currentQuantity?.toString() ?: "") }
+    Log.d("TAG", "value: ${value}")
     if (showDialog.value) {
-        Dialog(onDismissRequest =  onClose , ) {
+        Dialog(onDismissRequest = onClose) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Column(
                     modifier = Modifier
-
                         .padding(start = 20.dp, end = 20.dp),
                 ) {
                     Box(
@@ -305,8 +324,10 @@ fun FullScreenDialog(
                             contentScale = ContentScale.FillWidth
                         )
                     }
-                    Column(modifier = Modifier
-                        .fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
                         Text(
                             modifier = Modifier.padding(bottom = 20.dp, top = 20.dp),
                             text = selectedProduct.title,
@@ -315,13 +336,14 @@ fun FullScreenDialog(
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.h4
                         )
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = selectedProduct.pricePerPiece.toString()+" HUF/db",
+                                text = selectedProduct.pricePerPiece.toString() + " HUF/db",
                                 textAlign = TextAlign.Start,
                                 letterSpacing = 2.sp,
                                 fontWeight = FontWeight.Bold,
@@ -329,7 +351,7 @@ fun FullScreenDialog(
                                 color = MaterialTheme.colors.primary
                             )
                             Text(
-                                text = selectedProduct.pricePerKarton.toString()+" HUF/karton",
+                                text = selectedProduct.pricePerKarton.toString() + " HUF/karton",
                                 textAlign = TextAlign.End,
                                 letterSpacing = 2.sp,
                                 fontWeight = FontWeight.Normal,
@@ -338,16 +360,17 @@ fun FullScreenDialog(
                             )
                         }
 
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp),
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             TextField(
                                 value = value,
                                 onValueChange = { newValue ->
                                     value = newValue
-                                    quantity = value.toInt()
+                                    //quantity = value.toInt()
                                 },
                                 label = { Text(text = "Mennyiség") },
                                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -356,35 +379,41 @@ fun FullScreenDialog(
                             Spacer(modifier = Modifier.width(30.dp))
                             Row(Modifier.selectableGroup()) {
                                 RadioButton(
-                                    selected = state,
+                                    selected = state.value,
                                     onClick = {
-                                        state = true
-                                        piece = true
-                                        karton = false
-                                              },
-                                    modifier = Modifier.semantics { contentDescription = "Localized Description" } ,
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
+                                        state.value = true
+                                    },
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Localized Description"
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colors.primary,
+                                        unselectedColor = Color.Gray
+                                    )
                                 )
                                 Text(
                                     textAlign = TextAlign.Center,
                                     text = "Darab",
                                     modifier = Modifier
-                                        .clickable(onClick = { state = true })
+                                        .clickable(onClick = { state.value = true })
                                         .align(Alignment.CenterVertically)
                                 )
                                 Spacer(modifier = Modifier.width(30.dp))
                                 RadioButton(
-                                    selected = !state,
-                                    onClick = { state = false
-                                        piece = false
-                                        karton = true},
-                                    modifier = Modifier.semantics { contentDescription = "Localized Description" },
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary, unselectedColor = Color.Gray)
+                                    selected = !state.value,
+                                    onClick = { state.value = false },
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Localized Description"
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colors.primary,
+                                        unselectedColor = Color.Gray
+                                    )
                                 )
                                 Text(
                                     text = "Karton",
                                     modifier = Modifier
-                                        .clickable(onClick = { state = false })
+                                        .clickable(onClick = { state.value = false })
                                         .align(Alignment.CenterVertically),
                                 )
                             }
@@ -392,14 +421,15 @@ fun FullScreenDialog(
                         }
 
                     }
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
-                    ){
+                    ) {
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
-                            onClick = { onAdd(karton, piece, quantity) },
+                            onClick = { onAdd(state.value, value.toInt()) },
                             contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
                         ) {
                             Icon(
@@ -413,7 +443,9 @@ fun FullScreenDialog(
 
                         Button(
                             modifier = Modifier.padding(top = 20.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = Color.Gray
+                            ),
                             onClick = { showDialog.value = false },
                             contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
                         ) {
@@ -424,10 +456,11 @@ fun FullScreenDialog(
 
                 }
 
-                
+
             }
         }
     }
+
 }
 
 
@@ -466,12 +499,15 @@ fun <T> CreateList(
                     ) {
                         itemContent(item)
                     }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
                         iconContent(item)
-                        CreateIcon(Icons.Rounded.Edit){
+                        CreateIcon(Icons.Rounded.Edit) {
                             onEdit(item)
                         }
-                        CreateIcon(Icons.Rounded.Delete){
+                        CreateIcon(Icons.Rounded.Delete) {
                             onDelete(item)
                         }
                     }
@@ -481,3 +517,68 @@ fun <T> CreateList(
         }
     }
 }
+
+@Composable
+fun ToggleButtons(
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit,
+) {
+    val cornerRadius = 8.dp
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        items.forEachIndexed { index, item ->
+            OutlinedButton(
+                onClick = { onSelectedIndexChange(index) },
+                shape = when {
+                    // left outer button
+                    index == 0 -> RoundedCornerShape(topStart = cornerRadius, bottomStart = cornerRadius)
+                    // right outer button
+                    index == 1 -> RoundedCornerShape(topEnd = cornerRadius, bottomEnd = cornerRadius)
+                    // middle button
+                    else -> RectangleShape
+                },
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (selectedIndex == index) {
+                        MaterialTheme.colors.primary
+                    } else {
+                        Color.DarkGray.copy(alpha = 0.75f)
+                    }
+                ),
+                colors = if (selectedIndex == index) {
+                    // selected colors
+                    ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                        contentColor = MaterialTheme.colors.primary
+                    )
+                } else {
+                    // not selected colors
+                    ButtonDefaults.outlinedButtonColors(
+                        backgroundColor = MaterialTheme.colors.surface,
+                        contentColor = MaterialTheme.colors.primary
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .zIndex(if (selectedIndex == index) 1f else 0f),
+            ) {
+                Text(
+                    text = item,
+                    color = if (selectedIndex == index) {
+                        MaterialTheme.colors.primary
+                    } else {
+                        Color.DarkGray.copy(alpha = 0.9f)
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+

@@ -3,6 +3,7 @@ package com.example.onlab.data
 import androidx.room.*
 import com.example.onlab.model.OrderItem
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 @Dao
 interface OrderItemDatabaseDao {
@@ -20,4 +21,10 @@ interface OrderItemDatabaseDao {
 
     @Delete
     suspend fun deleteOrderItem(orderItem: OrderItem)
+
+    @Query("SELECT product_tbl.product_title \n" +
+            "FROM product_tbl \n" +
+            "JOIN order_item_tbl ON product_tbl.id = order_item_tbl.productID \n" +
+            "WHERE order_item_tbl.productID = :productID")
+    fun getProductName(productID: UUID): Flow<String>
 }

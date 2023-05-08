@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
 import javax.inject.Inject
@@ -40,4 +41,15 @@ class OrderItemViewModel @Inject constructor(private val repository: OrderItemRe
             it.orderID.toString() == orderID
         }
     }
+
+    //fun getProductName(productID: UUID): String = repository.getProductName(productID).toString()
+
+    fun getProductName(productID: UUID): String {
+        val flow = repository.getProductName(productID)
+        val productName = runBlocking { flow.first() }
+        return productName
+    }
+
+
+
 }

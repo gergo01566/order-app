@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.model.Customer
+import com.example.onlab.model.Product
 import com.example.onlab.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -56,9 +57,13 @@ class CustomerViewModel @Inject constructor(private val repository: CustomerRepo
     fun removeCustomer(customer: Customer) = viewModelScope.launch { repository.deleteCustomer(customer) }
 
     fun getCustomerById(id: String): Customer? {
-        return customerList.value.find {
-            it.id.toString() == id
+        return _customerList.value.find {
+            it.id.toString().lowercase() == id.lowercase()
         }
+    }
+
+    fun getAllCustomer(): List<Customer> {
+        return _customerList.value
     }
 
     fun onSearchTextChange(text: String){

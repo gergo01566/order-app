@@ -61,16 +61,19 @@ fun ProductListScreen(navController: NavController, orderID: UUID? = null, list:
         FullScreenDialog(
             showDialog = showFullScreenDialog,
             selectedProduct = it,
-            onAdd = { karton: Boolean, piece: Boolean, quantity: Int ->
+            isKarton = null,
+            currentQuantity = null,
+            onAdd = { state: Boolean, quantity: Int ->
                 val orderItem = OrderItem(
                     amount = quantity,
                     orderID = orderID!!,
                     productID = selectedProduct!!.id,
                     statusID = 0,
-                    karton = karton,
-                    db = piece
+                    karton = !state,
+                    db = state
                 )
                 orderItemViewModel.addOrderItem(orderItem)
+                navController.popBackStack()
             }
         ) {
             showFullScreenDialog.value = false

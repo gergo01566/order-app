@@ -1,6 +1,9 @@
 package com.example.onlab.screen.order
 
+import android.os.Build
 import android.util.Log
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -12,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -19,19 +23,27 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
+import com.example.onlab.model.Customer
+import com.example.onlab.model.Order
 import com.example.onlab.model.OrderItem
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.CustomerViewModel
 import com.example.onlab.viewModels.OrderItemViewModel
+import com.example.onlab.viewModels.OrderViewModel
+import com.example.onlab.viewModels.ProductViewModel
+import java.time.LocalDate
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NewOrderScreen(
     navController: NavController,
     customerID: String? = null,
     orderID: String? = null,
     customerViewModel: CustomerViewModel,
-    orderItemViewModel: OrderItemViewModel
+    orderItemViewModel: OrderItemViewModel,
+    productViewModel: ProductViewModel,
+    orderViewModel: OrderViewModel
 ) {
     var customer by remember {
         mutableStateOf(customerViewModel.getCustomerById(customerID!!))
@@ -39,13 +51,65 @@ fun NewOrderScreen(
 
     var orderItems = orderID?.let { orderItemViewModel.getOrderItemsByOrder(it) }
 
+    val contextForToast = LocalContext.current.applicationContext
+
+    val showDialog = remember { mutableStateOf(false) }
+
+    val showEditDialog = remember { mutableStateOf(false) }
+
+    var selectedOrderItem by remember { mutableStateOf<OrderItem?>(null) }
+
+
+    if (showEditDialog.value) {
+        productViewModel.getProductById(selectedOrderItem?.productID.toString())?.let {
+            FullScreenDialog(
+                showDialog = showEditDialog,
+                selectedProduct = it,
+                currentQuantity = selectedOrderItem?.amount,
+                isKarton = selectedOrderItem?.karton,
+                onAdd = { state: Boolean, quantity: Int ->
+                    selectedOrderItem?.let {
+                        selectedOrderItem = it.copy(karton = !state, db = state, amount = quantity)
+                        orderItemViewModel.updateOrderItem(selectedOrderItem!!)
+                        Toast.makeText(
+                            contextForToast,
+                            "Rendelési tétel módosítva",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    showEditDialog.value = false
+                }
+            ) {
+                showEditDialog.value = false
+            }
+        }
+    }
+
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a következő terméket?",
+        onConfirm = {
+            selectedOrderItem?.let { orderItemViewModel.deleteOrderItem(it) }
+            showDialog.value = false
+        },
+        onDismiss = {
+            showDialog.value = false
+        }
+    )
 
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text = "${customer!!.firstName} rendelése", withIcon = true)
+            createTopBar(
+                navController = navController,
+                text = "${customer!!.firstName} rendelése",
+                withIcon = true
+            )
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
+            BottomNavBar(
+                navController = navController as NavHostController,
+                selectedItem = items[1]
+            )
         },
         floatingActionButton = {
         },
@@ -68,12 +132,18 @@ fun NewOrderScreen(
                         CreateList<OrderItem>(
                             data = orderItems,
                             onDelete = {
-                                Log.d("TAG", "ProductListScreen: ${it.id}")
-                                //showDialog.value = true
-                                //selectedProduct = it
+                                showDialog.value = true
+                                selectedOrderItem = it
                             },
                             onEdit = {
-                                navController.navigate(route = ProductScreens.NewProductScreen.name + "/${it.id}")
+                                selectedOrderItem = it
+                                showEditDialog.value = true
+                                Toast.makeText(
+                                    contextForToast,
+                                    "${selectedOrderItem?.amount}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
                             },
                             onClick = {
 //                            if(list == true) {
@@ -83,33 +153,45 @@ fun NewOrderScreen(
 //                            else{
 //                                Log.d("TAG", "ProductListScreen: ez nem jott ossze")
 //                            }
-                            }, itemContent = { product ->
+                            }, itemContent = { orderItem ->
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     Column(
                                         modifier = Modifier.size(70.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-//                                        AsyncImage(
-//                                            model = product.image.toUri(),
-//                                            contentDescription = "profile image",
-//                                            modifier = Modifier
-//                                                .fillMaxWidth()
-//                                                .height(80.dp),
-//                                            contentScale = ContentScale.Crop
-//                                        )
+                                        AsyncImage(
+                                            model = productViewModel.getProductById(orderItem.productID.toString())!!.image.toUri(),
+                                            contentDescription = "profile image",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(80.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     }
                                     Column(
                                         modifier = Modifier
                                             .weight(1f)
                                             .padding(10.dp)
                                     ) {
-                                        Text(text = product.amount.toString(), fontWeight = FontWeight.Bold)
-//                                        Text(
-//                                            text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
-//                                            style = MaterialTheme.typography.caption
-//                                        )
-
+                                        productViewModel.getProductById(orderItem.productID.toString())
+                                            ?.let { it1 ->
+                                                Text(
+                                                    text = it1.title,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        if (orderItem.karton) {
+                                            Text(
+                                                text = "${orderItem.amount} karton",
+                                                style = MaterialTheme.typography.caption
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "${orderItem.amount} darab",
+                                                style = MaterialTheme.typography.caption
+                                            )
+                                        }
                                     }
                                 }
                             })
@@ -148,7 +230,9 @@ fun NewOrderScreen(
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colors.secondary
                             ),
-                            onClick = { },
+                            onClick = {
+                                      orderViewModel.addOrder(Order(id = UUID.fromString(orderID), date = LocalDate.now(), customerID = UUID.fromString(customerID), status = 0))
+                            },
                             contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
                         ) {
                             androidx.compose.material3.Icon(

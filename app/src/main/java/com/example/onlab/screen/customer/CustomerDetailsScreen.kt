@@ -176,7 +176,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),
-                    text = "Termék mentése",
+                    text = "Ügyfél mentése",
                     onClick = {
                         if(customer!!.phoneNumber.toDoubleOrNull() != null || customer!!.phoneNumber.toLongOrNull() != null){
                             Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
