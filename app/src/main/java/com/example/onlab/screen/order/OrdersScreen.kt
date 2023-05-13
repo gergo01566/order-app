@@ -30,6 +30,7 @@ import com.example.onlab.model.Order
 import com.example.onlab.model.OrderItem
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.CustomerViewModel
+import com.example.onlab.viewModels.OrderItemViewModel
 import com.example.onlab.viewModels.OrderViewModel
 import java.time.LocalDate
 import java.util.*
@@ -38,7 +39,8 @@ import java.util.*
 fun OrdersScreen(
     navController: NavController,
     orderViewModel: OrderViewModel,
-    customerViewModel: CustomerViewModel
+    customerViewModel: CustomerViewModel,
+    orderItemViewModel: OrderItemViewModel
 ) {
     var selectedIndex by remember { mutableStateOf(0) }
     var orders = orderViewModel.getOrdersByStatus(selectedIndex)
@@ -81,6 +83,10 @@ fun OrdersScreen(
                 CreateList(
                     data = orders,
                     onDelete = {
+                        for (x in orderItemViewModel.getOrderItemsByOrder(it.id.toString())){
+                            orderItemViewModel.deleteOrderItem(x);
+                        }
+                        orderViewModel.deleteOrder(it)
                     },
                     onEdit = {
                     },

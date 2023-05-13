@@ -231,7 +231,9 @@ fun NewOrderScreen(
                                 containerColor = MaterialTheme.colors.secondary
                             ),
                             onClick = {
-                                      orderViewModel.addOrder(Order(id = UUID.fromString(orderID), date = LocalDate.now(), customerID = UUID.fromString(customerID), status = 0))
+                                orderViewModel.addOrder(Order(id = UUID.fromString(orderID), date = LocalDate.now(), customerID = UUID.fromString(customerID), status = 0))
+                                navController.navigate("OrdersScreen")
+                                Toast.makeText(contextForToast, "Rendelés hozzáadva", Toast.LENGTH_SHORT).show()
                             },
                             contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
                         ) {

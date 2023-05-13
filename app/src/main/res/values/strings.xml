@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Onlab</string>
     <string name="product_screen_name">Termékek</string>
+    <string name="help_text"> Please enter a valid email and password that is at least 6 character</string>
 </resources>

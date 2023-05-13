@@ -110,6 +110,7 @@ fun BottomNavBar(
                         "Ügyfelek" -> navController.navigate("CustomerScreen")
                         "Termékek" -> navController.navigate("${ProductScreens.ListScreen.name}/false")
                         "Rendelések" -> navController.navigate("OrdersScreen")
+                        "Beállítások" -> navController.navigate("ProfileScreen")
                         else -> Log.d("TAG", "BottomNavBar: Clicked")
                     }
                 },

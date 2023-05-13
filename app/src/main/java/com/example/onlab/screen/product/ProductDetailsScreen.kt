@@ -180,7 +180,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     value = pricePerKarton,
                     onValueChange = { newValue ->
                         pricePerKarton = newValue
-                        product = product!!.copy(pricePerPiece = pricePerKarton.toIntOrNull() ?: 0)
+                        product = product!!.copy(pricePerKarton = pricePerKarton.toIntOrNull() ?: 0)
                     },
                     label = { Text(text = "Termék ára/karton") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),

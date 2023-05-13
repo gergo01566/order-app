@@ -20,14 +20,17 @@ import com.example.onlab.screen.customer.CustomerDetailsScreen
 import com.example.onlab.screen.customer.CustomerScreen
 import com.example.onlab.viewModels.CustomerViewModel
 import com.example.onlab.screen.customer.NewCustomerScreen
+import com.example.onlab.screen.login.LoginScreen
 import com.example.onlab.screen.order.NewOrderScreen
 import com.example.onlab.screen.order.OrdersScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
+import com.example.onlab.screen.profile.ProfileScreen
 import com.example.onlab.viewModels.OrderItemViewModel
 import com.example.onlab.viewModels.OrderViewModel
 import com.example.onlab.viewModels.ProductViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.firebase.auth.FirebaseAuth
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -40,12 +43,12 @@ fun AppNavigation(){
     val customerViewModel = viewModel<CustomerViewModel>()
     val orderItemViewModel = viewModel<OrderItemViewModel>()
     val orderViewModel = viewModel<OrderViewModel>()
-    NavHost(navController = navController, startDestination = ProductScreens.ListScreen.name){
+    NavHost(navController = navController, startDestination = "LoginScreen"){
         composable(ProductScreens.ListScreen.name){
             ProductListScreen(navController = navController,list = false, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
         }
 
-        composable(ProductScreens.NewProductScreen.name)
+        composable(route = ProductScreens.NewProductScreen.name)
         {
             NewProductScreen(navController = navController, productViewModel = productViewModel)
         }
@@ -61,7 +64,7 @@ fun AppNavigation(){
             NewCustomerScreen(navController = navController, customerViewModel = customerViewModel)
         }
         composable("OrdersScreen"){
-            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel)
+            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("CustomerDetailsScreen" + "/{customer}",
             arguments = listOf(navArgument(name = "customer"){
@@ -106,6 +109,16 @@ fun AppNavigation(){
         ) { backStackEntry ->
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
             ProductListScreen(navController = navController, list = list, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
+        }
+        composable("LoginScreen"){
+            if(!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
+                navController.navigate("OrdersScreen")
+            } else {
+                LoginScreen(navController = navController)
+            }
+        }
+        composable("ProfileScreen"){
+            ProfileScreen(navController = navController)
         }
     }
 }
