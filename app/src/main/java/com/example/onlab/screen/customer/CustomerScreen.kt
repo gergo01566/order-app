@@ -1,5 +1,6 @@
 package com.example.onlab.screen.customer
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -16,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
+import com.example.onlab.data.DataOrException
 import com.example.onlab.model.Customer
 import com.example.onlab.model.MCustomer
 import com.example.onlab.navigation.ProductScreens
@@ -26,17 +28,15 @@ import java.util.*
 @Composable
 fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerViewModel) {
 
+
     var selectedCustomer by remember { mutableStateOf<MCustomer?>(null) }
 
     var listOfCustomers = emptyList<MCustomer>()
 
     if (!mCustomerViewModel.data.value.data.isNullOrEmpty()){
-        listOfCustomers = mCustomerViewModel.data.value.data!!.toList()!!
+        Log.d("FBB", "CustomerScreen: ${mCustomerViewModel.data.value.data!!.toList().toString()}")
+        listOfCustomers = mCustomerViewModel.data.value.data!!.toList()
     }
-
-//    val customers = customerViewModel.customerList.collectAsState().value
-//
-//    val searchText by customerViewModel.searchText.collectAsState()
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -98,7 +98,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                     selectedCustomer = it
                     },
                     onEdit = {
-                    navController.navigate(route = "CustomerDetailsScreen" + "/${it.id}")
+                    navController.navigate(route = "CustomerDetailsScreen" + "/${it.id.toString()}")
                     },
                     iconContent = {
                     CreateIcon(Icons.Rounded.ShoppingCart){

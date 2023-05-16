@@ -31,16 +31,17 @@ import com.example.onlab.model.Customer
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
 import com.example.onlab.viewModels.CustomerViewModel
+import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.firebase.firestore.FirebaseFirestore
 
 @ExperimentalPermissionsApi
 @Composable
-fun NewCustomerScreen(navController: NavController, customerViewModel: CustomerViewModel){
+fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomerViewModel){
     val contextForToast = LocalContext.current.applicationContext
 
-    var customer by remember { mutableStateOf(Customer(firstName = "", lastName = "", address = "", phoneNumber = "", image = "")) }
+    var customer by remember { mutableStateOf(MCustomer(firstName = "", lastName = "", address = "", phoneNumber = "", image = "")) }
 
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -162,11 +163,11 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: CustomerV
                     .padding((10.dp))
                     .height(40.dp),text = "Ügyfél mentése", onClick = {
                     if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null){
-                        Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
-                        customerViewModel.addCustomer(customer = customer)
                         val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = customer.image)
-                        saveToFirebase(navController = navController, customer = mCustomer)
-                        //navController.navigate(route = "CustomerScreen")
+                        customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
+                            Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
+                            navController.navigate(route = "CustomerScreen")
+                        })
                     } else {
                         Toast.makeText(contextForToast, "Kérlek használj megfelelő formátumot a telefonszám megadásánál!", Toast.LENGTH_SHORT).show()
 
@@ -175,26 +176,4 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: CustomerV
             }
         }
     )
-}
-
-fun saveToFirebase(customer: MCustomer, navController: NavController){
-    val db = FirebaseFirestore.getInstance()
-    val dbCollection = db.collection("customers")
-
-    if(customer.toString().isNotEmpty()){
-        dbCollection.add(customer)
-            .addOnSuccessListener{ documentRef->
-                val docId = documentRef.id
-                dbCollection.document(docId)
-                    .update(hashMapOf("id" to docId) as Map<String, Any>)
-                    .addOnCompleteListener{task->
-                        if(task.isSuccessful){
-                            navController.popBackStack()
-                        }
-                    }
-                    .addOnFailureListener{
-                        Log.d("FB", "saveToFirebase: Error: $docId")
-                    }
-            }
-    }
 }

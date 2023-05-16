@@ -59,7 +59,7 @@ fun AppNavigation(){
             CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
         }
         composable("NewCustomerScreen"){
-            NewCustomerScreen(navController = navController, customerViewModel = customerViewModel)
+            NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel)
         }
         composable("OrdersScreen"){
             OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)

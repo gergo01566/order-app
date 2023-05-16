@@ -23,8 +23,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideFireCustomerRepository()=
-        FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))
+    fun provideFireCustomerRepository()= FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))
 
     @Singleton
     @Provides
