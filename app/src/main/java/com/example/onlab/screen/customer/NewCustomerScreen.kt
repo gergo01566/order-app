@@ -2,6 +2,7 @@ package com.example.onlab.screen.customer
 
 import android.Manifest
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,10 +28,12 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
 import com.example.onlab.model.Customer
+import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
 import com.example.onlab.viewModels.CustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.firebase.firestore.FirebaseFirestore
 
 @ExperimentalPermissionsApi
 @Composable
@@ -161,7 +164,9 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: CustomerV
                     if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null){
                         Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
                         customerViewModel.addCustomer(customer = customer)
-                        navController.navigate(route = "CustomerScreen")
+                        val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = customer.image)
+                        saveToFirebase(navController = navController, customer = mCustomer)
+                        //navController.navigate(route = "CustomerScreen")
                     } else {
                         Toast.makeText(contextForToast, "Kérlek használj megfelelő formátumot a telefonszám megadásánál!", Toast.LENGTH_SHORT).show()
 
@@ -170,4 +175,26 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: CustomerV
             }
         }
     )
+}
+
+fun saveToFirebase(customer: MCustomer, navController: NavController){
+    val db = FirebaseFirestore.getInstance()
+    val dbCollection = db.collection("customers")
+
+    if(customer.toString().isNotEmpty()){
+        dbCollection.add(customer)
+            .addOnSuccessListener{ documentRef->
+                val docId = documentRef.id
+                dbCollection.document(docId)
+                    .update(hashMapOf("id" to docId) as Map<String, Any>)
+                    .addOnCompleteListener{task->
+                        if(task.isSuccessful){
+                            navController.popBackStack()
+                        }
+                    }
+                    .addOnFailureListener{
+                        Log.d("FB", "saveToFirebase: Error: $docId")
+                    }
+            }
+    }
 }

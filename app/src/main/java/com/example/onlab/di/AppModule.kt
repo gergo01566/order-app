@@ -7,6 +7,8 @@ import com.example.onlab.data.OrderItemDatabaseDao
 import com.example.onlab.data.ProductDatabase
 import com.example.onlab.data.ProductDatabaseDao
 import com.example.onlab.data.customer.CustomerDatabaseDao
+import com.example.onlab.repository.FireRepository
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,6 +20,11 @@ import javax.inject.Singleton
 @Module
 //used to add bindings to hilt
 object AppModule {
+
+    @Singleton
+    @Provides
+    fun provideFireCustomerRepository()=
+        FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))
 
     @Singleton
     @Provides

@@ -2,6 +2,7 @@ package com.example.onlab.screen.customer
 
 import android.Manifest
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,20 +29,32 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
 import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.data.DataOrException
+import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
 import com.example.onlab.viewModels.CustomerViewModel
+import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 
 @ExperimentalPermissionsApi
 @Composable
-fun CustomerDetailsScreen(navController: NavController, customerID: String? = null, customerViewModel: CustomerViewModel){
+fun CustomerDetailsScreen(navController: NavController, customerID: String? = null, customerViewModel: MCustomerViewModel){
 
     val contextForToast = LocalContext.current.applicationContext
 
     var customer by remember {
-        mutableStateOf(customerViewModel.getCustomerById(customerID!!))
+        mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->  
+            mCustomer.id == customerID.toString()
+        })
     }
+
+    val customerList = produceState<DataOrException<List<MCustomer>,
+            Boolean, java.lang.Exception>>(initialValue = DataOrException(data = emptyList(), true, Exception(""))){
+            value = customerViewModel.data.value
+    }.value
 
     var imageUri by remember {
         mutableStateOf<Uri?>(customer!!.image.toUri())
@@ -60,9 +73,13 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            customerViewModel.removeCustomer(customer!!)
-            showDialog.value = false
-            navController.navigate(route = "CustomerScreen")
+            FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).delete().addOnCompleteListener {
+                if(it.isSuccessful){
+                    showDialog.value = false
+                    navController.navigate(route = "CustomerScreen")
+                }
+            }
+
         },
         onDismiss = {
             showDialog.value = false
@@ -83,7 +100,12 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                             navController.popBackStack()
                         })
                     Spacer(modifier = Modifier.padding(10.dp))
-                    Text(text = customer!!.firstName + " " + customer!!.lastName + " adatai", fontSize = 27.sp, fontWeight = FontWeight.Normal)
+                    if(customerList.loading == true){
+                        LinearProgressIndicator()
+                        customerList.loading = false
+                    } else {
+                        Text(text = customer!!.firstName + " " + customer!!.lastName + " adatai", fontSize = 27.sp, fontWeight = FontWeight.Normal)
+                    }
                 }
             }
         },
@@ -179,9 +201,23 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                     text = "Ügyfél mentése",
                     onClick = {
                         if(customer!!.phoneNumber.toDoubleOrNull() != null || customer!!.phoneNumber.toLongOrNull() != null){
-                            Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
-                            customerViewModel.updateCustomer(customer!!)
-                            navController.navigate(route = "CustomerScreen")
+                            val customerToUpdate = hashMapOf(
+                                "first_name" to customer?.firstName,
+                                "last_name" to customer?.lastName,
+                                "customer_address" to customer?.address,
+                                "phone_number" to customer?.phoneNumber,
+                                "cusomer_image" to customer?.image
+                            ).toMap()
+                            FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).update(customerToUpdate).addOnCompleteListener{ task->
+                                if (task.isSuccessful){
+                                    navController.navigate(route = "CustomerScreen")
+                                    Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+                                }
+
+                            }.addOnFailureListener{
+                                Log.d("FB", "CustomerDetailsScreen: nem lett updatelve")
+                            }
+
                         }else {
                             Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
                         }

@@ -18,7 +18,6 @@ import com.example.onlab.model.Order
 import com.example.onlab.screen.ProductListScreen
 import com.example.onlab.screen.customer.CustomerDetailsScreen
 import com.example.onlab.screen.customer.CustomerScreen
-import com.example.onlab.viewModels.CustomerViewModel
 import com.example.onlab.screen.customer.NewCustomerScreen
 import com.example.onlab.screen.login.LoginScreen
 import com.example.onlab.screen.order.NewOrderScreen
@@ -26,9 +25,7 @@ import com.example.onlab.screen.order.OrdersScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.profile.ProfileScreen
-import com.example.onlab.viewModels.OrderItemViewModel
-import com.example.onlab.viewModels.OrderViewModel
-import com.example.onlab.viewModels.ProductViewModel
+import com.example.onlab.viewModels.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.FirebaseAuth
 import java.util.*
@@ -43,6 +40,7 @@ fun AppNavigation(){
     val customerViewModel = viewModel<CustomerViewModel>()
     val orderItemViewModel = viewModel<OrderItemViewModel>()
     val orderViewModel = viewModel<OrderViewModel>()
+    val mCustomerViewModel = viewModel<MCustomerViewModel>()
     NavHost(navController = navController, startDestination = "LoginScreen"){
         composable(ProductScreens.ListScreen.name){
             ProductListScreen(navController = navController,list = false, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
@@ -58,7 +56,7 @@ fun AppNavigation(){
             ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = productViewModel)
         }
         composable("CustomerScreen") { // add CustomerScreen composable
-            CustomerScreen(navController = navController, customerViewModel = customerViewModel)
+            CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
         }
         composable("NewCustomerScreen"){
             NewCustomerScreen(navController = navController, customerViewModel = customerViewModel)
@@ -70,7 +68,7 @@ fun AppNavigation(){
             arguments = listOf(navArgument(name = "customer"){
                 type = NavType.StringType
             })){ navBackStackEntry ->
-            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = customerViewModel)
+            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = mCustomerViewModel)
         }
         composable("NewOrderScreen/{customer}/{orderId}",
             arguments = listOf(
@@ -111,11 +109,12 @@ fun AppNavigation(){
             ProductListScreen(navController = navController, list = list, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
-            if(!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-                navController.navigate("OrdersScreen")
-            } else {
+            //TODO: megcsinalni ha be van jelentkezve vigye az orders screenre egyebkent login
+//            if(!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
+//                navController.navigate("OrdersScreen")
+//            } else {
                 LoginScreen(navController = navController)
-            }
+            //}
         }
         composable("ProfileScreen"){
             ProfileScreen(navController = navController)

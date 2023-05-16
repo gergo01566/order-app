@@ -57,6 +57,11 @@ fun ProfileScreen(
 //    onDeleteProfile: () -> Unit,
 //    onNavigateToNotifications: () -> Unit
 ) {
+
+    val currentUserName = if (!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
+        FirebaseAuth.getInstance().currentUser?.email?.split("@")?.get(0)
+    } else "N/A"
+
     Scaffold(
         topBar = {
 
@@ -89,7 +94,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = "name",
+                        text = currentUserName.toString(),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold
                     )

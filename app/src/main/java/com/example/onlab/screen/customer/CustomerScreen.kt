@@ -17,18 +17,26 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.Customer
+import com.example.onlab.model.MCustomer
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.CustomerViewModel
+import com.example.onlab.viewModels.MCustomerViewModel
 import java.util.*
 
 @Composable
-fun CustomerScreen(navController: NavController, customerViewModel: CustomerViewModel) {
+fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerViewModel) {
 
-    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
+    var selectedCustomer by remember { mutableStateOf<MCustomer?>(null) }
 
-    val customers = customerViewModel.customerList.collectAsState().value
+    var listOfCustomers = emptyList<MCustomer>()
 
-    val searchText by customerViewModel.searchText.collectAsState()
+    if (!mCustomerViewModel.data.value.data.isNullOrEmpty()){
+        listOfCustomers = mCustomerViewModel.data.value.data!!.toList()!!
+    }
+
+//    val customers = customerViewModel.customerList.collectAsState().value
+//
+//    val searchText by customerViewModel.searchText.collectAsState()
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -36,7 +44,7 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            selectedCustomer?.let { customerViewModel.removeCustomer(it) }
+            //selectedCustomer?.let { customerViewModel.removeCustomer(it) }
             showDialog.value = false
         },
         onDismiss = {
@@ -76,15 +84,15 @@ fun CustomerScreen(navController: NavController, customerViewModel: CustomerView
                 Column(modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)) {
-                    TextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = searchText,
-                        onValueChange = customerViewModel::onSearchTextChange,
-                        placeholder = { Text(text = "Keresés")})
+//                    TextField(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        //value = searchText,
+//                        //onValueChange = customerViewModel::onSearchTextChange,
+//                        placeholder = { Text(text = "Keresés")})
                 }
 
                 CreateList(
-                    data = customers,
+                    data = listOfCustomers,
                     onDelete = {
                     showDialog.value = true
                     selectedCustomer = it

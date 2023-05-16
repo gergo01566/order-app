@@ -37,6 +37,7 @@ import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.LoginScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.math.log
 
 @Composable
 fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel()){
@@ -50,6 +51,7 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
             if (showLoginFrom.value) UserForm(false, false){ email, pwd ->
                 loginScreenViewModel.signInWithEmailAndPassword(email = email, password = pwd){
                     navController.navigate(route = "OrdersScreen")
+                    Log.d("TAG", "LoginScreen: ok")
                 }
             }
             else {
