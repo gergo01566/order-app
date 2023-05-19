@@ -41,7 +41,7 @@ fun AppNavigation(){
     val orderItemViewModel = viewModel<OrderItemViewModel>()
     val orderViewModel = viewModel<OrderViewModel>()
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
-    NavHost(navController = navController, startDestination = "LoginScreen"){
+    NavHost(navController = navController, startDestination = "CustomerScreen"){
         composable(ProductScreens.ListScreen.name){
             ProductListScreen(navController = navController,list = false, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
         }

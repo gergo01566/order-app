@@ -11,11 +11,14 @@ import com.example.onlab.model.MCustomer
 import com.example.onlab.repository.FireRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MCustomerViewModel @Inject constructor( private val repository: FireRepository) : ViewModel() {
+
+    val searchText = mutableStateOf("")
 
     val data: MutableState<DataOrException<List<MCustomer>, Boolean, Exception>> = mutableStateOf(
         DataOrException(listOf(), true, Exception("")))
@@ -24,15 +27,23 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
         getAllCustomersFromDatabase()
     }
 
-
-    private fun getAllCustomersFromDatabase() {
+    fun getAllCustomersFromDatabase() {
         viewModelScope.launch {
             data.value.loading = true
-            data.value = repository.getAllCustomersFromDatabase()
-            //data.value.data = repository.getAllCustomersFromDatabase()
-            if(!data.value.data.isNullOrEmpty()) data.value.loading = false
+            val customersResult = repository.getAllCustomersFromDatabase()
+            if (customersResult.data?.isNotEmpty() == true) {
+                val customers = customersResult.data
+                val filteredCustomers = if (searchText.value.isBlank()) {
+                    customers
+                } else {
+                    customers?.filter { it.doesMatchSearchQuery(searchText.value) }
+                }
+                data.value = DataOrException(filteredCustomers, false, null)
+            } else {
+                    data.value = DataOrException(emptyList(), false, customersResult.e)
+            }
+            data.value.loading = false
         }
-        Log.d("FB", "getAllCustomersFromDatabase: ${data.value.data?.toList().toString()}")
     }
 
     fun updateCustomer(customerToUpdate: Map<String, String?>, customerID: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
@@ -49,6 +60,7 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
     fun deleteCustomer(customerID: String?, onSuccess: () -> Unit) {
         FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).delete().addOnCompleteListener {
             if(it.isSuccessful){
+                getAllCustomersFromDatabase()
                 onSuccess()
             }
         }
@@ -76,6 +88,16 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
         }
         getAllCustomersFromDatabase()
     }
+
+    fun onSearchTextChanged(newText: String) {
+        searchText.value = newText
+        getAllCustomersFromDatabase()
+    }
+
+
+
+
+
 
 
 }

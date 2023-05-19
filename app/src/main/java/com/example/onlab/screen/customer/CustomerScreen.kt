@@ -44,8 +44,9 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            //selectedCustomer?.let { customerViewModel.removeCustomer(it) }
-            showDialog.value = false
+            mCustomerViewModel.deleteCustomer(selectedCustomer?.id.toString()){
+                showDialog.value = false
+            }
         },
         onDismiss = {
             showDialog.value = false
@@ -73,6 +74,9 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
+            if(mCustomerViewModel.data.value.loading == true){
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
+            }
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier
@@ -84,11 +88,15 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                 Column(modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)) {
-//                    TextField(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        //value = searchText,
-//                        //onValueChange = customerViewModel::onSearchTextChange,
-//                        placeholder = { Text(text = "Keresés")})
+
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = mCustomerViewModel.searchText.value,
+                        onValueChange = { newText ->
+                            mCustomerViewModel.onSearchTextChanged(newText)
+                        },
+                        label = { Text("Keresés") }
+                    )
                 }
 
                 CreateList(

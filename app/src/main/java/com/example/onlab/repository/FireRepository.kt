@@ -1,9 +1,12 @@
 package com.example.onlab.repository
 
+import android.net.Uri
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.MCustomer
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -24,6 +27,5 @@ class FireRepository @Inject constructor(
             dataOrException.e = exception
         }
         return dataOrException
-
     }
 }

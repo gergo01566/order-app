@@ -60,6 +60,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
 
+    // Add the dependency for the Cloud Storage library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation 'com.google.firebase:firebase-storage'
+
     def nav_version = "2.5.3"
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation 'androidx.core:core-ktx:1.7.0'
