@@ -2,6 +2,7 @@ package com.example.onlab.screen.customer
 
 import android.Manifest
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,7 +44,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
 
     //TODO: megnezni
     var customer by remember {
-        mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->  
+        mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->
             mCustomer.id == customerID.toString()
         })
     }
@@ -73,6 +74,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
             customerViewModel.deleteCustomer(customerID){
                 showDialog.value = false
                 navController.navigate(route = "CustomerScreen")
+                customerViewModel.getAllCustomersFromDatabase()
             }
         },
         onDismiss = {
@@ -180,7 +182,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                         shape = RoundedCornerShape(15.dp)
                     ) {
                         AsyncImage(
-                            model = imageUri,
+                            model = customer?.image,
                             contentDescription = "profile image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -200,11 +202,12 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                                 "last_name" to customer?.lastName,
                                 "customer_address" to customer?.address,
                                 "phone_number" to customer?.phoneNumber,
-                                "cusomer_image" to customer?.image
+                                "customer_image" to customer?.image
                             ).toMap()
                             customerViewModel.updateCustomer(customerToUpdate, customerID!!, onSuccess = {
                                 navController.navigate(route = "CustomerScreen")
                                 Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+                                customerViewModel.getAllCustomersFromDatabase()
                             }, onFailure = {
                                 Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
                             })
@@ -218,7 +221,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),
-                    text = "Termék törlése",
+                    text = "Ügyfél törlése",
                     onClick = {
                         showDialog.value = true
                     },

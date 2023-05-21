@@ -1,6 +1,7 @@
 package com.example.onlab.viewModels
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
@@ -55,7 +56,13 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
         }.addOnFailureListener{
             onFailure()
         }
-        getAllCustomersFromDatabase()
+        viewModelScope.launch {
+            FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).update(
+                hashMapOf(
+                    "customer_image" to repository.addImageToFirebaseStorage(customerToUpdate["customer_image"]!!.toUri())
+                ) as Map<String, Any>
+            )
+        }
     }
 
     fun deleteCustomer(customerID: String?, onSuccess: () -> Unit) {
@@ -64,6 +71,9 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
                 getAllCustomersFromDatabase()
                 onSuccess()
             }
+
+        }.addOnFailureListener {
+            Log.d("fail", "deleteCustomer: nem lett torolve")
         }
     }
 
@@ -71,15 +81,18 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
         val db = FirebaseFirestore.getInstance()
         val dbCollection = db.collection("customers")
         var url = ""
-        viewModelScope.launch {
-            url = repository.addImageToFirebaseStorage(customer.image.toUri())
-        }
 
         if(customer.toString().isNotEmpty()){
             dbCollection.add(customer)
                 .addOnSuccessListener{ documentRef->
                     val docId = documentRef.id
-
+                    viewModelScope.launch {
+                        dbCollection.document(docId).update(
+                            hashMapOf(
+                                "customer_image" to repository.addImageToFirebaseStorage(customer.image.toUri()).toString()
+                            ) as Map<String, Any>
+                        )
+                    }
                     dbCollection.document(docId)
                         .update(hashMapOf(
                             "id" to docId,

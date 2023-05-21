@@ -1,6 +1,7 @@
 package com.example.onlab.screen.customer
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -16,6 +17,8 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
+import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.Customer
@@ -46,6 +49,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
         onConfirm = {
             mCustomerViewModel.deleteCustomer(selectedCustomer?.id.toString()){
                 showDialog.value = false
+                mCustomerViewModel.getAllCustomersFromDatabase()
             }
         },
         onDismiss = {
@@ -75,7 +79,9 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
             if(mCustomerViewModel.data.value.loading == true){
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(16.dp))
+                LinearProgressIndicator(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp))
             }
             it.calculateBottomPadding()
             Column(
@@ -129,6 +135,13 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                                     .height(80.dp),
                                 contentScale = ContentScale.Crop
                             )
+                            Image(
+                                painter = rememberImagePainter(
+                                    data = customer.image,
+                                    builder = {
+                                        placeholder(R.drawable.picture_placeholder)
+                                        error(R.drawable.picture_placeholder)
+                                    }) , contentDescription = "customer_image")
                         }
                         Column(
                             modifier = Modifier
