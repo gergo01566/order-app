@@ -163,7 +163,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     .padding((10.dp))
                     .height(40.dp),text = "Ügyfél mentése", onClick = {
                     if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null){
-                        val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = customer.image)
+                        val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = imageUri.toString())
                         customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
                             Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
                             navController.navigate(route = "CustomerScreen")

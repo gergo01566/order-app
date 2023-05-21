@@ -3,6 +3,7 @@ package com.example.onlab.viewModels
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -69,13 +70,21 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
     fun saveCustomerToFirebase(customer: MCustomer, onSuccess: () -> Unit, onFailure: () -> Unit = {}){
         val db = FirebaseFirestore.getInstance()
         val dbCollection = db.collection("customers")
+        var url = ""
+        viewModelScope.launch {
+            url = repository.addImageToFirebaseStorage(customer.image.toUri())
+        }
 
         if(customer.toString().isNotEmpty()){
             dbCollection.add(customer)
                 .addOnSuccessListener{ documentRef->
                     val docId = documentRef.id
+
                     dbCollection.document(docId)
-                        .update(hashMapOf("id" to docId) as Map<String, Any>)
+                        .update(hashMapOf(
+                            "id" to docId,
+                            "customer_image" to url
+                        ) as Map<String, Any>)
                         .addOnCompleteListener{task->
                             if(task.isSuccessful){
                                 onSuccess()
