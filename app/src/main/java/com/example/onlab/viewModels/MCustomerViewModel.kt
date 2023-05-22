@@ -122,10 +122,10 @@ class MCustomerViewModel @Inject constructor(private val repository: FireReposit
         getAllCustomersFromDatabase()
     }
 
-
-
-
-
-
+    fun getCustomerById(customerId: String): MCustomer{
+        return data.value.data!!.first {
+            it.id == customerId
+        }
+    }
 
 }

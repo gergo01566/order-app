@@ -31,11 +31,9 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.Category
-import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.MProductViewModel
-import com.example.onlab.viewModels.ProductViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import java.io.IOException
@@ -47,7 +45,7 @@ import java.util.*
 @Composable
 fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel) {
 
-    //TODO: ollection contains no element matching the predicate.
+    //TODO: Collection contains no element matching the predicate.
     var product by remember {
         mutableStateOf(productViewModel.data.value.data?.first{mProduct->
             mProduct.id == productID.toString()
@@ -117,6 +115,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
         onConfirm = {
             productViewModel.deleteProduct(productID!!){
                 showDialog.value = false
+                Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
                 navController.navigate(route = ProductScreens.ListScreen.name)
             }
         },

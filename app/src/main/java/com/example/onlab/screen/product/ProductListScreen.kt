@@ -1,6 +1,7 @@
 package com.example.onlab.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -26,12 +28,20 @@ import java.util.*
 import com.example.onlab.model.Category as Categ
 
 @Composable
-fun ProductListScreen(navController: NavController, orderID: UUID? = null, list: Boolean? = null, productViewModel: MProductViewModel, customerViewModel: MCustomerViewModel, orderItemViewModel: OrderItemViewModel) {
+fun ProductListScreen(
+    navController: NavController,
+    orderID: String? = null,
+    list: Boolean? = null,
+    productViewModel: MProductViewModel,
+    customerViewModel: MCustomerViewModel,
+    orderItemViewModel: MOrderItemViewModel
+) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
+    val context = LocalContext.current
 
     var listOfProducts = emptyList<MProduct>()
 
@@ -39,7 +49,7 @@ fun ProductListScreen(navController: NavController, orderID: UUID? = null, list:
         Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
         listOfProducts = productViewModel.data.value.data!!.toList()
         if (selectedCategory != null) {
-            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())
+            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())!!
         }
     }
 
@@ -48,35 +58,39 @@ fun ProductListScreen(navController: NavController, orderID: UUID? = null, list:
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedProduct?.let {
-                //productViewModel.removeProduct(it)
+                productViewModel.deleteProduct(it.id.toString()){
+                    showDialog.value = false
+                    Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
+                }
             }
-            showDialog.value = false }
+        }
     ) {
         showDialog.value = false
     }
 
-//    selectedProduct?.let {
-//        FullScreenDialog(
-//            showDialog = showFullScreenDialog,
-//            selectedProduct = it,
-//            isKarton = null,
-//            currentQuantity = null,
-//            onAdd = { state: Boolean, quantity: Int ->
-//                val orderItem = OrderItem(
-//                    amount = quantity,
-//                    orderID = orderID!!,
-//                    productID = selectedProduct!!.id,
-//                    statusID = 0,
-//                    karton = !state,
-//                    db = state
-//                )
-//                orderItemViewModel.addOrderItem(orderItem)
-//                navController.popBackStack()
-//            }
-//        ) {
-//            showFullScreenDialog.value = false
-//        }
-//    }
+    selectedProduct?.let {
+        FullScreenDialog(
+            showDialog = showFullScreenDialog,
+            selectedProduct = it,
+            isKarton = null,
+            currentQuantity = null,
+            onAdd = { state: Boolean, quantity: Int ->
+                val orderItem = MOrderItem(
+                    amount = quantity,
+                    orderID = orderID!!,
+                    productID = selectedProduct!!.id.toString(),
+                    statusID = 0,
+                    carton = !state,
+                    piece = state
+                )
+                orderItemViewModel.saveOrderItemToFirebase(orderItem, {
+                    navController.popBackStack()
+                })
+            }
+        ) {
+            showFullScreenDialog.value = false
+        }
+    }
 
     Scaffold(
         topBar = {

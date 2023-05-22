@@ -32,14 +32,14 @@ import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalMaterialApi
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalPermissionsApi::class)
 @Composable
 fun AppNavigation(){
     val navController = rememberNavController()
-    val productViewModel = viewModel<ProductViewModel>()
-    val customerViewModel = viewModel<CustomerViewModel>()
-    val orderItemViewModel = viewModel<OrderItemViewModel>()
-    val orderViewModel = viewModel<OrderViewModel>()
+    val productViewModel = viewModel<MProductViewModel>()
+    val customerViewModel = viewModel<MCustomerViewModel>()
+    val orderItemViewModel = viewModel<MOrderItemViewModel>()
+    val orderViewModel = viewModel<MOrderViewModel>()
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
     val mProductViewModel = viewModel<MProductViewModel>()
     NavHost(navController = navController, startDestination = "CustomerScreen"){
@@ -96,9 +96,8 @@ fun AppNavigation(){
             )
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-            val orderUUID= UUID.fromString(orderId)
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, orderID = orderUUID, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController, orderID = orderId, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable(
             route = "${ProductScreens.ListScreen.name}/{list}", // include customerId parameter in the route

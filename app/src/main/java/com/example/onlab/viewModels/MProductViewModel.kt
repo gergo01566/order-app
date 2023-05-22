@@ -124,9 +124,15 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
         getAllProcutsFromDatabase()
     }
 
-    fun getProductsByCategory(category: String): List<MProduct> {
+    fun getProductsByCategory(category: String): List<MProduct>? {
         return data.value.data!!.filter {
-            it.category.toString() == category
+            it.category == category
+        }
+    }
+
+    fun getProductById(productId: String): MProduct? {
+        return data.value.data!!.find {
+            it.id.toString() == productId
         }
     }
 

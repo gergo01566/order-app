@@ -1,6 +1,7 @@
 package com.example.onlab.screen.customer
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -20,17 +22,14 @@ import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.example.onlab.R
 import com.example.onlab.components.*
-import com.example.onlab.data.DataOrException
-import com.example.onlab.model.Customer
 import com.example.onlab.model.MCustomer
-import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.viewModels.CustomerViewModel
 import com.example.onlab.viewModels.MCustomerViewModel
 import java.util.*
 
 @Composable
 fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerViewModel) {
 
+    val contextForToast = LocalContext.current.applicationContext
 
     var selectedCustomer by remember { mutableStateOf<MCustomer?>(null) }
 
@@ -48,6 +47,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             mCustomerViewModel.deleteCustomer(selectedCustomer?.id.toString()){
+                Toast.makeText(contextForToast, "Ügyfél törölve", Toast.LENGTH_SHORT).show()
                 showDialog.value = false
                 mCustomerViewModel.getAllCustomersFromDatabase()
             }

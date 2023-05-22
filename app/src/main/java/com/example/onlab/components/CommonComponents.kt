@@ -57,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.zIndex
+import com.example.onlab.model.MProduct
 
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
@@ -295,7 +296,7 @@ fun showConfirmationDialog(
 @Composable
 fun FullScreenDialog(
     showDialog: MutableState<Boolean>,
-    selectedProduct: Product,
+    selectedProduct: MProduct,
     currentQuantity: Int?,
     isKarton: Boolean?,
     onAdd: (state: Boolean, quantity: Int) -> Unit,

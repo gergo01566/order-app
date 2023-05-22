@@ -27,14 +27,11 @@ import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
-import com.example.onlab.model.Customer
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
-import com.example.onlab.viewModels.CustomerViewModel
 import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.firebase.firestore.FirebaseFirestore
 
 @ExperimentalPermissionsApi
 @Composable
