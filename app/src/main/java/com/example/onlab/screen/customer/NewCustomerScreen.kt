@@ -167,6 +167,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
                             Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
                             navController.navigate(route = "CustomerScreen")
+                            //customerViewModel.getAllCustomersFromDatabase()
                         })
                     } else {
                         Toast.makeText(contextForToast, "Kérlek használj megfelelő formátumot a telefonszám megadásánál!", Toast.LENGTH_SHORT).show()

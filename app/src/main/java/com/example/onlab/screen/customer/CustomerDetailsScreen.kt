@@ -45,6 +45,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
     //TODO: megnezni
     var customer by remember {
         mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->
+            Log.d("customerID", "CustomerDetailsScreen: ${customerID}")
             mCustomer.id == customerID.toString()
         })
     }
@@ -206,13 +207,13 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                             ).toMap()
                             customerViewModel.updateCustomer(customerToUpdate, customerID!!, onSuccess = {
                                 navController.navigate(route = "CustomerScreen")
-                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(contextForToast, "Ügyfél módosítva", Toast.LENGTH_SHORT).show()
                                 customerViewModel.getAllCustomersFromDatabase()
                             }, onFailure = {
-                                Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(contextForToast, "Ügyfél nem lett módosítva", Toast.LENGTH_SHORT).show()
                             })
                         }else {
-                            Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
+                            Toast.makeText(contextForToast, "Csak számokat használj az telefonszám megadásánál", Toast.LENGTH_LONG).show()
                         }
                     }
                 )

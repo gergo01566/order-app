@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MCustomerViewModel @Inject constructor( private val repository: FireRepository) : ViewModel() {
+class MCustomerViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
     val searchText = mutableStateOf("")
 
@@ -80,23 +80,29 @@ class MCustomerViewModel @Inject constructor( private val repository: FireReposi
     fun saveCustomerToFirebase(customer: MCustomer, onSuccess: () -> Unit, onFailure: () -> Unit = {}){
         val db = FirebaseFirestore.getInstance()
         val dbCollection = db.collection("customers")
-        var url = ""
+        //var url = ""
 
+        if (customer.image == "null") Log.d("imagee", "saveCustomerToFirebase: ${customer.image}")
         if(customer.toString().isNotEmpty()){
             dbCollection.add(customer)
                 .addOnSuccessListener{ documentRef->
                     val docId = documentRef.id
                     viewModelScope.launch {
                         dbCollection.document(docId).update(
-                            hashMapOf(
-                                "customer_image" to repository.addImageToFirebaseStorage(customer.image.toUri()).toString()
-                            ) as Map<String, Any>
+                            if (customer.image == "null"){
+                                hashMapOf(
+                                    "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
+                                ) as Map<String, Any>
+                            } else {
+                                hashMapOf(
+                                    "customer_image" to repository.addImageToFirebaseStorage(customer.image.toUri()).toString()
+                                ) as Map<String, Any>
+                            }
                         )
                     }
                     dbCollection.document(docId)
                         .update(hashMapOf(
                             "id" to docId,
-                            "customer_image" to url
                         ) as Map<String, Any>)
                         .addOnCompleteListener{task->
                             if(task.isSuccessful){

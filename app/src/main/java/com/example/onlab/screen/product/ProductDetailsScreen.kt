@@ -31,8 +31,10 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.Category
+import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.viewModels.MProductViewModel
 import com.example.onlab.viewModels.ProductViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -43,9 +45,14 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
-fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: ProductViewModel) {
+fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel) {
 
-    var product by remember { mutableStateOf(productViewModel.getProductById(productID!!)) }
+    //TODO: ollection contains no element matching the predicate.
+    var product by remember {
+        mutableStateOf(productViewModel.data.value.data?.first{mProduct->
+            mProduct.id == productID.toString()
+        })
+    }
 
     val listItems = getCategoryTypes(Category::class.java)
 
@@ -108,9 +115,10 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            productViewModel.removeProduct(product!!)
-            showDialog.value = false
-            navController.navigate(route = ProductScreens.ListScreen.name)
+            productViewModel.deleteProduct(productID!!){
+                showDialog.value = false
+                navController.navigate(route = ProductScreens.ListScreen.name)
+            }
         },
         onDismiss = {
             showDialog.value = false
@@ -190,7 +198,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     selectedCategory = product!!.category,
                     onCategorySelected = { category ->
                         selectedItem = category
-                        product = product!!.copy(category = category)
+                        product = product!!.copy(category = category.toString())
                     }
                 )
                 Row(
@@ -225,9 +233,19 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     text = "Termék mentése",
                     onClick = {
                         if (product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0) {
-                            Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
-                            productViewModel.updateProduct(product!!)
-                            navController.navigate(route = ProductScreens.ListScreen.name)
+                            val productToUpdate = hashMapOf(
+                                "product_title" to product?.title,
+                                "product_category" to product?.category,
+                                "price_piece" to product?.pricePerPiece,
+                                "price_carton" to product?.pricePerKarton,
+                                "product_image" to product?.image
+                            ).toMap()
+                            productViewModel.updateProduct(productToUpdate as Map<String, String?>, productID!!, onSuccess = {
+                                navController.navigate(route = ProductScreens.ListScreen.name)
+                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+                            }, onFailure = {
+                                Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
+                            })
                         }else {
                             Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
                         }

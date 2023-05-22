@@ -19,66 +19,64 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
-import com.example.onlab.model.OrderItem
-import com.example.onlab.model.Product
-import com.example.onlab.model.getCategoryTypes
+import com.example.onlab.model.*
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.viewModels.CustomerViewModel
-import com.example.onlab.viewModels.OrderItemViewModel
-import com.example.onlab.viewModels.ProductViewModel
+import com.example.onlab.viewModels.*
 import java.util.*
 import com.example.onlab.model.Category as Categ
 
 @Composable
-fun ProductListScreen(navController: NavController, orderID: UUID? = null, list: Boolean? = null, productViewModel: ProductViewModel, customerViewModel: CustomerViewModel, orderItemViewModel: OrderItemViewModel) {
+fun ProductListScreen(navController: NavController, orderID: UUID? = null, list: Boolean? = null, productViewModel: MProductViewModel, customerViewModel: MCustomerViewModel, orderItemViewModel: OrderItemViewModel) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
     var selectedCategory by remember { mutableStateOf<Categ?>(null) }
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
-    var selectedProduct by remember { mutableStateOf<Product?>(null) }
+    var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
 
-    val products = if (selectedCategory != null) {
-        productViewModel.getProductsByCategory(selectedCategory.toString())
-    } else {
-        productViewModel.productList.collectAsState().value
+    var listOfProducts = emptyList<MProduct>()
+
+    if (!productViewModel.data.value.data.isNullOrEmpty()){
+        Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
+        listOfProducts = productViewModel.data.value.data!!.toList()
+        if (selectedCategory != null) {
+            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())
+        }
     }
-
-    val searchText by productViewModel.searchText.collectAsState()
 
     showConfirmationDialog(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedProduct?.let {
-                productViewModel.removeProduct(it)
+                //productViewModel.removeProduct(it)
             }
             showDialog.value = false }
     ) {
         showDialog.value = false
     }
 
-    selectedProduct?.let {
-        FullScreenDialog(
-            showDialog = showFullScreenDialog,
-            selectedProduct = it,
-            isKarton = null,
-            currentQuantity = null,
-            onAdd = { state: Boolean, quantity: Int ->
-                val orderItem = OrderItem(
-                    amount = quantity,
-                    orderID = orderID!!,
-                    productID = selectedProduct!!.id,
-                    statusID = 0,
-                    karton = !state,
-                    db = state
-                )
-                orderItemViewModel.addOrderItem(orderItem)
-                navController.popBackStack()
-            }
-        ) {
-            showFullScreenDialog.value = false
-        }
-    }
+//    selectedProduct?.let {
+//        FullScreenDialog(
+//            showDialog = showFullScreenDialog,
+//            selectedProduct = it,
+//            isKarton = null,
+//            currentQuantity = null,
+//            onAdd = { state: Boolean, quantity: Int ->
+//                val orderItem = OrderItem(
+//                    amount = quantity,
+//                    orderID = orderID!!,
+//                    productID = selectedProduct!!.id,
+//                    statusID = 0,
+//                    karton = !state,
+//                    db = state
+//                )
+//                orderItemViewModel.addOrderItem(orderItem)
+//                navController.popBackStack()
+//            }
+//        ) {
+//            showFullScreenDialog.value = false
+//        }
+//    }
 
     Scaffold(
         topBar = {
@@ -118,6 +116,11 @@ fun ProductListScreen(navController: NavController, orderID: UUID? = null, list:
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
+            if(productViewModel.data.value.loading == true){
+                LinearProgressIndicator(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp))
+            }
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier
@@ -136,13 +139,14 @@ fun ProductListScreen(navController: NavController, orderID: UUID? = null, list:
                     .padding(horizontal = 16.dp)) {
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = searchText,
-                        onValueChange = productViewModel::onSearchTextChange,
+                        value = productViewModel.searchText.value,
+                        onValueChange = { newText->
+                            productViewModel.onSearchTextChanged(newText) },
                         placeholder = { Text(text = "Keresés")})
                 }
 
                 CreateList(
-                    data = products,
+                    data = listOfProducts,
                     onDelete = {
                     Log.d("TAG", "ProductListScreen: ${it.id}")
                     showDialog.value = true

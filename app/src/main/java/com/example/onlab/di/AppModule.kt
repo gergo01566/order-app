@@ -8,6 +8,7 @@ import com.example.onlab.data.ProductDatabase
 import com.example.onlab.data.ProductDatabaseDao
 import com.example.onlab.data.customer.CustomerDatabaseDao
 import com.example.onlab.repository.FireRepository
+import com.example.onlab.repository.ProductFireRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
@@ -24,6 +25,10 @@ object AppModule {
     @Singleton
     @Provides
     fun provideFireCustomerRepository()= FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))
+
+    @Singleton
+    @Provides
+    fun provideFireProductRepository()= ProductFireRepository(queryProduct = FirebaseFirestore.getInstance().collection("products"))
 
     @Singleton
     @Provides

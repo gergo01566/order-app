@@ -29,10 +29,10 @@ import com.example.onlab.components.CategoryDropDownMenu
 import com.example.onlab.components.ImagePickerButton
 import com.example.onlab.components.items
 import com.example.onlab.model.Category
-import com.example.onlab.model.Product
+import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.viewModels.ProductViewModel
+import com.example.onlab.viewModels.MProductViewModel
 import com.google.accompanist.permissions.*
 import java.io.*
 import java.util.*
@@ -42,7 +42,7 @@ import java.util.*
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @Composable
-fun NewProductScreen(navController: NavController, productViewModel: ProductViewModel) {
+fun NewProductScreen(navController: NavController, productViewModel: MProductViewModel) {
 
     val listItems = getCategoryTypes(Category::class.java)
     val contextForToast = LocalContext.current.applicationContext
@@ -52,7 +52,7 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
         mutableStateOf(listItems[0])
     }
 
-    var product by remember { mutableStateOf(Product(title = "", pricePerPiece = 0, pricePerKarton = 0,category = Category.Italok, image = "")) }
+    var product by remember { mutableStateOf(MProduct(title = "", category = "", pricePerPiece = 0, pricePerKarton = 0, image = "")) }
 
     // 2
     var imageUri by remember {
@@ -164,10 +164,10 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                 )
 
                 CategoryDropDownMenu(
-                    selectedCategory = selectedItem,
+                    selectedCategory = selectedItem.toString(),
                     onCategorySelected = { category ->
                         selectedItem = category
-                        product = product.copy(category = category)
+                        product = product.copy(category = category.toString())
                     }
                 )
 
@@ -200,10 +200,11 @@ fun NewProductScreen(navController: NavController, productViewModel: ProductView
                     .padding((10.dp))
                     .height(40.dp),text = "Termék mentése", onClick = {
                     if(product.pricePerPiece != 0 && product.pricePerKarton != 0){
-                        Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
-                        productViewModel.addProduct(product = product)
-                        navController.navigate(route = ProductScreens.ListScreen.name)
-                    } else {
+                        val mProduct = MProduct(title = product.title, category = product.category.toString(), pricePerPiece = product.pricePerPiece, pricePerKarton = product.pricePerKarton, image = product.image)
+                        productViewModel.saveProductToFirebase(mProduct,{
+                            Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
+                            navController.navigate(route = ProductScreens.ListScreen.name)
+                        }) } else {
                         Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
                     }
 

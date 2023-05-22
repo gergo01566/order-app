@@ -171,7 +171,7 @@ fun createTopBar(
 @ExperimentalMaterialApi
 @Composable
 fun CategoryDropDownMenu(
-    selectedCategory: Category,
+    selectedCategory: String,
     onCategorySelected: (Category) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -185,7 +185,7 @@ fun CategoryDropDownMenu(
     ) {
         TextField(
             modifier = Modifier.fillMaxWidth(),
-            value = selectedCategory.toString(),
+            value = selectedCategory,
             onValueChange = {},
             readOnly = true,
             label = { Text(text = "Kategória") },

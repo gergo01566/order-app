@@ -41,19 +41,20 @@ fun AppNavigation(){
     val orderItemViewModel = viewModel<OrderItemViewModel>()
     val orderViewModel = viewModel<OrderViewModel>()
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
+    val mProductViewModel = viewModel<MProductViewModel>()
     NavHost(navController = navController, startDestination = "CustomerScreen"){
         composable(ProductScreens.ListScreen.name){
-            ProductListScreen(navController = navController,list = false, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController,list = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
 
         composable(route = ProductScreens.NewProductScreen.name)
         {
-            NewProductScreen(navController = navController, productViewModel = productViewModel)
+            NewProductScreen(navController = navController, productViewModel = mProductViewModel)
         }
         composable(ProductScreens.NewProductScreen.name + "/{product}",
         arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
         ){ navBackStackEntry ->  
-            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = productViewModel)
+            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel)
         }
         composable("CustomerScreen") { // add CustomerScreen composable
             CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
@@ -97,7 +98,7 @@ fun AppNavigation(){
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             val orderUUID= UUID.fromString(orderId)
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, orderID = orderUUID, list = list, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController, orderID = orderUUID, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable(
             route = "${ProductScreens.ListScreen.name}/{list}", // include customerId parameter in the route
@@ -106,7 +107,7 @@ fun AppNavigation(){
             )
         ) { backStackEntry ->
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, list = list, productViewModel = productViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
             //TODO: megcsinalni ha be van jelentkezve vigye az orders screenre egyebkent login

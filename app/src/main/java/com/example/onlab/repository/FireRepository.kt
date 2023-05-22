@@ -3,6 +3,7 @@ package com.example.onlab.repository
 import android.net.Uri
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.MCustomer
+import com.example.onlab.model.MProduct
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
@@ -12,7 +13,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class FireRepository @Inject constructor(
-    private val queryCustomer: Query
+    private val queryCustomer: Query,
 ) {
     suspend fun getAllCustomersFromDatabase(): DataOrException<List<MCustomer>, Boolean, Exception> {
         val dataOrException = DataOrException<List<MCustomer>, Boolean, Exception>()
