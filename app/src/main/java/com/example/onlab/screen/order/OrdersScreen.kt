@@ -27,6 +27,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.Customer
+import com.example.onlab.model.MOrder
 import com.example.onlab.model.Order
 import com.example.onlab.model.OrderItem
 import com.example.onlab.navigation.ProductScreens
@@ -39,11 +40,14 @@ fun OrdersScreen(
     navController: NavController,
     orderViewModel: MOrderViewModel,
     customerViewModel: MCustomerViewModel,
-    orderItemViewModel: MOrderItemViewModel
+    orderItemViewModel: MOrderItemViewModel,
+    mProductViewModel: MProductViewModel
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
     var orders = orderViewModel.getOrdersByStatus(selectedIndex)
+    var selectedOrder by remember { mutableStateOf<MOrder?>(null) }
+    var kivalasztva = false
 
     Scaffold(
         topBar = {
@@ -97,6 +101,8 @@ fun OrdersScreen(
                     orderViewModel.deleteOrder(it.id.toString(),{})
                 },
                 onEdit = {
+                        kivalasztva = true
+                         selectedOrder = it
                 },
                 onClick = {
                     var updatedOrder = it.copy()
@@ -147,6 +153,18 @@ fun OrdersScreen(
                                 }
 
                         }
+
+                        if (selectedOrder != null && kivalasztva){
+                            orderViewModel.generatePDF(
+                                contextForToast,
+                                orderId = selectedOrder!!.orderId.toString(),
+                                customerViewModel = customerViewModel,
+                                mOrderItemViewModel = orderItemViewModel,
+                                mProductViewModel = mProductViewModel
+                            )
+                            kivalasztva = false
+                        }
+
                     }
 
                 })

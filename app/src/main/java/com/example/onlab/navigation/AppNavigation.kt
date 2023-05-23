@@ -63,7 +63,7 @@ fun AppNavigation(){
             NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel)
         }
         composable("OrdersScreen"){
-            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel)
+            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel, mProductViewModel = productViewModel)
         }
         composable("CustomerDetailsScreen" + "/{customer}",
             arguments = listOf(navArgument(name = "customer"){
