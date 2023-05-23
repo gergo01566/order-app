@@ -10,6 +10,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -101,8 +102,13 @@ fun OrdersScreen(
                     orderViewModel.deleteOrder(it.id.toString(),{})
                 },
                 onEdit = {
-                        kivalasztva = true
-                         selectedOrder = it
+                    Toast.makeText(
+                        contextForToast,
+                        "Ez a funkció nem érhető el",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+//                        kivalasztva = true
+//                         selectedOrder = it
                 },
                 onClick = {
                     var updatedOrder = it.copy()
@@ -132,6 +138,11 @@ fun OrdersScreen(
                         }){} }
                     }
 
+                }, iconContent = {
+                                 CreateIcon(icons = Icons.Default.Info) {
+                                     kivalasztva = true
+                                     selectedOrder = it
+                                 }
                 }, itemContent = { order ->
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Column(

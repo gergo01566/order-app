@@ -164,7 +164,7 @@ fun createTopBar(
                     })
             }
             Spacer(modifier = Modifier.padding(10.dp))
-            Text(modifier = modifier, text = text, fontSize = 27.sp, fontWeight = FontWeight.Normal)
+            Text(modifier = modifier, text = text, fontSize = 27.sp, fontWeight = FontWeight.Normal, color = Color.White)
         }
     }
 }

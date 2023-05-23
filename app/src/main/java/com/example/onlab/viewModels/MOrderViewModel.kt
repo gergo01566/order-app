@@ -138,22 +138,6 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         }
     }
 
-    @Composable
-    fun OrderPDFLayout(customerName: String, orderItems: List<MOrderItem>, productNames: Map<String, String>) {
-        // PDF layout code goes here
-        Column {
-            // Render customer name
-            Text(text = "Customer: $customerName")
-
-            // Render order items
-            Text(text = "Order Items:")
-            orderItems.forEach { orderItem ->
-                val productName = productNames[orderItem.productID]
-                Text(text = "- ${orderItem.amount} ")
-            }
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun generatePDF(
         context: Context,
@@ -242,11 +226,4 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         }
     }
 
-
-
-
-
-    fun generatePDFContent(order: MOrder, customer: MCustomer, orderItems: List<OrderItem>){
-
-    }
 }
