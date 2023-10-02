@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.MProduct
-import com.example.onlab.model.Product
 import com.example.onlab.repository.FireRepository
 import com.example.onlab.repository.ProductFireRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -26,10 +25,10 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
     )
 
     init {
-        getAllProcutsFromDatabase()
+        getAllProductsFromDB()
     }
 
-    private fun getAllProcutsFromDatabase() {
+    fun getAllProductsFromDB() {
         viewModelScope.launch {
             data.value.loading = true
             val productsResult = repository.getAllProductsFromDatabase()
@@ -84,7 +83,7 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
                         }
                 }
         }
-        getAllProcutsFromDatabase()
+        getAllProductsFromDB()
     }
 
     fun updateProduct(productToUpdate: Map<String, String?>, productID: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
@@ -104,13 +103,13 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
                 )
             }
         }
-        getAllProcutsFromDatabase()
+        getAllProductsFromDB()
     }
 
     fun deleteProduct(productID: String, onSuccess: () -> Unit) {
         FirebaseFirestore.getInstance().collection("products").document(productID).delete().addOnCompleteListener {
             if(it.isSuccessful){
-                getAllProcutsFromDatabase()
+                getAllProductsFromDB()
                 onSuccess()
             }
 
@@ -121,7 +120,7 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
 
     fun onSearchTextChanged(newText: String) {
         searchText.value = newText
-        getAllProcutsFromDatabase()
+        getAllProductsFromDB()
     }
 
     fun getProductsByCategory(category: String): List<MProduct>? {

@@ -44,7 +44,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
 
     showConfirmationDialog(
         showDialog = showDialog,
-        message = "Biztos törölni szeretnéd a következő terméket?",
+        message = "Biztos törölni szeretnéd az ügyfelet?",
         onConfirm = {
             mCustomerViewModel.deleteCustomer(selectedCustomer?.id.toString()){
                 Toast.makeText(contextForToast, "Ügyfél törölve", Toast.LENGTH_SHORT).show()
@@ -106,7 +106,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                 }
 
                 CreateList(
-                    data = listOfCustomers,
+                    data = listOfCustomers.sortedBy { it.firstName },
                     onDelete = {
                     showDialog.value = true
                     selectedCustomer = it
@@ -149,7 +149,8 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                                 .padding(10.dp)
                         ){
                             Text(text = customer.firstName + " " + customer.lastName, fontWeight = FontWeight.Bold)
-                            }
+                            Text(text = customer.address)
+                        }
                         }
                 }
             }

@@ -24,14 +24,13 @@ import com.example.onlab.components.*
 import com.example.onlab.model.*
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.*
-import java.util.*
 import com.example.onlab.model.Category as Categ
 
 @Composable
 fun ProductListScreen(
     navController: NavController,
     orderID: String? = null,
-    list: Boolean? = null,
+    ordering: Boolean,
     productViewModel: MProductViewModel,
     customerViewModel: MCustomerViewModel,
     orderItemViewModel: MOrderItemViewModel
@@ -94,38 +93,26 @@ fun ProductListScreen(
 
     Scaffold(
         topBar = {
-            if (list == true ) createTopBar(navController = navController, text = "Új rendelés", withIcon = true)
+            if (ordering) createTopBar(navController = navController, text = "Új rendelés", withIcon = true)
             else {
                 createTopBar(navController = navController, text = "Termékek", withIcon = false)            }
 
         },
         bottomBar = {
-            if (list == true ) BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
-            else {
-                BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
-            }
+            if (!ordering) BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
         },
         floatingActionButton = {
-            if(list == true){
+            if(!ordering){
                 ExtendedFloatingActionButton(
                     modifier =  Modifier.padding(bottom = 60.dp),
-                    text = { Text(text = "Rendelés rögzítése") },
+                    text = { Text(text = "Új termék") },
                     onClick = {
-                        //navController.navigate(route = ProductScreens.NewProductScreen.name)
+                        navController.navigate(route = ProductScreens.NewProductScreen.name)
                     },
                     shape = RoundedCornerShape(20.dp),
                     backgroundColor = MaterialTheme.colors.primary,
                 )
             }
-            ExtendedFloatingActionButton(
-                modifier =  Modifier.padding(bottom = 60.dp),
-                text = { Text(text = "Új termék") },
-                onClick = {
-                    navController.navigate(route = ProductScreens.NewProductScreen.name)
-                },
-                shape = RoundedCornerShape(20.dp),
-                backgroundColor = MaterialTheme.colors.primary,
-            )
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -160,22 +147,26 @@ fun ProductListScreen(
                 }
 
                 CreateList(
-                    data = listOfProducts,
+                    data = listOfProducts.sortedBy { it.title },
                     onDelete = {
                     Log.d("TAG", "ProductListScreen: ${it.id}")
                     showDialog.value = true
                     selectedProduct = it },
                     onEdit = {
-                    navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}") },
+                        navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
+                        Log.d("ID", "ProductListScreen: ${it.id}")
+                             },
                     onClick = {
-                        if(list == true) {
+                        if(ordering) {
                             selectedProduct = it
                             showFullScreenDialog.value = true
                         }
                         else{
                             Log.d("TAG", "ProductListScreen: ez nem jott ossze")
                         }
-                    }, itemContent = { product ->
+                    },
+                    iconClickEnabled = !ordering,
+                    itemContent = { product ->
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Column(
                                 modifier = Modifier.size(70.dp),

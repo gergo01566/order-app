@@ -268,7 +268,7 @@ fun ProductButton(
     text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    color: Color = MaterialTheme.colors.primary
+    color: Color = MaterialTheme.colors.primary,
 ){
     Button(
         onClick = onClick,

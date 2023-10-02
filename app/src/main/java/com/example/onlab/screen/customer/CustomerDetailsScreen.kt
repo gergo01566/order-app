@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -42,7 +43,10 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
 
     val contextForToast = LocalContext.current.applicationContext
 
-    //TODO: megnezni
+    var buttonEnabled by remember { mutableStateOf(true) }
+
+    var changesMade by remember { mutableStateOf(false) }
+
     var customer by remember {
         mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->
             Log.d("customerID", "CustomerDetailsScreen: ${customerID}")
@@ -67,14 +71,16 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
     )
 
     val showDialog = remember { mutableStateOf(false) }
+    val showNavigationDialog = remember { mutableStateOf(false) }
 
     showConfirmationDialog(
         showDialog = showDialog,
-        message = "Biztos törölni szeretnéd a következő terméket?",
+        message = "Biztos törölni szeretnéd az ügyfelet?",
         onConfirm = {
             customerViewModel.deleteCustomer(customerID){
                 showDialog.value = false
                 navController.navigate(route = "CustomerScreen")
+                Toast.makeText(contextForToast, "Ügyfél törölve", Toast.LENGTH_SHORT).show()
                 customerViewModel.getAllCustomersFromDatabase()
             }
         },
@@ -82,6 +88,20 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
             showDialog.value = false
         }
     )
+
+    showConfirmationDialog(
+        showDialog = showNavigationDialog,
+        message = "Biztos visszaszeretnél lépni mentés nélkül?",
+        onConfirm = {
+            navController.popBackStack()
+            showNavigationDialog.value = false
+        },
+        onDismiss = {
+            showNavigationDialog.value = false
+        }
+    )
+
+
 
     Scaffold(
         topBar = {
@@ -94,7 +114,10 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                     Icon(imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Arrow Back",
                         modifier = Modifier.clickable {
-                            navController.popBackStack()
+                            if(changesMade){
+                                showNavigationDialog.value = true
+                            }
+                            else navController.popBackStack()
                         })
                     Spacer(modifier = Modifier.padding(10.dp))
                     if(customerList.loading == true){
@@ -110,124 +133,177 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
             BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
         },
         isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End,
-        content = { padding ->
-            Column(
+        floatingActionButtonPosition = FabPosition.End
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .statusBarsPadding()
+                .padding(bottom = padding.calculateBottomPadding() / 2),
+            horizontalAlignment = Alignment.Start
+        ) {
+            TextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
-                    .statusBarsPadding()
-                    .padding(bottom = padding.calculateBottomPadding() / 2),
-                horizontalAlignment = Alignment.Start
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = customer?.firstName ?: "",
-                    onValueChange = { newValue ->
+                    .padding((10.dp)),
+                value = customer?.firstName ?: "",
+                onValueChange = { newValue ->
+                    if (newValue.length <= 20) {
                         customer = customer?.copy(firstName = newValue) ?: customer
-                    },
-                    label = { Text(text = "Ügyfél keresztneve") },
-                    placeholder = { Text(text = "Add meg az ügyfél nevét!") }
-                )
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = customer?.lastName ?: "",
-                    onValueChange = { newValue ->
+                        changesMade = true // Mark changes as made
+                    }
+                    else if(newValue.isEmpty()) buttonEnabled = false
+                    else Toast.makeText(
+                        contextForToast,
+                        "A keresztnév max. 20 karakter lehet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                label = { Text(text = "Ügyfél keresztneve") },
+                placeholder = { Text(text = "Add meg az ügyfél nevét!") }
+            )
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding((10.dp)),
+                value = customer?.lastName ?: "",
+                onValueChange = { newValue ->
+                    if (newValue.length <= 20){
                         customer = customer?.copy(lastName = newValue) ?: customer
-                    },
-                    label = { Text(text = "Ügyfél vezetékneve") },
-                    placeholder = { Text(text = "Add meg az ügyfél nevét!") }
-                )
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = customer?.address ?: "",
-                    onValueChange = { newValue ->
+                        changesMade = true // Mark changes as made
+                    }
+                    else if(newValue.isEmpty()) buttonEnabled = false
+                    else Toast.makeText(
+                        contextForToast,
+                        "A vezetéknév max. 20 karakter lehet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                label = { Text(text = "Ügyfél vezetékneve") },
+                placeholder = { Text(text = "Add meg az ügyfél nevét!") }
+            )
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding((10.dp)),
+                value = customer?.address ?: "",
+                onValueChange = { newValue ->
+                    if (newValue.length <= 30) {
                         customer = customer?.copy(address = newValue) ?: customer
-                    },
-                    label = { Text(text = "Ügyfél címe") },
-                    placeholder = { Text(text = "Add meg az ügyfél címét!") }
-                )
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = customer?.phoneNumber ?: "",
-                    onValueChange = { newValue ->
+                        changesMade = true // Mark changes as made
+                    }
+                    else Toast.makeText(
+                        contextForToast,
+                        "A cím max. 30 karakter lehet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                label = { Text(text = "Ügyfél címe") },
+                placeholder = { Text(text = "Add meg az ügyfél címét!") }
+            )
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding((10.dp)),
+                value = customer?.phoneNumber ?: "",
+                onValueChange = { newValue ->
+                    if (newValue.length <= 15){
                         customer = customer?.copy(phoneNumber = newValue) ?: customer
-                    },
-                    label = { Text(text = "Ügyfél telefonszáma") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text(text = "Add meg az ügyfél telefonszámát!") }
-                )
-                Row(
+                        changesMade = true // Mark changes as made
+                    }
+                    else Toast.makeText(
+                        contextForToast,
+                        "A telefonszám max. 15 számjegyű lehet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                label = { Text(text = "Ügyfél telefonszáma") },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                placeholder = { Text(text = "Add meg az ügyfél telefonszámát!") }
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp)
+                    .height(150.dp)
+            ) {
+                ImagePickerButton(onImageSelected = {
+                    permissionsState.launchMultiplePermissionRequest()
+                    imageUri = it
+                    customer = customer!!.copy(image = it.toString())
+                })
+                Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-                        .height(150.dp)
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(15.dp)
                 ) {
-                    ImagePickerButton(onImageSelected = {
-                        permissionsState.launchMultiplePermissionRequest()
-                        imageUri = it
-                        customer = customer!!.copy(image = it.toString())
-                    })
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        shape = RoundedCornerShape(15.dp)
-                    ) {
-                        AsyncImage(
-                            model = customer?.image,
-                            contentDescription = "profile image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                    AsyncImage(
+                        model = customer?.image,
+                        contentDescription = "profile image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
+
+            ProductButton(modifier = Modifier
+                .fillMaxWidth()
+                .padding((10.dp))
+                .height(40.dp),
+                text = "Ügyfél mentése",
+                enabled = buttonEnabled,
+                onClick = {
+                    if (customer!!.phoneNumber.toDoubleOrNull() != null || customer!!.phoneNumber.toLongOrNull() != null) {
+                        val customerToUpdate = hashMapOf(
+                            "first_name" to customer?.firstName,
+                            "last_name" to customer?.lastName,
+                            "customer_address" to customer?.address,
+                            "phone_number" to customer?.phoneNumber,
+                            "customer_image" to customer?.image
+                        ).toMap()
+                        customerViewModel.updateCustomer(
+                            customerToUpdate as Map<String, String?>,
+                            customerID!!,
+                            onSuccess = {
+                                navController.navigate(route = "CustomerScreen")
+                                Toast.makeText(
+                                    contextForToast,
+                                    "Ügyfél módosítva",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onFailure = {
+                                Toast.makeText(
+                                    contextForToast,
+                                    "Ügyfél nem lett módosítva",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            })
+                    } else {
+                        Toast.makeText(
+                            contextForToast,
+                            "Csak számokat használj az telefonszám megadásánál",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
+            )
 
-                ProductButton(modifier = Modifier
+            ProductButton(
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),
-                    text = "Ügyfél mentése",
-                    onClick = {
-                        if(customer!!.phoneNumber.toDoubleOrNull() != null || customer!!.phoneNumber.toLongOrNull() != null){
-                            val customerToUpdate = hashMapOf(
-                                "first_name" to customer?.firstName,
-                                "last_name" to customer?.lastName,
-                                "customer_address" to customer?.address,
-                                "phone_number" to customer?.phoneNumber,
-                                "customer_image" to customer?.image
-                            ).toMap()
-                            customerViewModel.updateCustomer(customerToUpdate, customerID!!, onSuccess = {
-                                navController.navigate(route = "CustomerScreen")
-                                Toast.makeText(contextForToast, "Ügyfél módosítva", Toast.LENGTH_SHORT).show()
-                                customerViewModel.getAllCustomersFromDatabase()
-                            }, onFailure = {
-                                Toast.makeText(contextForToast, "Ügyfél nem lett módosítva", Toast.LENGTH_SHORT).show()
-                            })
-                        }else {
-                            Toast.makeText(contextForToast, "Csak számokat használj az telefonszám megadásánál", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                )
+                text = "Ügyfél törlése",
+                onClick = {
+                    showDialog.value = true
+                },
+                color = Color.Red
+            )
 
-                ProductButton(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),
-                    text = "Ügyfél törlése",
-                    onClick = {
-                        showDialog.value = true
-                    },
-                    color = Color.Red)
-            }
         }
-    )
+    }
 }

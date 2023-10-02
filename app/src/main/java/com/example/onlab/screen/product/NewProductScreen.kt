@@ -203,8 +203,10 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                         val mProduct = MProduct(title = product.title, category = product.category.toString(), pricePerPiece = product.pricePerPiece, pricePerKarton = product.pricePerKarton, image = product.image)
                         productViewModel.saveProductToFirebase(mProduct,{
                             Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
+                            productViewModel.getAllProductsFromDB()
                             navController.navigate(route = ProductScreens.ListScreen.name)
-                        }) } else {
+                        })
+                    } else {
                         Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
                     }
 

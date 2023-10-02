@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.onlab.model.Order
 
 import com.example.onlab.screen.ProductListScreen
 import com.example.onlab.screen.customer.CustomerDetailsScreen
@@ -42,9 +41,17 @@ fun AppNavigation(){
     val orderViewModel = viewModel<MOrderViewModel>()
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
     val mProductViewModel = viewModel<MProductViewModel>()
-    NavHost(navController = navController, startDestination = "CustomerScreen"){
+    val loginScreenViewModel = viewModel<LoginScreenViewModel>()
+
+    val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
+        "LoginScreen";
+    } else {
+        "CustomerScreen";
+    }
+
+    NavHost(navController = navController, startDestination = startDestination){
         composable(ProductScreens.ListScreen.name){
-            ProductListScreen(navController = navController,list = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController,ordering = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
 
         composable(route = ProductScreens.NewProductScreen.name)
@@ -63,7 +70,7 @@ fun AppNavigation(){
             NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel)
         }
         composable("OrdersScreen"){
-            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel, mProductViewModel = productViewModel)
+            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel, mProductViewModel = productViewModel, loginScreenViewModel = loginScreenViewModel)
         }
         composable("CustomerDetailsScreen" + "/{customer}",
             arguments = listOf(navArgument(name = "customer"){
@@ -97,7 +104,7 @@ fun AppNavigation(){
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, orderID = orderId, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController, orderID = orderId, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable(
             route = "${ProductScreens.ListScreen.name}/{list}", // include customerId parameter in the route
@@ -106,18 +113,21 @@ fun AppNavigation(){
             )
         ) { backStackEntry ->
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, list = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
-            //TODO: megcsinalni ha be van jelentkezve vigye az orders screenre egyebkent login
-//            if(!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-//                navController.navigate("OrdersScreen")
-//            } else {
                 LoginScreen(navController = navController)
-            //}
         }
         composable("ProfileScreen"){
             ProfileScreen(navController = navController)
         }
     }
+
+    fun loadAllDatas(){
+        productViewModel.getAllProductsFromDB()
+        customerViewModel.getAllCustomersFromDatabase()
+        orderViewModel.getOrdersByStatus(0)
+        orderViewModel.getOrdersByStatus(1)
+    }
 }
+

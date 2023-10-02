@@ -1,5 +1,6 @@
 package com.example.onlab.screen.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -42,6 +43,7 @@ import coil.transform.CircleCropTransformation
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.createTopBar
 import com.example.onlab.components.items
+import com.example.onlab.components.showConfirmationDialog
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.ktx.Firebase
@@ -61,6 +63,19 @@ fun ProfileScreen(
     val currentUserName = if (!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
         FirebaseAuth.getInstance().currentUser?.email?.split("@")?.get(0)
     } else "N/A"
+
+    val showDialog = remember { mutableStateOf(false) }
+
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "Biztos törölni szeretnéd a profilodat?",
+        onConfirm = {
+            FirebaseAuth.getInstance().currentUser?.delete()
+        },
+        onDismiss = {
+            showDialog.value = false
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -106,9 +121,11 @@ fun ProfileScreen(
                 ) {
                     Icon(Icons.Filled.Email, contentDescription = "Email Icon")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "example@example.com",
-                    )
+                    FirebaseAuth.getInstance().currentUser?.email?.let { it1 ->
+                        Text(
+                            text = it1,
+                        )
+                    }
                 }
                 Row(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -137,7 +154,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ClickableText(
-                        text = AnnotatedString("Notifications"),
+                        text = AnnotatedString("Értesítések"),
                         style = TextStyle(fontSize = 20.sp),
                         modifier = Modifier.padding(start = 8.dp),
                         onClick = {}
@@ -157,7 +174,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ClickableText(
-                        text = AnnotatedString("Log out"),
+                        text = AnnotatedString("Kijelentkezés"),
                         style = TextStyle(fontSize = 20.sp),
                         modifier = Modifier.padding(start = 8.dp),
                         onClick = {
@@ -181,10 +198,10 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ClickableText(
-                        text = AnnotatedString("Delete profile"),
+                        text = AnnotatedString("Profil törlése"),
                         style = TextStyle(fontSize = 20.sp),
                         modifier = Modifier.padding(start = 8.dp),
-                        onClick = { /* Handle text click */ }
+                        onClick = { showDialog.value = true; }
                     )
                 }
             }

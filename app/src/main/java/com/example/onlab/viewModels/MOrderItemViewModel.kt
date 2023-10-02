@@ -28,7 +28,7 @@ class MOrderItemViewModel @Inject constructor(private val repository: OrderItemF
         getOrderItemsFromDatabase()
     }
 
-    private fun getOrderItemsFromDatabase(orderId: String? = null) {
+    fun getOrderItemsFromDatabase(orderId: String? = null) {
         viewModelScope.launch {
             data.value.loading = true
             val orderItemsResult = repository.getAllOrderItemsFromDatabase()

@@ -49,20 +49,23 @@ class MCustomerViewModel @Inject constructor(private val repository: FireReposit
     }
 
     fun updateCustomer(customerToUpdate: Map<String, String?>, customerID: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).update(customerToUpdate).addOnCompleteListener{ task->
+        FirebaseFirestore.getInstance().collection("customers").document(customerID).update(customerToUpdate).addOnCompleteListener{ task->
             if (task.isSuccessful){
                 onSuccess()
             }
         }.addOnFailureListener{
             onFailure()
         }
-        viewModelScope.launch {
-            FirebaseFirestore.getInstance().collection("customers").document(customerID.toString()).update(
-                hashMapOf(
-                    "customer_image" to repository.addImageToFirebaseStorage(customerToUpdate["customer_image"]!!.toUri())
-                ) as Map<String, Any>
-            )
+        if(!customerToUpdate["customer_image"]!!.startsWith("https")){
+            viewModelScope.launch {
+                FirebaseFirestore.getInstance().collection("customers").document(customerID).update(
+                    hashMapOf(
+                        "customer_image" to repository.addImageToFirebaseStorage(customerToUpdate["customer_image"]!!.toUri())
+                    ) as Map<String, Any>
+                )
+            }
         }
+        getAllCustomersFromDatabase()
     }
 
     fun deleteCustomer(customerID: String?, onSuccess: () -> Unit) {
@@ -80,7 +83,6 @@ class MCustomerViewModel @Inject constructor(private val repository: FireReposit
     fun saveCustomerToFirebase(customer: MCustomer, onSuccess: () -> Unit, onFailure: () -> Unit = {}){
         val db = FirebaseFirestore.getInstance()
         val dbCollection = db.collection("customers")
-        //var url = ""
 
         if (customer.image == "null") Log.d("imagee", "saveCustomerToFirebase: ${customer.image}")
         if(customer.toString().isNotEmpty()){
@@ -122,10 +124,9 @@ class MCustomerViewModel @Inject constructor(private val repository: FireReposit
         getAllCustomersFromDatabase()
     }
 
-    fun getCustomerById(customerId: String): MCustomer{
-        return data.value.data!!.first {
+    fun getCustomerById(customerId: String): MCustomer? {
+        return data.value.data?.firstOrNull {
             it.id == customerId
         }
     }
-
 }

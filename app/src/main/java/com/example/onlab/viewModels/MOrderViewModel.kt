@@ -71,7 +71,7 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         getAllOrdersFromDatabase()
     }
 
-    private fun getAllOrdersFromDatabase() {
+    fun getAllOrdersFromDatabase() {
         viewModelScope.launch {
             data.value.loading = true
             val ordersResult = repository.getAllOrders()
@@ -138,7 +138,6 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun generatePDF(
         context: Context,
         orderId: String,
@@ -153,7 +152,6 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
 
         val pageHeight = 1120
         val pageWidth = 792
-        lateinit var bmp: Bitmap
         lateinit var scaledbmp: Bitmap
         val pdfDocument: PdfDocument = PdfDocument()
         val paint: Paint = Paint()
@@ -167,33 +165,36 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         val fileName = "order_$orderId.pdf"
         val file = File(directory, fileName)
 
-        bmp = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
+        var bmp: Bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
         scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
         val myPageInfo: PdfDocument.PageInfo? =
             PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
         val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
         val canvas: Canvas = myPage.canvas
         canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
-        title.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD))
+        title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         title.textSize = 20F
-        title.setColor(ContextCompat.getColor(context, R.color.black))
-        canvas.drawText("Ügyfél neve: ${customer.lastName} ${customer.firstName}", 209F, 80F, title)
-        canvas.drawText("Rendelési azonosító: ${order.orderId}", 209F, 115F, title)
-        canvas.drawText("Rendelés kelte: ${order.date}", 209F, 150F, title)
-        title.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD))
-        title.setColor(ContextCompat.getColor(context, R.color.black))
+        title.color = ContextCompat.getColor(context, R.color.black)
+        canvas.drawText("Ügyfél neve: ${customer?.lastName} ${customer?.firstName}", 209F, 40F, title)
+        canvas.drawText("Ügyfél címe: ${customer?.address} ", 209F, 75F, title)
+        canvas.drawText("Ügyfél telefonszáma: ${customer?.phoneNumber} ", 209F, 110F, title)
+        title.textSize = 15F
+        canvas.drawText("Rendelési azonosító: ${order.orderId}", 209F, 145F, title)
+        canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
+        title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+        title.color = ContextCompat.getColor(context, R.color.black)
         title.textSize = 15F
         title.textAlign = Paint.Align.CENTER
 
-        canvas.drawText("Termék neve ", 170F, 240F, title)
-        canvas.drawText("Mennyiség ", 340F, 240F, title)
-        canvas.drawText("Darab", 510F, 240F, title)
-        canvas.drawText("Karton", 680F, 240F, title)
-        title.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL))
-        var yPosition = 270F
+        canvas.drawText("Termék neve ", 170F, 270F, title)
+        canvas.drawText("Mennyiség ", 340F, 270F, title)
+        canvas.drawText("Darab", 510F, 270F, title)
+        canvas.drawText("Karton", 680F, 270f, title)
+        title.typeface = Typeface.defaultFromStyle(Typeface.NORMAL)
+        var yPosition = 300f
         for (orderItem in orderItems) {
             val product = products.find { it!!.id.toString() == orderItem.productID }
-            canvas.drawText("${product!!.title}", 170F, yPosition, title)
+            canvas.drawText(product!!.title, 170F, yPosition, title)
             canvas.drawText("${orderItem.amount}", 340F, yPosition , title)
             canvas.drawText((if (orderItem.piece){"igen"} else {
                 "nem"
@@ -201,6 +202,7 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
             canvas.drawText((if (orderItem.carton){"igen"} else {
                 "nem"
             }).toString(), 680F, yPosition , title)
+            canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
             yPosition += 60F
         }
         var sikerult = false

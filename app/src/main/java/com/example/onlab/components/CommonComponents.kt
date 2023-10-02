@@ -63,7 +63,7 @@ import com.example.onlab.model.MProduct
 data class BottomNavItem(val name: String, val icon: ImageVector)
 
 @Composable
-fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, clickEnabled: Boolean = true, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .size(40.dp)
@@ -77,7 +77,7 @@ fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, onClick: () ->
             modifier = modifier
                 .size(11.dp)
                 .clickable(
-                    enabled = true,
+                    enabled = clickEnabled,
                     onClick = {
                         onClick()
                     }
@@ -472,6 +472,7 @@ fun <T> CreateList(
     onDelete: (T) -> Unit,
     onEdit: (T) -> Unit,
     onClick: (T) -> Unit = {},
+    iconClickEnabled: Boolean = true,
     iconContent: @Composable (item: T) -> Unit = {},
     itemContent: @Composable (item: T) -> Unit
 ) {
@@ -489,36 +490,36 @@ fun <T> CreateList(
                         .padding(8.dp)
                         .padding(7.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
-                    //CreatePicture(modifier = Modifier.size(60.dp).padding(3.dp))
                     Column(
                         modifier = Modifier
-                            .width(200.dp)
+                            .weight(1f)
                             .padding(7.dp)
-                            .align(alignment = Alignment.CenterVertically)
                     ) {
                         itemContent(item)
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp) // Add spacing between icons
                     ) {
                         iconContent(item)
-                        CreateIcon(Icons.Rounded.Edit) {
+                        CreateIcon(Icons.Rounded.Edit, clickEnabled = iconClickEnabled) {
                             onEdit(item)
                         }
-                        CreateIcon(Icons.Rounded.Delete) {
+                        CreateIcon(Icons.Rounded.Delete, clickEnabled = iconClickEnabled) {
                             onDelete(item)
                         }
                     }
-
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun ToggleButtons(

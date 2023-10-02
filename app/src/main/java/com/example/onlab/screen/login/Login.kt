@@ -1,17 +1,22 @@
 package com.example.onlab.screen.login
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -19,6 +24,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -27,9 +33,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onlab.R
@@ -37,22 +45,35 @@ import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.LoginScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.currentCoroutineContext
 import kotlin.math.log
+import androidx.compose.ui.window.Dialog
+import com.example.onlab.navigation.AppNavigation
+import com.example.onlab.screen.order.OrdersScreen
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel()){
     val showLoginFrom = rememberSaveable{ mutableStateOf(true) }
+    val showDialog = remember{ mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            if (showLoginFrom.value) UserForm(false, false){ email, pwd ->
-                loginScreenViewModel.signInWithEmailAndPassword(email = email, password = pwd){
-                    navController.navigate(route = "OrdersScreen")
-                    Log.d("TAG", "LoginScreen: ok")
-                }
+            if (showLoginFrom.value)
+                UserForm(false, false){ email, pwd ->
+                    loginScreenViewModel.signInWithEmailAndPassword(
+                        email = email,
+                        password = pwd,
+                        orders = {
+                            navController.navigate(route = "OrdersScreen")
+                                 },
+                        onFailure = {
+                            showDialog.value = true
+                        })
             }
             else {
                 UserForm(false, true){ email, pwd ->
@@ -68,8 +89,8 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val text = if (showLoginFrom.value) "Sign up" else "Login"
-            Text(text = "New User?")
+            val text = if (showLoginFrom.value) "Regisztráció" else "Bejelentkezés"
+            Text(text = if (showLoginFrom.value) "Új felhasználó?" else "Már van fiókod?")
             Text(text, modifier = Modifier
                 .clickable {
                     showLoginFrom.value = !showLoginFrom.value
@@ -77,6 +98,39 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
                 .padding(start = 5.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondaryVariant)
         }
     }
+    if (showDialog.value){
+        AlertDialogExample(onDismissRequest = { /*TODO*/ }) {
+            showDialog.value = false
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AlertDialogExample(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = "Hiba")
+        },
+        text = {
+            Text(text = "Helytelen felhasználónév vagy jelszó")
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text("Ok")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -105,7 +159,7 @@ fun UserForm(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = if (!isCreateAccount) "Login" else "Create Account",
+            text = if (!isCreateAccount) "Bejelentkezés" else "Regisztráció",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -122,7 +176,7 @@ fun UserForm(
         PasswordInput(
             modifier = Modifier.focusRequester(passwordFocusRequest),
             passwordState = password,
-            labelID = "Password",
+            labelID = "Jelszó",
             enabled = !loading,
             passwordVisibility = passwordVisibility,
             onAction = KeyboardActions {
@@ -131,7 +185,7 @@ fun UserForm(
             }
         )
         SubmitButton(
-            textId = if (isCreateAccount) "Create Account" else "Login",
+            textId = if (isCreateAccount) "Regisztráció" else "Bejelentkezés",
             loading = loading,
             validInputs = valid
         ){
@@ -189,7 +243,6 @@ fun PasswordInput(
     visualTransformation = visualTransformation,
     trailingIcon = {PasswordVisibility(passwordVisibility = passwordVisibility)},
     keyboardActions = onAction)
-
 }
 
 @Composable

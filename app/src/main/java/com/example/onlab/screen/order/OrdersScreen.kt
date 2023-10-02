@@ -18,14 +18,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.model.Customer
 import com.example.onlab.model.MOrder
@@ -42,13 +46,55 @@ fun OrdersScreen(
     orderViewModel: MOrderViewModel,
     customerViewModel: MCustomerViewModel,
     orderItemViewModel: MOrderItemViewModel,
-    mProductViewModel: MProductViewModel
+    mProductViewModel: MProductViewModel,
+    loginScreenViewModel: LoginScreenViewModel
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
     var orders = orderViewModel.getOrdersByStatus(selectedIndex)
     var selectedOrder by remember { mutableStateOf<MOrder?>(null) }
     var kivalasztva = false
+    val loggedInUser = loginScreenViewModel.getCurrentUser()
+    val showDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(loggedInUser) {
+        if (loggedInUser != null) {
+            // User is logged in, fetch the orders data
+            orderViewModel.getAllOrdersFromDatabase() // Replace this with the actual function to fetch orders
+            customerViewModel.getAllCustomersFromDatabase()
+            mProductViewModel.getAllProductsFromDB()
+            orderItemViewModel.getOrderItemsFromDatabase()
+            orders = orderViewModel.getOrdersByStatus(1)
+            orders = orderViewModel.getOrdersByStatus(0)
+        }
+    }
+
+    showConfirmationDialog(
+        showDialog = showDialog,
+        message = "\"Biztos törölni szeretnéd a rendelést?\"" + "${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}",
+        onConfirm = {
+//            for (x in orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())) {
+//                orderItemViewModel.deleteOrderItem(
+//                    x.id.toString(),
+//                ) {
+//                }
+//            }
+            Log.d("TAG", "OrdersScreen: ${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}")
+            showDialog.value = false
+            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString()).forEach{
+
+                orderItemViewModel.deleteOrderItem(it.id!!) {}
+            }
+            orderViewModel.deleteOrder(selectedOrder?.id.toString()) {
+                Toast.makeText(
+                    contextForToast,
+                    "Rendelés törölve",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }) {
+
+    }
 
     Scaffold(
         topBar = {
@@ -81,25 +127,15 @@ fun OrdersScreen(
                 selectedIndex = selectedIndex,
                 onSelectedIndexChange = { index ->
                     selectedIndex = index
-                    // do something else with the selected index
                 }
             )
+
 
             CreateList(
                 data = orders,
                 onDelete = {
-                    for (x in orderItemViewModel.getOrderItemsByOrder(it.id.toString())) {
-                        orderItemViewModel.deleteOrderItem(
-                            x.id.toString(),
-                        ) {
-                            Toast.makeText(
-                                contextForToast,
-                                "Rendelés törölve",
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        }
-                    }
-                    orderViewModel.deleteOrder(it.id.toString(),{})
+                    selectedOrder = it
+                    showDialog.value = true
                 },
                 onEdit = {
                     Toast.makeText(

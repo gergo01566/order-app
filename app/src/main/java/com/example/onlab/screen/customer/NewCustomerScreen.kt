@@ -40,6 +40,8 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
 
     var customer by remember { mutableStateOf(MCustomer(firstName = "", lastName = "", address = "", phoneNumber = "", image = "")) }
 
+    var buttonEnabled by remember { mutableStateOf(false) }
+
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -91,8 +93,10 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         .padding((10.dp)),
                     value = customer.firstName,
                     onValueChange = { newValue ->
-                        customer = customer.copy(firstName = newValue)
+                        if(newValue.length <= 20) customer = customer.copy(firstName = newValue)
+                        else Toast.makeText(contextForToast, "A keresztnév max. 20 karakter lehet", Toast.LENGTH_SHORT).show()
                     },
+                    maxLines = 1,
                     label = { Text(text = "Ügyfél keresztneve") },
                     placeholder = { Text(text = "Add meg az ügyfél nevét!") }
                 )
@@ -102,7 +106,8 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         .padding((10.dp)),
                     value = customer.lastName,
                     onValueChange = { newValue ->
-                        customer = customer.copy(lastName = newValue)
+                        if(newValue.length <= 20) customer = customer.copy(lastName = newValue)
+                        else Toast.makeText(contextForToast, "A vezetéknév max. 20 karakter lehet", Toast.LENGTH_SHORT).show()
                     },
                     label = { Text(text = "Ügyfél vezetékneve") },
                     placeholder = { Text(text = "Add meg az ügyfél nevét!") }
@@ -111,9 +116,10 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding((10.dp)),
-                    value = customer.address,//product.pricePerPiece.toString(),
+                    value = customer.address,
                     onValueChange = { newValue ->
-                        customer = customer.copy(address = newValue)
+                        if(newValue.length <= 30) customer = customer.copy(address = newValue)
+                        else Toast.makeText(contextForToast, "A cím max. 30 karakter lehet", Toast.LENGTH_SHORT).show()
                     },
                     label = { Text(text = "Ügyfél címe") },
                     placeholder = { Text(text = "Add meg az ügyfél címét!") }
@@ -124,7 +130,8 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         .padding((10.dp)),
                     value = customer.phoneNumber,
                     onValueChange = { newValue ->
-                        customer = customer.copy(phoneNumber = newValue)
+                        if(newValue.length <= 15) customer = customer.copy(phoneNumber = newValue)
+                        else Toast.makeText(contextForToast, "A telefonszám max. 15 számjegyű lehet", Toast.LENGTH_SHORT).show()
                     },
                     label = { Text(text = "Ügyfél telefonszáma") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -155,16 +162,26 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     }
                 }
 
-                ProductButton(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),text = "Ügyfél mentése", onClick = {
+                if (customer.firstName.isNotEmpty() && customer.lastName.isNotEmpty() && customer.address.isNotEmpty()){
+                    buttonEnabled = true
+                }
+
+                ProductButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding((10.dp))
+                        .height(40.dp),
+                    text = "Ügyfél mentése",
+                    enabled =  buttonEnabled,
+                    onClick = {
                     if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null){
                         val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = imageUri.toString())
                         customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
                             Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
                             navController.navigate(route = "CustomerScreen")
-                            //customerViewModel.getAllCustomersFromDatabase()
+                            customerViewModel.getAllCustomersFromDatabase()
+                        }, {
+                            Log.d("FB", "saveToFirebase: Error:")
                         })
                     } else {
                         Toast.makeText(contextForToast, "Kérlek használj megfelelő formátumot a telefonszám megadásánál!", Toast.LENGTH_SHORT).show()
