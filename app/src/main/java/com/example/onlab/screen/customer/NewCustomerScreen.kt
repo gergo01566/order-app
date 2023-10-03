@@ -26,6 +26,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.ImagePickerButton
+import com.example.onlab.components.createTopBar
 import com.example.onlab.components.items
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
@@ -57,21 +58,15 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            ) {
-                Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Arrow Back",
-                        modifier = Modifier.clickable {
-                            navController.popBackStack()
-                        })
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    Text(text = "Új ügyfél", fontSize = 27.sp, fontWeight = FontWeight.Normal)
+            createTopBar(
+                navController = navController,
+                text = "Új ügyfél",
+                withIcon = true,
+                onBack = {
+                    //TODO
+                   navController.popBackStack()
                 }
-            }
+            )
         },
         bottomBar = {
             BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])

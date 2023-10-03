@@ -2,6 +2,7 @@ package com.example.onlab.components
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -51,13 +52,28 @@ import java.util.*
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Card
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
+import androidx.compose.material.TextField
+import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
+import androidx.core.text.isDigitsOnly
 import com.example.onlab.model.MProduct
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
@@ -145,7 +161,8 @@ fun createTopBar(
     modifier: Modifier = Modifier,
     navController: NavController,
     text: String,
-    withIcon: Boolean
+    withIcon: Boolean,
+    onBack: () -> Unit = { navController.popBackStack() },
 ) {
     TopAppBar(
         backgroundColor = MaterialTheme.colors.primary,
@@ -160,7 +177,7 @@ fun createTopBar(
                 Icon(imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Icon",
                     modifier = Modifier.clickable {
-                        navController.popBackStack()
+                        onBack()
                     })
             }
             Spacer(modifier = Modifier.padding(10.dp))
@@ -293,41 +310,63 @@ fun showConfirmationDialog(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun FullScreenDialog(
     showDialog: MutableState<Boolean>,
     selectedProduct: MProduct,
     currentQuantity: Int?,
     isKarton: Boolean?,
-    onAdd: (state: Boolean, quantity: Int) -> Unit,
+    onAdd: (state: Boolean, quantity: String) -> Unit,
     onClose: () -> Unit
 ) {
     var state = remember { mutableStateOf(isKarton != true) }
     var value by remember { mutableStateOf(currentQuantity?.toString() ?: "") }
     Log.d("TAG", "value: ${value}")
     if (showDialog.value) {
-        Dialog(onDismissRequest = onClose) {
+        Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp),
-                ) {
-                    Box(
-                        contentAlignment = Alignment.TopCenter
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                )
+                {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colors.primary),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = selectedProduct.image.toUri(),
-                            contentDescription = "profile image",
-                            modifier = Modifier
-                                .height(200.dp)
-                                .fillMaxWidth(),
-                            contentScale = ContentScale.FillWidth
+                        Icon(
+                            Icons.Filled.Close,
+                            modifier = Modifier.clickable {
+                                showDialog.value = false
+                            }.padding(20.dp),
+                            contentDescription = "Localized description",
+                            tint = Color.White
                         )
+                            Text(modifier = Modifier.padding(20.dp).clickable {
+                                    onAdd(state.value, value)
+                                  },
+                                text = "Mentés", fontSize = 22.sp, fontWeight = FontWeight.Normal, color = Color.White)
                     }
+                    AsyncImage(
+                        model = selectedProduct.image.toUri(),
+                        contentDescription = "profile image",
+                        modifier = Modifier
+                            .weight(2f)
+                            .padding(20.dp)
+                            .fillMaxWidth(),
+                        contentScale = ContentScale.FillWidth
+                    )
                     Column(
                         modifier = Modifier
+                            .padding(20.dp)
+                            .weight(2f)
                             .fillMaxWidth()
                     ) {
                         Text(
@@ -368,11 +407,10 @@ fun FullScreenDialog(
                                 .padding(top = 20.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TextField(
+                            androidx.compose.material3.TextField(
                                 value = value,
                                 onValueChange = { newValue ->
-                                    value = newValue
-                                    //quantity = value.toInt()
+                                   value = newValue
                                 },
                                 label = { Text(text = "Mennyiség") },
                                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -422,37 +460,6 @@ fun FullScreenDialog(
 
                         }
 
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Button(
-                            modifier = Modifier.padding(top = 20.dp),
-                            onClick = { onAdd(state.value, value.toInt()) },
-                            contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                contentDescription = "Localized description",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text("Hozzáadás")
-                        }
-
-                        Button(
-                            modifier = Modifier.padding(top = 20.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = Color.Gray
-                            ),
-                            onClick = { showDialog.value = false },
-                            contentPadding = androidx.compose.material3.ButtonDefaults.ButtonWithIconContentPadding
-                        ) {
-                            Text("Mégsem")
-                        }
                     }
 
 

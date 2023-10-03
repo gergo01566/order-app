@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -73,18 +74,24 @@ fun ProductListScreen(
             selectedProduct = it,
             isKarton = null,
             currentQuantity = null,
-            onAdd = { state: Boolean, quantity: Int ->
-                val orderItem = MOrderItem(
-                    amount = quantity,
-                    orderID = orderID!!,
-                    productID = selectedProduct!!.id.toString(),
-                    statusID = 0,
-                    carton = !state,
-                    piece = state
-                )
-                orderItemViewModel.saveOrderItemToFirebase(orderItem, {
-                    navController.popBackStack()
-                })
+            onAdd = { state: Boolean, quantity: String ->
+                if (quantity.isDigitsOnly() && quantity!=""){
+                    val orderItem = MOrderItem(
+                        amount = quantity.toInt(),
+                        orderID = orderID!!,
+                        productID = selectedProduct!!.id.toString(),
+                        statusID = 0,
+                        carton = !state,
+                        piece = state
+                    )
+                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
+                        navController.popBackStack()
+                    })
+                } else {
+                    Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()
+                }
+
+
             }
         ) {
             showFullScreenDialog.value = false

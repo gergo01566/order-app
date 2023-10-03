@@ -43,7 +43,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
 
     val contextForToast = LocalContext.current.applicationContext
 
-    var buttonEnabled by remember { mutableStateOf(true) }
+    var buttonEnabled by remember { mutableStateOf(false) }
 
     var changesMade by remember { mutableStateOf(false) }
 
@@ -248,6 +248,9 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                 }
             }
 
+            if (customer!!.firstName.isNotEmpty() && customer!!.lastName.isNotEmpty() && customer!!.address.isNotEmpty()){
+                buttonEnabled = true
+            }
 
             ProductButton(modifier = Modifier
                 .fillMaxWidth()

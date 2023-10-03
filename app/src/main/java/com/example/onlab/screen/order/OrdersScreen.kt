@@ -71,18 +71,11 @@ fun OrdersScreen(
 
     showConfirmationDialog(
         showDialog = showDialog,
-        message = "\"Biztos törölni szeretnéd a rendelést?\"" + "${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}",
+        message = "\"Biztos törölni szeretnéd a rendelést?\"",
         onConfirm = {
-//            for (x in orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())) {
-//                orderItemViewModel.deleteOrderItem(
-//                    x.id.toString(),
-//                ) {
-//                }
-//            }
             Log.d("TAG", "OrdersScreen: ${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}")
             showDialog.value = false
-            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString()).forEach{
-
+            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.orderId.toString()).forEach{
                 orderItemViewModel.deleteOrderItem(it.id!!) {}
             }
             orderViewModel.deleteOrder(selectedOrder?.id.toString()) {

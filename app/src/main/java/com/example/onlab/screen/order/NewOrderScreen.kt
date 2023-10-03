@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.SAVED_STATE_REGISTRY_OWNER_KEY
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -113,32 +114,42 @@ fun NewOrderScreen(
                 selectedProduct = it,
                 currentQuantity = selectedOrderItem?.amount,
                 isKarton = selectedOrderItem?.carton,
-                onAdd = { state: Boolean, quantity: Int ->
+                onAdd = { state: Boolean, quantity: String ->
+
                     Log.d("TAG", "NewOrderScreen: ${selectedOrderItem?.id}")
                     selectedOrderItem?.let {
                         //selectedOrderItem = it.copy(carton = !state, piece = state, amount = quantity)
-                        val selectedOrderItemToUpdate = hashMapOf(
-                            "item_amount" to quantity,
-                            "is_karton" to !state,
-                            "is_piece" to state,
-                        ).toMap()
-                        orderItemViewModel.updateOrderItem(selectedOrderItemToUpdate,
-                            selectedOrderItem?.id.toString(),
-                            {
+                        if (quantity.isDigitsOnly() && quantity!=""){
+                            val selectedOrderItemToUpdate = hashMapOf(
+                                "item_amount" to quantity,
+                                "is_karton" to !state,
+                                "is_piece" to state,
+                            ).toMap()
+                            orderItemViewModel.updateOrderItem(selectedOrderItemToUpdate,
+                                selectedOrderItem?.id.toString(),
+                                {
+                                    Toast.makeText(
+                                        contextForToast,
+                                        "Rendelési tétel módosítva",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    showEditDialog.value = false
+                                }) {
+                                showEditDialog.value = false
                                 Toast.makeText(
                                     contextForToast,
-                                    "Rendelési tétel módosítva",
+                                    "Rendelési tétel nem lett módosítva",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                showEditDialog.value = false
-                            }) {
-                            showEditDialog.value = false
+                            }
+                        } else {
                             Toast.makeText(
                                 contextForToast,
-                                "Rendelési tétel nem lett módosítva",
+                                "A tétel mennyisége nem megfelelő formátumban van!",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+
                     }
                 }
             ) {
@@ -170,7 +181,14 @@ fun NewOrderScreen(
             createTopBar(
                 navController = navController,
                 text = "${customer!!.firstName} rendelése",
-                withIcon = true
+                withIcon = true,
+                onBack = {
+                    if (!orderItems.isNullOrEmpty()) {
+                        openDialog.value = true
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
             )
         },
         bottomBar = {

@@ -45,6 +45,7 @@ class MOrderItemViewModel @Inject constructor(private val repository: OrderItemF
             } else {
                 data.value = DataOrException(emptyList(), false, orderItemsResult.e)
             }
+            Log.d("OK", "getOrderItemsFromDatabase: ${data.value})")
             data.value.loading = false
         }
     }
