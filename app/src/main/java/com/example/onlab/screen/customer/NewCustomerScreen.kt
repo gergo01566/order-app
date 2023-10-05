@@ -4,30 +4,22 @@ import android.Manifest
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.ImagePickerButton
-import com.example.onlab.components.createTopBar
-import com.example.onlab.components.items
+import com.example.onlab.components.*
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
 import com.example.onlab.viewModels.MCustomerViewModel
@@ -43,6 +35,10 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
 
     var buttonEnabled by remember { mutableStateOf(false) }
 
+    var showAlertDialog by remember {
+        mutableStateOf(false)
+    }
+
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -50,11 +46,9 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
         )
     )
 
-
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
     }
-
 
     Scaffold(
         topBar = {
@@ -63,8 +57,11 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                 text = "Új ügyfél",
                 withIcon = true,
                 onBack = {
-                    //TODO
-                   navController.popBackStack()
+                    if (buttonEnabled){
+                        showAlertDialog = true
+                    } else {
+                        navController.popBackStack()
+                    }
                 }
             )
         },
@@ -141,7 +138,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     ImagePickerButton(onImageSelected = {
                         permissionsState.launchMultiplePermissionRequest()
                         imageUri = it
-                        customer = customer!!.copy(image = it.toString())
+                        customer = customer.copy(image = it.toString())
                     })
                     Surface(
                         modifier = Modifier
@@ -155,6 +152,24 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                             contentScale = ContentScale.Crop
                         )
                     }
+                }
+
+                BackHandler {
+                    if(buttonEnabled){
+                        showAlertDialog = true
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+
+                if (showAlertDialog){
+                    DismissChangesDialog(
+                        onDismiss = { showAlertDialog = false },
+                        onConfirm = {
+                            navController.popBackStack()
+                            showAlertDialog = false
+                        }
+                    )
                 }
 
                 if (customer.firstName.isNotEmpty() && customer.lastName.isNotEmpty() && customer.address.isNotEmpty()){

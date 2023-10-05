@@ -3,6 +3,7 @@
 package com.example.onlab.screen.product
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,10 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.CategoryDropDownMenu
-import com.example.onlab.components.ImagePickerButton
-import com.example.onlab.components.items
+import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
@@ -45,16 +43,21 @@ import java.util.*
 fun NewProductScreen(navController: NavController, productViewModel: MProductViewModel) {
 
     val listItems = getCategoryTypes(Category::class.java)
+
     val contextForToast = LocalContext.current.applicationContext
 
-    // remember the selected item
     var selectedItem by remember {
         mutableStateOf(listItems[0])
     }
 
+    var buttonEnabled by remember { mutableStateOf(false) }
+
     var product by remember { mutableStateOf(MProduct(title = "", category = "", pricePerPiece = 0, pricePerKarton = 0, image = "")) }
 
-    // 2
+    var showAlertDialog by remember {
+        mutableStateOf(false)
+    }
+
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -94,19 +97,11 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            ) {
-                Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Arrow Back",
-                        modifier = Modifier.clickable {
-                            navController.popBackStack()
-                        })
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    Text(text = "Új termék", fontSize = 27.sp, fontWeight = FontWeight.Normal)
+            createTopBar(navController = navController, text = "Új termék", withIcon = true){
+                if(buttonEnabled){
+                    showAlertDialog = true
+                } else {
+                    navController.popBackStack()
                 }
             }
         },
@@ -195,10 +190,14 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                     }
                 }
 
+                if(!product.title.isNullOrEmpty() && product.pricePerKarton != 0 && product.pricePerKarton != null && product.pricePerPiece != 0 && product.pricePerKarton != null){
+                    buttonEnabled = true
+                }
+
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
-                    .height(40.dp),text = "Termék mentése", onClick = {
+                    .height(40.dp), enabled = buttonEnabled, text = "Termék mentése", onClick = {
                     if(product.pricePerPiece != 0 && product.pricePerKarton != 0){
                         val mProduct = MProduct(title = product.title, category = product.category.toString(), pricePerPiece = product.pricePerPiece, pricePerKarton = product.pricePerKarton, image = product.image)
                         productViewModel.saveProductToFirebase(mProduct,{
@@ -211,6 +210,21 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                     }
 
                     })
+
+                BackHandler {
+                    if(buttonEnabled){
+                        showAlertDialog = true
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+
+                if(showAlertDialog){
+                    DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
+                        navController.popBackStack()
+                        showAlertDialog = false
+                    }
+                }
             }
         }
     )

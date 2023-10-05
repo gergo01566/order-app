@@ -4,6 +4,7 @@ import android.Manifest
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,15 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.onlab.components.BottomNavBar
-import com.example.onlab.components.ImagePickerButton
-import com.example.onlab.components.items
-import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.components.*
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
@@ -49,7 +46,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
 
     var customer by remember {
         mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->
-            Log.d("customerID", "CustomerDetailsScreen: ${customerID}")
+            Log.d("customerID", "CustomerDetailsScreen: $customerID")
             mCustomer.id == customerID.toString()
         })
     }
@@ -89,20 +86,21 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
         }
     )
 
-    showConfirmationDialog(
-        showDialog = showNavigationDialog,
-        message = "Biztos visszaszeretnél lépni mentés nélkül?",
-        onConfirm = {
+    if(showNavigationDialog.value){
+        DismissChangesDialog(onDismiss = {
+            showNavigationDialog.value = false
+        }) {
             navController.popBackStack()
             showNavigationDialog.value = false
-        },
-        onDismiss = {
-            showNavigationDialog.value = false
         }
-    )
-
-
-
+    }
+    BackHandler {
+        if (changesMade){
+            showNavigationDialog.value= true
+        } else {
+            navController.popBackStack()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -268,7 +266,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                             "customer_image" to customer?.image
                         ).toMap()
                         customerViewModel.updateCustomer(
-                            customerToUpdate as Map<String, String?>,
+                            customerToUpdate,
                             customerID!!,
                             onSuccess = {
                                 navController.navigate(route = "CustomerScreen")

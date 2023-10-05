@@ -6,12 +6,9 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Done
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,9 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
-import androidx.lifecycle.SAVED_STATE_REGISTRY_OWNER_KEY
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.*
@@ -32,7 +27,6 @@ import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.time.LocalDate
 import java.util.*
 
@@ -47,11 +41,11 @@ fun NewOrderScreen(
     productViewModel: MProductViewModel,
     orderViewModel: MOrderViewModel
 ) {
-    var customer by remember {
+    val customer by remember {
         mutableStateOf(customerViewModel.getCustomerById(customerID!!))
     }
 
-    var orderItems = orderID?.let { orderItemViewModel.getOrderItemsByOrder(it) }
+    val orderItems = orderID?.let { orderItemViewModel.getOrderItemsByOrder(it) }
 
     val contextForToast = LocalContext.current.applicationContext
 
@@ -67,45 +61,15 @@ fun NewOrderScreen(
 
     val openDialog = remember { mutableStateOf(false) }
 
-    if (openDialog.value) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
-            icon = { Icon(Icons.Filled.Warning, contentDescription = null) },
-            title = {
-                Text(text = "A rendelés nincs elmentve")
-            },
-            text = {
-                Text(
-                    "Biztos kilépsz a rendelés mentése nélül?"
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        openDialog.value = false
-                        orderItems!!.forEach { mOrderItem ->
-                            orderItemViewModel.deleteOrderItem(mOrderItem.id!!) {}
-                        }
-                        navController.navigate("CustomerScreen")
-                    }
-                ) {
-                    Text("Igen")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        openDialog.value = false
-                    }
-                ) {
-                    Text("Mégsem")
-                }
+    if(openDialog.value){
+        DismissChangesDialog(onDismiss = { openDialog.value = false }) {
+            openDialog.value = false
+            orderItems!!.forEach { mOrderItem ->
+                orderItemViewModel.deleteOrderItem(mOrderItem.id!!) {}
             }
-        )
+            navController.navigate("CustomerScreen")
+        }
     }
-
 
     if (showEditDialog.value) {
         productViewModel.getProductById(selectedOrderItem?.productID.toString())?.let {
@@ -115,10 +79,8 @@ fun NewOrderScreen(
                 currentQuantity = selectedOrderItem?.amount,
                 isKarton = selectedOrderItem?.carton,
                 onAdd = { state: Boolean, quantity: String ->
-
                     Log.d("TAG", "NewOrderScreen: ${selectedOrderItem?.id}")
                     selectedOrderItem?.let {
-                        //selectedOrderItem = it.copy(carton = !state, piece = state, amount = quantity)
                         if (quantity.isDigitsOnly() && quantity!=""){
                             val selectedOrderItemToUpdate = hashMapOf(
                                 "item_amount" to quantity,
@@ -192,7 +154,7 @@ fun NewOrderScreen(
             )
         },
         bottomBar = {
-            androidx.compose.material3.BottomAppBar() {
+            androidx.compose.material3.BottomAppBar {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     androidx.compose.material3.FloatingActionButton(
 
@@ -218,9 +180,9 @@ fun NewOrderScreen(
                             tint = Color.White
                         )
                     }
-                    BackHandler() {
+                    BackHandler {
                         if (!orderItems.isNullOrEmpty()) {
-                            openDialog.value = true;
+                            openDialog.value = true
                         } else {
                             navController.popBackStack()
                         }
@@ -258,10 +220,9 @@ fun NewOrderScreen(
                             onClick = {
                                 if (orderItems.isNullOrEmpty()) {
                                     coroutineScope.launch {
-                                        val snackbarResult =
-                                            scaffoldState.snackbarHostState.showSnackbar(
-                                                message = "Rendelés mentése sikertelen, nincs rendelési tétel a listában."
-                                            )
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            message = "Rendelés mentése sikertelen, nincs rendelési tétel a listában."
+                                        )
                                     }
                                 } else {
                                     orderViewModel.saveOrderToFirebase(
@@ -297,12 +258,9 @@ fun NewOrderScreen(
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .padding(bottom = it.calculateBottomPadding())
-//                modifier = Modifier.weight(1f),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            orderItems?.let { items ->
-                CreateList<MOrderItem>(
+            orderItems?.let {
+                CreateList(
                     data = orderItems,
                     onDelete = {
                         showDialog.value = true

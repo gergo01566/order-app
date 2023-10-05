@@ -74,6 +74,8 @@ import androidx.compose.ui.zIndex
 import androidx.core.text.isDigitsOnly
 import com.example.onlab.model.MProduct
 import dagger.hilt.android.qualifiers.ApplicationContext
+import androidx.compose.material.TextButton // Import the Material Design 1 version
+
 
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
@@ -176,6 +178,7 @@ fun createTopBar(
             if (withIcon) {
                 Icon(imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Icon",
+                    tint = Color.White,
                     modifier = Modifier.clickable {
                         onBack()
                     })
@@ -310,6 +313,37 @@ fun showConfirmationDialog(
     }
 }
 
+@Composable
+fun DismissChangesDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+        AlertDialog(
+            onDismissRequest = { onDismiss() },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = "Warning icon") },
+            title = {
+                androidx.compose.material.Text(text = "Biztos kilépsz mentés nélkül?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirm() // Call the onConfirm lambda
+                    }
+                ) {
+                    androidx.compose.material.Text("Igen") // Text for the button
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onDismiss() }) {
+                    androidx.compose.material.Text("Mégsem")
+                }
+            }
+        )
+
+}
+
+
+
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun FullScreenDialog(
@@ -343,15 +377,19 @@ fun FullScreenDialog(
                     ) {
                         Icon(
                             Icons.Filled.Close,
-                            modifier = Modifier.clickable {
-                                showDialog.value = false
-                            }.padding(20.dp),
+                            modifier = Modifier
+                                .clickable {
+                                    showDialog.value = false
+                                }
+                                .padding(20.dp),
                             contentDescription = "Localized description",
                             tint = Color.White
                         )
-                            Text(modifier = Modifier.padding(20.dp).clickable {
+                            Text(modifier = Modifier
+                                .padding(20.dp)
+                                .clickable {
                                     onAdd(state.value, value)
-                                  },
+                                },
                                 text = "Mentés", fontSize = 22.sp, fontWeight = FontWeight.Normal, color = Color.White)
                     }
                     AsyncImage(
@@ -471,7 +509,6 @@ fun FullScreenDialog(
     }
 
 }
-
 
 @Composable
 fun <T> CreateList(

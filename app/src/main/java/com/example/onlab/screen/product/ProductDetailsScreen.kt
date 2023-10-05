@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,12 +46,15 @@ import java.util.*
 @Composable
 fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel) {
 
-    //TODO: Collection contains no element matching the predicate.
     var product by remember {
         mutableStateOf(productViewModel.data.value.data?.first{mProduct->
             mProduct.id == productID.toString()
         })
     }
+
+    var changesMade by remember { mutableStateOf(false) }
+
+    var showAlertDialog by remember { mutableStateOf(false) }
 
     val listItems = getCategoryTypes(Category::class.java)
 
@@ -126,19 +130,11 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            ) {
-                Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Arrow Back",
-                        modifier = Modifier.clickable {
-                            navController.popBackStack()
-                        })
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    Text(text = product!!.title, fontSize = 27.sp, fontWeight = FontWeight.Normal)
+            createTopBar(navController = navController, text =product!!.title , withIcon = true){
+                if(changesMade){
+                    showAlertDialog = true
+                } else {
+                    navController.popBackStack()
                 }
             }
         },
@@ -162,7 +158,16 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         .padding((10.dp)),
                     value = product?.title ?: "",
                     onValueChange = { newValue ->
-                        product = product?.copy(title = newValue) ?: product
+                        if(newValue.length <= 20){
+                            product = product?.copy(title = newValue) ?: product
+                            changesMade = true
+                        } else {
+                            Toast.makeText(
+                                contextForToast,
+                                "A termék neve max. 20 karakter lehet",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     label = { Text(text = "Termék neve") },
                     placeholder = { Text(text = "Add meg a termék nevét!") }
@@ -175,6 +180,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                 onValueChange = { newValue ->
                     pricePerPiece = newValue
                     product = product!!.copy(pricePerPiece = pricePerPiece.toIntOrNull() ?: 0)
+                    changesMade = true
                 },
                 label = { Text(text = "Termék ára/db") },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -188,6 +194,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     onValueChange = { newValue ->
                         pricePerKarton = newValue
                         product = product!!.copy(pricePerKarton = pricePerKarton.toIntOrNull() ?: 0)
+                        changesMade = true
                     },
                     label = { Text(text = "Termék ára/karton") },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -198,6 +205,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     onCategorySelected = { category ->
                         selectedItem = category
                         product = product!!.copy(category = category.toString())
+                        changesMade = true
                     }
                 )
                 Row(
@@ -250,13 +258,30 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         }
                     }
                 )
+
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp))
                     .height(40.dp),
                     text = "Termék törlése",
                     onClick = { showDialog.value = true},
-                    color = Color.Red)
+                    color = Color.Red,
+                )
+
+                BackHandler{
+                    if (changesMade){
+                        showAlertDialog = true
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+
+                if(showAlertDialog){
+                    DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
+                        showAlertDialog = false
+                        navController.popBackStack()
+                    }
+                }
             }
         }
     )
