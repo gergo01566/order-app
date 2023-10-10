@@ -112,7 +112,7 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                     selectedCustomer = it
                     },
                     onEdit = {
-                    navController.navigate(route = "CustomerDetailsScreen" + "/${it.id.toString()}")
+                        navController.navigate(route = "CustomerDetailsScreen" + "/${it.id.toString()}")
                     },
                     iconContent = {
                     CreateIcon(Icons.Rounded.ShoppingCart){

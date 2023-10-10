@@ -135,4 +135,8 @@ class MProductViewModel @Inject constructor(private val repository: ProductFireR
         }
     }
 
+    fun getAllProductsFromDatabase(): List<MProduct>? {
+        return data.value.data
+    }
+
 }

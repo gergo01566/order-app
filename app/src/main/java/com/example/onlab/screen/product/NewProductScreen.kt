@@ -149,6 +149,7 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                         .fillMaxWidth()
                         .padding((10.dp)),
                     value = if (pricePerKarton == "null") "" else pricePerKarton,
+                    maxLines = 1,
                     onValueChange = { newValue ->
                         pricePerKarton = newValue
                         product = product.copy(pricePerKarton = pricePerKarton.toIntOrNull() ?: 0)
@@ -190,9 +191,7 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                     }
                 }
 
-                if(!product.title.isNullOrEmpty() && product.pricePerKarton != 0 && product.pricePerKarton != null && product.pricePerPiece != 0 && product.pricePerKarton != null){
-                    buttonEnabled = true
-                }
+                buttonEnabled = !product.title.isNullOrEmpty() && product.pricePerKarton != 0 && product.pricePerKarton != null && product.pricePerPiece != 0 && product.pricePerKarton != null
 
                 ProductButton(modifier = Modifier
                     .fillMaxWidth()

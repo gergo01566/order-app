@@ -25,6 +25,7 @@ import com.example.onlab.components.*
 import com.example.onlab.model.*
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.*
+import java.util.*
 import com.example.onlab.model.Category as Categ
 
 @Composable
@@ -47,7 +48,7 @@ fun ProductListScreen(
 
     if (!productViewModel.data.value.data.isNullOrEmpty()){
         Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
-        listOfProducts = productViewModel.data.value.data!!.toList()
+        listOfProducts = productViewModel.getAllProductsFromDatabase()!!
         if (selectedCategory != null) {
             listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())!!
         }
@@ -77,6 +78,7 @@ fun ProductListScreen(
             onAdd = { state: Boolean, quantity: String ->
                 if (quantity.isDigitsOnly() && quantity!=""){
                     val orderItem = MOrderItem(
+                        id = UUID.randomUUID().toString(),
                         amount = quantity.toInt(),
                         orderID = orderID!!,
                         productID = selectedProduct!!.id.toString(),
@@ -84,14 +86,15 @@ fun ProductListScreen(
                         carton = !state,
                         piece = state
                     )
-                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
-                        navController.popBackStack()
-                    })
+                    orderItemViewModel.addOrderItem(orderItem)
+                    Log.d("TAG", "ProductListScreen: ${orderItemViewModel.getOrderItemsList().size}")
+                    navController.popBackStack()
+//                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
+//                        navController.popBackStack()
+//                    })
                 } else {
                     Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()
                 }
-
-
             }
         ) {
             showFullScreenDialog.value = false
@@ -102,8 +105,8 @@ fun ProductListScreen(
         topBar = {
             if (ordering) createTopBar(navController = navController, text = "Új rendelés", withIcon = true)
             else {
-                createTopBar(navController = navController, text = "Termékek", withIcon = false)            }
-
+                createTopBar(navController = navController, text = "Termékek", withIcon = false)
+            }
         },
         bottomBar = {
             if (!ordering) BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])

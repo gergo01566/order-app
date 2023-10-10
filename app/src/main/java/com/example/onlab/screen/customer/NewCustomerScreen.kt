@@ -172,9 +172,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     )
                 }
 
-                if (customer.firstName.isNotEmpty() && customer.lastName.isNotEmpty() && customer.address.isNotEmpty()){
-                    buttonEnabled = true
-                }
+                buttonEnabled = customer.firstName.isNotEmpty() && customer.lastName.isNotEmpty() && customer.address.isNotEmpty()
 
                 ProductButton(
                     modifier = Modifier
@@ -184,7 +182,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     text = "Ügyfél mentése",
                     enabled =  buttonEnabled,
                     onClick = {
-                    if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null){
+                    if(customer.phoneNumber.toDoubleOrNull() != null || customer.phoneNumber.toLongOrNull() != null || customer.firstName.isNotEmpty()){
                         val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = imageUri.toString())
                         customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
                             Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()

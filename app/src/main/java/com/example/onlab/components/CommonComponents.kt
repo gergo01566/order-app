@@ -388,7 +388,7 @@ fun FullScreenDialog(
                             Text(modifier = Modifier
                                 .padding(20.dp)
                                 .clickable {
-                                    onAdd(state.value, value)
+                                    onAdd(state.value, value.toString())
                                 },
                                 text = "Mentés", fontSize = 22.sp, fontWeight = FontWeight.Normal, color = Color.White)
                     }
@@ -450,6 +450,7 @@ fun FullScreenDialog(
                                 onValueChange = { newValue ->
                                    value = newValue
                                 },
+                                maxLines = 1,
                                 label = { Text(text = "Mennyiség") },
                                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f)

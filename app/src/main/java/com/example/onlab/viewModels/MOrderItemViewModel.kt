@@ -1,8 +1,7 @@
 package com.example.onlab.viewModels
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -108,6 +107,51 @@ class MOrderItemViewModel @Inject constructor(private val repository: OrderItemF
         return data.value.data!!.filter {
             it.orderID == orderId
         }
+    }
+
+    fun initOrders(orderId: String){
+        getOrderItemsByOrder(orderId).forEach{
+            if(!orderItemsList.contains(it)){
+                addOrderItem(it)
+            }
+        }
+    }
+
+    // New variable to store order items
+    private var orderItemsList = mutableStateListOf<MOrderItem>()
+
+    // Function to get the list of order items
+    fun getOrderItemsList(): List<MOrderItem> {
+        return orderItemsList
+    }
+
+    // Function to add an order item to the list
+    fun addOrderItem(orderItem: MOrderItem) {
+        Log.d("IDD", "addOrderItem: ${orderItem.id.toString()}")
+        orderItemsList.add(orderItem)
+    }
+
+    // Function to remove an order item from the list
+    fun removeOrderItem(orderItem: MOrderItem) {
+        orderItemsList.remove(orderItem)
+    }
+
+    // Function to update an order item in the list
+    fun updateOrderItem(orderItemToUpdate: MOrderItem) {
+        val index = orderItemsList.indexOfFirst {
+            Log.d("ID", "index ${it.id.toString()}")
+            it.id == orderItemToUpdate.id
+        }
+
+        if (index != -1) {
+            orderItemsList[index] = orderItemToUpdate
+        }
+    }
+
+
+    // Function to clear the list
+    fun clearOrderItemsList() {
+        orderItemsList.clear()
     }
 
 }

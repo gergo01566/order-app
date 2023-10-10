@@ -47,7 +47,7 @@ fun OrdersScreen(
     customerViewModel: MCustomerViewModel,
     orderItemViewModel: MOrderItemViewModel,
     mProductViewModel: MProductViewModel,
-    loginScreenViewModel: LoginScreenViewModel
+    loginScreenViewModel: LoginScreenViewModel,
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
@@ -131,6 +131,7 @@ fun OrdersScreen(
                     showDialog.value = true
                 },
                 onEdit = {
+                    navController.navigate(route = "NewOrderScreen" + "/${customerViewModel.getCustomerById(it.customerID)!!.id}" + "/${it.orderId}")
                     Toast.makeText(
                         contextForToast,
                         "Ez a funkció nem érhető el",

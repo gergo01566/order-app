@@ -52,6 +52,8 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
         })
     }
 
+    var buttonEnabled by remember { mutableStateOf(false) }
+
     var changesMade by remember { mutableStateOf(false) }
 
     var showAlertDialog by remember { mutableStateOf(false) }
@@ -238,6 +240,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     .padding((10.dp))
                     .height(40.dp),
                     text = "Termék mentése",
+                    enabled = product!!.title.isNotEmpty() && product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0,
                     onClick = {
                         if (product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0) {
                             val productToUpdate = hashMapOf(

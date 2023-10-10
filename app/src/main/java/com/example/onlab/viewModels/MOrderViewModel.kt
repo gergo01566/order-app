@@ -132,6 +132,12 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         }
     }
 
+    fun isOrderIncluded(id: String): Boolean {
+        return data.value.data!!.any {
+            (it.orderId == id)
+        }!!
+    }
+
     fun getOrdersByStatus(status: Int): List<MOrder> {
         return data.value.data!!.filter {
             it.status == status

@@ -103,28 +103,15 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
     }
     Scaffold(
         topBar = {
-            TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            ) {
-                Row(horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Arrow Back",
-                        modifier = Modifier.clickable {
-                            if(changesMade){
-                                showNavigationDialog.value = true
-                            }
-                            else navController.popBackStack()
-                        })
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    if(customerList.loading == true){
-                        LinearProgressIndicator()
-                        customerList.loading = false
-                    } else {
-                        Text(text = customer!!.firstName + " " + customer!!.lastName + " adatai", fontSize = 27.sp, fontWeight = FontWeight.Normal)
-                    }
+            createTopBar(navController = navController, text = customer!!.firstName + " " + customer!!.lastName + " adatai", withIcon = true){
+                if(changesMade){
+                    showNavigationDialog.value = true
                 }
+                else navController.popBackStack()
+            }
+            if(customerList.loading == true){
+                LinearProgressIndicator()
+                customerList.loading = false
             }
         },
         bottomBar = {
@@ -145,6 +132,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding((10.dp)),
+                maxLines = 1,
                 value = customer?.firstName ?: "",
                 onValueChange = { newValue ->
                     if (newValue.length <= 20) {
@@ -166,6 +154,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                     .fillMaxWidth()
                     .padding((10.dp)),
                 value = customer?.lastName ?: "",
+                maxLines = 1,
                 onValueChange = { newValue ->
                     if (newValue.length <= 20){
                         customer = customer?.copy(lastName = newValue) ?: customer
@@ -246,9 +235,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
                 }
             }
 
-            if (customer!!.firstName.isNotEmpty() && customer!!.lastName.isNotEmpty() && customer!!.address.isNotEmpty()){
-                buttonEnabled = true
-            }
+            buttonEnabled = customer!!.firstName.isNotEmpty() && customer!!.lastName.isNotEmpty() && customer!!.address.isNotEmpty()
 
             ProductButton(modifier = Modifier
                 .fillMaxWidth()
