@@ -5,9 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -510,123 +508,129 @@ fun FullScreenDialog(
     }
 
 }
-
-@Composable
-fun <T> CreateList(
-    data: List<T>,
-    onDelete: (T) -> Unit,
-    onEdit: (T) -> Unit,
-    onClick: (T) -> Unit = {},
-    iconClickEnabled: Boolean = true,
-    iconContent: @Composable (item: T) -> Unit = {},
-    itemContent: @Composable (item: T) -> Unit
-) {
-    LazyColumn {
-        items(data) { item ->
-            Card(
-                modifier = Modifier
-                    .padding(13.dp)
-                    .fillMaxWidth()
-                    .clickable(onClick = { onClick(item) }),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .padding(7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(
+        @Composable
+        fun <T> CreateList(
+            data: List<T>,
+            onDelete: (T) -> Unit,
+            onEdit: (T) -> Unit,
+            onClick: (T) -> Unit = {},
+            iconClickEnabled: Boolean = true,
+            iconContent: @Composable (item: T) -> Unit = {},
+            itemContent: @Composable (item: T) -> Unit
+        ) {
+            LazyColumn {
+                items(data) { item ->
+                    Card(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(7.dp)
+                            .padding(13.dp)
+                            .fillMaxWidth()
+                            .clickable(onClick = { onClick(item) }),
+                        shape = RoundedCornerShape(20.dp)
                     ) {
-                        itemContent(item)
-                    }
-                    Row(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp) // Add spacing between icons
-                    ) {
-                        iconContent(item)
-                        CreateIcon(Icons.Rounded.Edit, clickEnabled = iconClickEnabled) {
-                            onEdit(item)
-                        }
-                        CreateIcon(Icons.Rounded.Delete, clickEnabled = iconClickEnabled) {
-                            onDelete(item)
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(7.dp)
+                            ) {
+                                itemContent(item)
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .wrapContentSize()
+                                    .padding(10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp) // Add spacing between icons
+                            ) {
+                                iconContent(item)
+                                CreateIcon(Icons.Rounded.Edit, clickEnabled = iconClickEnabled) {
+                                    onEdit(item)
+                                }
+                                CreateIcon(Icons.Rounded.Delete, clickEnabled = iconClickEnabled) {
+                                    onDelete(item)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
 
 
+        @Composable
+        fun ToggleButtons(
+            items: List<String>,
+            selectedIndex: Int,
+            onSelectedIndexChange: (Int) -> Unit,
+        ) {
+            val cornerRadius = 8.dp
 
-@Composable
-fun ToggleButtons(
-    items: List<String>,
-    selectedIndex: Int,
-    onSelectedIndexChange: (Int) -> Unit,
-) {
-    val cornerRadius = 8.dp
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-    ) {
-        items.forEachIndexed { index, item ->
-            OutlinedButton(
-                onClick = { onSelectedIndexChange(index) },
-                shape = when {
-                    // left outer button
-                    index == 0 -> RoundedCornerShape(topStart = cornerRadius, bottomStart = cornerRadius)
-                    // right outer button
-                    index == 1 -> RoundedCornerShape(topEnd = cornerRadius, bottomEnd = cornerRadius)
-                    // middle button
-                    else -> RectangleShape
-                },
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = if (selectedIndex == index) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        Color.DarkGray.copy(alpha = 0.75f)
-                    }
-                ),
-                colors = if (selectedIndex == index) {
-                    // selected colors
-                    ButtonDefaults.outlinedButtonColors(
-                        backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f),
-                        contentColor = MaterialTheme.colors.primary
-                    )
-                } else {
-                    // not selected colors
-                    ButtonDefaults.outlinedButtonColors(
-                        backgroundColor = MaterialTheme.colors.surface,
-                        contentColor = MaterialTheme.colors.primary
-                    )
-                },
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .zIndex(if (selectedIndex == index) 1f else 0f),
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
             ) {
-                Text(
-                    text = item,
-                    color = if (selectedIndex == index) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        Color.DarkGray.copy(alpha = 0.9f)
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                items.forEachIndexed { index, item ->
+                    OutlinedButton(
+                        onClick = { onSelectedIndexChange(index) },
+                        shape = when {
+                            // left outer button
+                            index == 0 -> RoundedCornerShape(
+                                topStart = cornerRadius,
+                                bottomStart = cornerRadius
+                            )
+                            // right outer button
+                            index == 1 -> RoundedCornerShape(
+                                topEnd = cornerRadius,
+                                bottomEnd = cornerRadius
+                            )
+                            // middle button
+                            else -> RectangleShape
+                        },
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = if (selectedIndex == index) {
+                                MaterialTheme.colors.primary
+                            } else {
+                                Color.DarkGray.copy(alpha = 0.75f)
+                            }
+                        ),
+                        colors = if (selectedIndex == index) {
+                            // selected colors
+                            ButtonDefaults.outlinedButtonColors(
+                                backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                                contentColor = MaterialTheme.colors.primary
+                            )
+                        } else {
+                            // not selected colors
+                            ButtonDefaults.outlinedButtonColors(
+                                backgroundColor = MaterialTheme.colors.surface,
+                                contentColor = MaterialTheme.colors.primary
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .zIndex(if (selectedIndex == index) 1f else 0f),
+                    ) {
+                        Text(
+                            text = item,
+                            color = if (selectedIndex == index) {
+                                MaterialTheme.colors.primary
+                            } else {
+                                Color.DarkGray.copy(alpha = 0.9f)
+                            },
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                }
             }
         }
-    }
-}
+
+
 
 

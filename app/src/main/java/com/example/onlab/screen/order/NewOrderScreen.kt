@@ -46,24 +46,16 @@ fun NewOrderScreen(
         mutableStateOf(customerViewModel.getCustomerById(customerID!!))
     }
 
+    Log.d("DB", "New order screen , lista ennyi elemet tartalmaz: ${orderItemViewModel.getOrderItemsList().size}")
 
     var copyOfOrderItems by remember { mutableStateOf<List<MOrderItem>>(emptyList()) }
-
-    Log.d("1", "${copyOfOrderItems.size} ")
-
 
     LaunchedEffect(orderID) {
         orderItemViewModel.initOrders(orderID!!)
     }
 
-    Log.d("2", "${copyOfOrderItems.size} ")
-
-
     //orderItemViewModel.initOrders(orderID!!)
     copyOfOrderItems = orderItemViewModel.getOrderItemsList()
-
-    Log.d("3", "${copyOfOrderItems.size} ")
-
 
     val contextForToast = LocalContext.current.applicationContext
 
@@ -82,9 +74,6 @@ fun NewOrderScreen(
     if (openDialog.value) {
         DismissChangesDialog(onDismiss = { openDialog.value = false }) {
             openDialog.value = false
-            copyOfOrderItems.forEach { mOrderItem ->
-                orderItemViewModel.deleteOrderItem(mOrderItem.id!!) {}
-            }
             orderItemViewModel.clearOrderItemsList()
             navController.navigate("CustomerScreen")
         }
@@ -109,10 +98,7 @@ fun NewOrderScreen(
                                 carton = !state,
                                 piece = state
                             )
-
-                            // Update the order item in your ViewModel
                             orderItemViewModel.updateOrderItem(updatedOrderItem)
-
                             Toast.makeText(
                                 contextForToast,
                                 "Rendelési tétel módosítva",
@@ -161,9 +147,10 @@ fun NewOrderScreen(
                 text = "${customer!!.firstName} rendelése",
                 withIcon = true,
                 onBack = {
-                    if (!copyOfOrderItems.isNullOrEmpty()) {
+                    if(orderItemViewModel.isOrderChanged(orderID!!)){
                         openDialog.value = true
                     } else {
+                        orderItemViewModel.clearOrderItemsList()
                         navController.popBackStack()
                     }
                 }
@@ -289,6 +276,7 @@ fun NewOrderScreen(
                                         }
                                     )
                                 }
+                                navController.popBackStack()
                                 orderItemViewModel.clearOrderItemsList()
 //                                } else if(orderViewModel.isOrderIncluded(orderID!!)){
 //                                    navController.popBackStack()

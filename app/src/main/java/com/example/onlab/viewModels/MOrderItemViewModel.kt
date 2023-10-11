@@ -109,13 +109,50 @@ class MOrderItemViewModel @Inject constructor(private val repository: OrderItemF
         }
     }
 
-    fun initOrders(orderId: String){
-        getOrderItemsByOrder(orderId).forEach{
-            if(!orderItemsList.contains(it)){
-                addOrderItem(it)
+    fun initOrders(orderId: String) {
+        // Log the current state of orderItemsList
+        for (orderItem in orderItemsList) {
+            Log.d("DB", "1. Name: ${orderItem.id}, Quantity: ${orderItem.amount}")
+        }
+
+        // Get the items from the database and add them to orderItemsList if they don't exist
+        val itemsFromDB = getOrderItemsByOrder(orderId)
+        itemsFromDB.forEach { fromDB ->
+            val existsInList = orderItemsList.any { fromList -> fromDB.id == fromList.id }
+            if (!existsInList) {
+                addOrderItem(fromDB)
             }
         }
+
+        // Log the updated state of orderItemsList
+        for (orderItem in orderItemsList) {
+            Log.d("DB", "2. Name: ${orderItem.id}, Quantity: ${orderItem.amount}")
+        }
     }
+
+    fun isOrderChanged(orderId: String): Boolean {
+        val itemsFromDB = getOrderItemsByOrder(orderId)
+
+        if(itemsFromDB.isNullOrEmpty()){
+            return true
+        }
+
+        if (itemsFromDB.size != orderItemsList.size) {
+            return true
+        }
+
+        for (fromDB in itemsFromDB) {
+            val existsInList = orderItemsList.any { fromList -> fromDB == fromList }
+            if (!existsInList) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+
+
 
     // New variable to store order items
     private var orderItemsList = mutableStateListOf<MOrderItem>()
@@ -139,15 +176,16 @@ class MOrderItemViewModel @Inject constructor(private val repository: OrderItemF
     // Function to update an order item in the list
     fun updateOrderItem(orderItemToUpdate: MOrderItem) {
         val index = orderItemsList.indexOfFirst {
-            Log.d("ID", "index ${it.id.toString()}")
             it.id == orderItemToUpdate.id
         }
-
         if (index != -1) {
+            Log.d("DB", "siker")
             orderItemsList[index] = orderItemToUpdate
         }
+        for (orderItem in orderItemsList) {
+            Log.d("DB", "Name: ${orderItem.id}, Quantity: ${orderItem.amount}")
+        }
     }
-
 
     // Function to clear the list
     fun clearOrderItemsList() {

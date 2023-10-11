@@ -125,7 +125,7 @@ fun OrdersScreen(
 
 
             CreateList(
-                data = orders,
+                data = orders.sortedBy { it.date },
                 onDelete = {
                     selectedOrder = it
                     showDialog.value = true

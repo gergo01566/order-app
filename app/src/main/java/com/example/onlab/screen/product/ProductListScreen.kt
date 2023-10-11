@@ -87,7 +87,7 @@ fun ProductListScreen(
                         piece = state
                     )
                     orderItemViewModel.addOrderItem(orderItem)
-                    Log.d("TAG", "ProductListScreen: ${orderItemViewModel.getOrderItemsList().size}")
+                    Log.d("DB", "ADD, lista tartalma ennyi elem: ${orderItemViewModel.getOrderItemsList().size}")
                     navController.popBackStack()
 //                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
 //                        navController.popBackStack()
