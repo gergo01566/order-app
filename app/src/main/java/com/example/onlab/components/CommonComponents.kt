@@ -73,7 +73,7 @@ import androidx.core.text.isDigitsOnly
 import com.example.onlab.model.MProduct
 import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.compose.material.TextButton // Import the Material Design 1 version
-
+import androidx.compose.ui.draw.clip
 
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
@@ -340,11 +340,170 @@ fun DismissChangesDialog(
 
 }
 
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun FullScreenDialog(
+    showDialog: MutableState<Boolean>,
+    selectedProduct: MProduct,
+    currentQuantity: Int?,
+    isKarton: Boolean?,
+    onAdd: (state: Boolean, quantity: String) -> Unit,
+    onClose: () -> Unit
+){
+    var state = remember {
+        mutableStateOf(isKarton != true)
+    }
+    var value by remember {
+        mutableStateOf(currentQuantity?.toString() ?: "")
+    }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    if (showDialog.value){
+        Dialog(
+            onDismissRequest = onClose,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                androidx.compose.material3.TopAppBar(
+                    title = { Text(text = selectedProduct.title) },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            showDialog.value = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            onAdd(state.value, value.toString())
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+                
+                Column(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AsyncImage(
+                        model = selectedProduct.image.toUri(),
+                        contentDescription = "profile image",
+                        modifier = Modifier
+                            .size(200.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
+                    Text(
+                        modifier = Modifier.padding(bottom = 20.dp, top = 20.dp),
+                        text = selectedProduct.title,
+                        textAlign = TextAlign.Start,
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.h4
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = selectedProduct.pricePerPiece.toString() + " HUF/db",
+                            textAlign = TextAlign.Start,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.subtitle2,
+                            color = MaterialTheme.colors.primary
+                        )
+                        Text(
+                            text = selectedProduct.pricePerKarton.toString() + " HUF/karton",
+                            textAlign = TextAlign.End,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Normal,
+                            style = MaterialTheme.typography.subtitle1,
+                            color = Color.Gray
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        androidx.compose.material3.TextField(
+                            value = value,
+                            onValueChange = { newValue ->
+                                value = newValue
+                            },
+                            maxLines = 1,
+                            label = { Text(text = "Mennyiség") },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(30.dp))
+                        Row(Modifier.selectableGroup()) {
+                            RadioButton(
+                                selected = state.value,
+                                onClick = {
+                                    state.value = true
+                                },
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Localized Description"
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colors.primary,
+                                    unselectedColor = Color.Gray
+                                )
+                            )
+                            Text(
+                                textAlign = TextAlign.Center,
+                                text = "Darab",
+                                modifier = Modifier
+                                    .clickable(onClick = { state.value = true })
+                                    .align(Alignment.CenterVertically)
+                            )
+                            Spacer(modifier = Modifier.width(30.dp))
+                            RadioButton(
+                                selected = !state.value,
+                                onClick = { state.value = false },
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Localized Description"
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colors.primary,
+                                    unselectedColor = Color.Gray
+                                )
+                            )
+                            Text(
+                                text = "Karton",
+                                modifier = Modifier
+                                    .clickable(onClick = { state.value = false })
+                                    .align(Alignment.CenterVertically),
+                            )
+                        }
+                    }
+                }
+            }
+            
+        }
+    }
+}
+
 
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun FullScreenDialog(
+fun FullScreenDidalog(
     showDialog: MutableState<Boolean>,
     selectedProduct: MProduct,
     currentQuantity: Int?,
@@ -506,7 +665,6 @@ fun FullScreenDialog(
             }
         }
     }
-
 }
         @Composable
         fun <T> CreateList(

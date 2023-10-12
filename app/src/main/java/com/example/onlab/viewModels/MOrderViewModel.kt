@@ -63,6 +63,7 @@ import androidx.core.content.FileProvider
 
 @HiltViewModel
 class MOrderViewModel @Inject constructor(private val repository: OrderFireRepository, private val fireRepository: FireRepository): ViewModel(){
+
     val data: MutableState<DataOrException<List<MOrder>, Boolean, Exception>> = mutableStateOf(
         DataOrException(listOf(), true, Exception(""))
     )
@@ -83,6 +84,22 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
             }
             data.value.loading = false
         }
+    }
+
+    fun deleteUnrelevantOrders(){
+        viewModelScope.launch {
+            val customerIds = fireRepository.getAllCustomersFromDatabase().data!!.map { it.id }
+
+
+            data.value.data?.filter { it.orderId != null }
+                ?.filter { it.orderId != null && it.customerID !in customerIds!! }
+                ?.forEach { order ->
+                    order.orderId?.let { orderId ->
+                        deleteOrder(orderId){}
+                    }
+                }
+        }
+
     }
 
     fun saveOrderToFirebase(order: MOrder, onSuccess: () -> Unit, onFailure: () -> Unit = {}){
@@ -141,6 +158,12 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
     fun getOrdersByStatus(status: Int): List<MOrder> {
         return data.value.data!!.filter {
             it.status == status
+        }
+    }
+
+    fun getOrdersByCustomer(customerId: String): List<MOrder> {
+        return data.value.data!!.filter {
+            it.customerID == customerId
         }
     }
 

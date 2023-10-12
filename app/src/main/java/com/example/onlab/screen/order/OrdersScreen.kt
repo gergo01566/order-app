@@ -123,7 +123,6 @@ fun OrdersScreen(
                 }
             )
 
-
             CreateList(
                 data = orders.sortedBy { it.date },
                 onDelete = {
@@ -181,6 +180,13 @@ fun OrdersScreen(
                                 .padding(10.dp)
                         ) {
 
+                            if (customerViewModel.getCustomerById(customerId = order.customerID) == null){
+                                orderItemViewModel.getOrderItemsByOrder(orderId = order.orderId!!).forEach {
+                                    orderItemViewModel.deleteOrderItem(it.id!!){}
+                                }
+                                order.id?.let { it1 -> orderViewModel.deleteOrder(it1){} }
+                            }
+
                             customerViewModel.getCustomerById(order.customerID)
                                 ?.let { it1 ->
                                     androidx.compose.material3.Text(
@@ -207,6 +213,7 @@ fun OrdersScreen(
                         }
 
                     }
+
 
                 })
         }
