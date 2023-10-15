@@ -2,6 +2,8 @@ package com.example.onlab.screen.login
 
 import android.os.Build
 import android.util.Log
+import android.util.Patterns
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +26,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -48,8 +51,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.currentCoroutineContext
 import kotlin.math.log
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.onlab.navigation.AppNavigation
 import com.example.onlab.screen.order.OrdersScreen
+import kotlinx.coroutines.coroutineScope
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -57,6 +62,7 @@ import com.example.onlab.screen.order.OrdersScreen
 fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel()){
     val showLoginFrom = rememberSaveable{ mutableStateOf(true) }
     val showDialog = remember{ mutableStateOf(false) }
+    val passwordReset = remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -77,37 +83,110 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
             }
             else {
                 UserForm(false, true){ email, pwd ->
-                    loginScreenViewModel.createUserWithEmailAndPassword(email = email, password = pwd){
+                    loginScreenViewModel.createUserWithEmailAndPassword(email = email, password = pwd, orders = {
                         navController.navigate(route = "OrdersScreen")
-                    }
+                    }, onFailure = {
+                        showDialog.value = true
+                    })
                 }
             }
+            Row(
+                modifier = Modifier.padding(15.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val text = if (showLoginFrom.value) "Regisztráció" else "Bejelentkezés"
+                Text(text = if (showLoginFrom.value) "Új felhasználó?" else "Már van fiókod?")
+                Text(text, modifier = Modifier
+                    .clickable {
+                        showLoginFrom.value = !showLoginFrom.value
+                    }
+                    .padding(start = 5.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondaryVariant)
+            }
+            if(showLoginFrom.value){
+                Text("Elfelejtett jelszó", modifier = Modifier
+                    .clickable {
+                        passwordReset.value = true
+                    }
+                    .padding(start = 5.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondaryVariant)
+            }
         }
-        Spacer(modifier = Modifier.height(15.dp))
-        Row(
-            modifier = Modifier.padding(15.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val text = if (showLoginFrom.value) "Regisztráció" else "Bejelentkezés"
-            Text(text = if (showLoginFrom.value) "Új felhasználó?" else "Már van fiókod?")
-            Text(text, modifier = Modifier
-                .clickable {
-                    showLoginFrom.value = !showLoginFrom.value
-                }
-                .padding(start = 5.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondaryVariant)
-        }
+        //Spacer(modifier = Modifier.height(15.dp))
+
+
     }
-    if (showDialog.value){
+    if (showDialog.value && showLoginFrom.value){
         AlertDialogExample(onDismissRequest = { /*TODO*/ }) {
             showDialog.value = false
+        }
+    } else if (showDialog.value && !showLoginFrom.value){
+        AlertDialogExample(text = "Az e-mail cím vagy jelszó formátuma nem megfelelő vagy ezzel az e-maillel már regisztráltak!",onDismissRequest = { /*TODO*/ }) {
+            showDialog.value = false
+        }
+    }
+
+    if(passwordReset.value){
+        PasswordResetDialog(showDialog = passwordReset.value, loginScreenViewModel = loginScreenViewModel, onDismissRequest = { passwordReset.value = false })
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun PasswordResetDialog(
+    showDialog: Boolean,
+    loginScreenViewModel: LoginScreenViewModel,
+    onDismissRequest: () -> Unit,
+) {
+    if (showDialog) {
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            properties = DialogProperties(usePlatformDefaultWidth = true)
+        ) {
+            var email by remember { mutableStateOf("") }
+
+            Column(
+                modifier = Modifier.padding(16.dp).background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Password Reset",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(8.dp)
+                )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                )
+
+                Button(
+                    onClick = {
+                        if (email.isNotEmpty()) {
+                            loginScreenViewModel.resetPassword(email)
+                            onDismissRequest()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(text = "Reset Password")
+                }
+            }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertDialogExample(
+    text: String = "Helytelen felhasználónév vagy jelszó",
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
@@ -116,7 +195,7 @@ fun AlertDialogExample(
             Text(text = "Hiba")
         },
         text = {
-            Text(text = "Helytelen felhasználónév vagy jelszó")
+            Text(text = text)
         },
         onDismissRequest = {
             onDismissRequest()
@@ -301,6 +380,6 @@ fun InputField(
 }
 
 fun validateInputs(email: String, password: String): Boolean {
-    return email.isNotEmpty() && password.isNotEmpty()
+    return email.isNotEmpty() && password.isNotEmpty() && password.length >= 6 && email.contains('@')
 }
 

@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.util.Log
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -64,24 +66,44 @@ class LoginScreenViewModel: ViewModel() {
             .add(user)
     }
 
+    fun resetPassword(email: String){
+        Firebase.auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("TAG", "Email sent.")
+                }
+            }
+    }
+
     fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-        orders: () -> Unit
+        orders: () -> Unit,
+        onFailure: () -> Unit
     ){
         if(loading.value == false){
             _loading.value = true
-            auth.createUserWithEmailAndPassword(email,password)
-                .addOnCompleteListener{task->
-                    if(task.isSuccessful){
-                        val displayName = task.result?.user?.email?.split('@')?.get(0)
-                        createUser(displayName)
-                        orders()
-                    } else {
-                        Log.d("FB", "createUserWithEmailAndPassword: ${task.result.toString()}")
+            try {
+                auth.createUserWithEmailAndPassword(email,password)
+                    .addOnCompleteListener{task->
+                        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            // Show an error message
+                            onFailure()
+                            _loading.value = false
+                            return@addOnCompleteListener
+                        }
+                        if(task.isSuccessful){
+                            val displayName = task.result?.user?.email?.split('@')?.get(0)
+                            createUser(displayName)
+                            orders()
+                        } else {
+                            onFailure()
+                        }
+                        _loading.value = false
                     }
-                    _loading.value = false
-                }
+            } catch (ex: java.lang.Exception){
+                Log.d("FB", "createUserWithEmailAndPassword: ${ex.message}")
+            }
         }
     }
 
