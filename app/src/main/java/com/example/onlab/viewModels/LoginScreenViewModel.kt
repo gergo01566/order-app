@@ -26,6 +26,8 @@ import com.example.onlab.model.MUser
 import com.google.android.gms.tasks.RuntimeExecutionException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -66,11 +68,22 @@ class LoginScreenViewModel: ViewModel() {
             .add(user)
     }
 
-    fun resetPassword(email: String){
+    fun resetPassword(email: String, onFailure: () -> Unit, onComplete:() -> Unit){
         Firebase.auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
+                if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    onFailure()
+                    _loading.value = false
+                    return@addOnCompleteListener
+                }
                 if (task.isSuccessful) {
-                    Log.d("TAG", "Email sent.")
+                    onComplete()
+                } else {
+                    val exception = task.exception
+                    if (exception is FirebaseAuthInvalidUserException) {
+                        onFailure()
+                    }
+                    _loading.value = false
                 }
             }
     }
@@ -87,7 +100,6 @@ class LoginScreenViewModel: ViewModel() {
                 auth.createUserWithEmailAndPassword(email,password)
                     .addOnCompleteListener{task->
                         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            // Show an error message
                             onFailure()
                             _loading.value = false
                             return@addOnCompleteListener
