@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.MCustomer
 import com.example.onlab.screen.product.ProductButton
@@ -28,7 +29,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable
-fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomerViewModel){
+fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomerViewModel, permissionRequester: PermissionRequester){
     val contextForToast = LocalContext.current.applicationContext
 
     var customer by remember { mutableStateOf(MCustomer(firstName = "", lastName = "", address = "", phoneNumber = "", image = "")) }
@@ -38,13 +39,6 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
     var showAlertDialog by remember {
         mutableStateOf(false)
     }
-
-    val permissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-    )
 
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
@@ -136,10 +130,9 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         .height(150.dp)
                 ) {
                     ImagePickerButton(onImageSelected = {
-                        permissionsState.launchMultiplePermissionRequest()
                         imageUri = it
                         customer = customer.copy(image = it.toString())
-                    })
+                    }, permissionRequester = permissionRequester)
                     Surface(
                         modifier = Modifier
                             .fillMaxHeight(),

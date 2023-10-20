@@ -1,6 +1,9 @@
 package com.example.onlab.components
 
+import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,42 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.core.net.toUri
-import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import com.example.onlab.R
-import com.example.onlab.model.Category
-import com.example.onlab.model.Product
-import com.example.onlab.model.getCategoryTypes
-import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.product.ProductButton
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.ExposedDropdownMenuBox
@@ -58,22 +25,54 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.RadioButton
 import androidx.compose.material.RadioButtonDefaults
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.core.text.isDigitsOnly
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
+import androidx.core.net.toUri
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.onlab.PermissionRequester
+import com.example.onlab.R
+import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
-import dagger.hilt.android.qualifiers.ApplicationContext
-import androidx.compose.material.TextButton // Import the Material Design 1 version
-import androidx.compose.ui.draw.clip
+import com.example.onlab.model.getCategoryTypes
+import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.screen.product.ProductButton
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 
 
 data class BottomNavItem(val name: String, val icon: ImageVector)
@@ -108,6 +107,8 @@ val items = listOf(
     BottomNavItem("Termékek", Icons.Default.ShoppingCart),
     BottomNavItem("Beállítások", Icons.Default.Settings)
 )
+
+
 
 
 @Composable
@@ -233,7 +234,7 @@ fun CategoryDropDownMenu(
 }
 
 @Composable
-fun ImagePickerButton(onImageSelected: (Uri) -> Unit) {
+fun ImagePickerButton(permissionRequester: PermissionRequester, onImageSelected: (Uri) -> Unit) {
     val context = LocalContext.current
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -262,14 +263,53 @@ fun ImagePickerButton(onImageSelected: (Uri) -> Unit) {
             }
         }
     )
+    val openAlertDialog = remember {
+        mutableStateOf(false)
+    }
     ProductButton(modifier = Modifier
         .padding(end = 10.dp)
         .height(40.dp),
         text = "Kép hozzáadása",
         onClick = {
-            imagePicker.launch("image/*")
+            permissionRequester.requestPermission(
+                context = context,
+                permission = android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                showRationale = {
+                    // Show rationale before requesting permission
+                    Toast.makeText(context, "We need access to your photos to proceed.", Toast.LENGTH_SHORT).show()
+                },
+                onPermissionDenied = {
+                    // Handle permission denied
+                    openAlertDialog.value = true
+                    Toast.makeText(context, "You have decided not to grant access to your photos.", Toast.LENGTH_SHORT).show()
+                }
+            ) {
+                Log.d("show", "ImagePickerButton: we need permission please")
+                imagePicker.launch("image/*")
+            }
         }
     )
+
+    when {
+        openAlertDialog.value -> {
+            permissionRequester.NotificationPermissionRationaleDialog(
+                icon = painterResource(id = R.drawable.cloud_storage),
+                headline = "Tölts fel képeket!",
+                strapline = "Ahhoz hogy képeket tudj feltölteni engedélyezned kell a fotók elérését.",
+                image = painterResource(id = R.drawable.gallery),
+                onSkip = {
+                    openAlertDialog.value = false
+                }
+            ) {
+                openAlertDialog.value = false
+                val intent: Intent = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", context.packageName, null)
+                )
+                startActivity(context,intent, Bundle.EMPTY)
+            }
+        }
+    }
 }
 
 @Composable
@@ -437,7 +477,9 @@ fun FullScreenDialog(
                         )
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ){
                         androidx.compose.material3.TextField(
@@ -787,7 +829,11 @@ fun FullScreenDidalog(
                     }
                 }
             }
+
+
         }
+
+
 
 
 

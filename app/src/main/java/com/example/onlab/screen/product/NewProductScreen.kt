@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
@@ -36,11 +37,11 @@ import java.io.*
 import java.util.*
 
 
-@ExperimentalPermissionsApi
+
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @Composable
-fun NewProductScreen(navController: NavController, productViewModel: MProductViewModel) {
+fun NewProductScreen(navController: NavController, productViewModel: MProductViewModel, permissionRequester: PermissionRequester) {
 
     val listItems = getCategoryTypes(Category::class.java)
 
@@ -69,31 +70,6 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
     var pricePerKarton by remember {
         mutableStateOf("null")
     }
-
-    val permissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-    )
-
-    @OptIn(ExperimentalPermissionsApi::class)
-    @Composable
-    fun MyPermission(
-        multiplePermissionState: MultiplePermissionsState,
-    ) {
-        PermissionsRequired(
-            multiplePermissionsState = multiplePermissionState,
-            permissionsNotGrantedContent = {
-                Toast.makeText(contextForToast, "Permissions not granted", Toast.LENGTH_SHORT).show() },
-            permissionsNotAvailableContent = {
-                Toast.makeText(contextForToast, "Permissions not available", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-        }
-    }
-
-    MyPermission(multiplePermissionState = permissionsState)
 
     Scaffold(
         topBar = {
@@ -176,7 +152,7 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                     ImagePickerButton(onImageSelected = {
                         imageUri = it
                         product = product!!.copy(image = it.toString())
-                    })
+                    }, permissionRequester = permissionRequester)
                     Surface(
                         modifier = Modifier
                             .fillMaxHeight(),

@@ -30,6 +30,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.getCategoryTypes
@@ -44,7 +45,7 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
-fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel) {
+fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel, permissionRequester: PermissionRequester) {
 
     var product by remember {
         mutableStateOf(productViewModel.data.value.data?.first{mProduct->
@@ -219,7 +220,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     ImagePickerButton(onImageSelected = {
                         imageUri = it
                         product = product!!.copy(image = it.toString())
-                    })
+                    }, permissionRequester = permissionRequester)
                     Surface(
                         modifier = Modifier
                             .weight(1f)

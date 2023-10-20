@@ -1,5 +1,7 @@
 package com.example.onlab.screen.order
 
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -17,19 +19,23 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
-import androidx.room.util.copy
 import coil.compose.AsyncImage
+import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.*
 import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.*
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
+import java.util.jar.Manifest
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -41,6 +47,7 @@ fun NewOrderScreen(
     orderItemViewModel: MOrderItemViewModel,
     productViewModel: MProductViewModel,
     orderViewModel: MOrderViewModel,
+    permissionRequester: PermissionRequester
 ) {
     val customer by remember {
         mutableStateOf(customerViewModel.getCustomerById(customerID!!))
@@ -57,7 +64,7 @@ fun NewOrderScreen(
     //orderItemViewModel.initOrders(orderID!!)
     copyOfOrderItems = orderItemViewModel.getOrderItemsList()
 
-    val contextForToast = LocalContext.current.applicationContext
+    val currentContext = LocalContext.current.applicationContext
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -100,14 +107,14 @@ fun NewOrderScreen(
                             )
                             orderItemViewModel.updateOrderItem(updatedOrderItem)
                             Toast.makeText(
-                                contextForToast,
+                                currentContext,
                                 "Rendelési tétel módosítva",
                                 Toast.LENGTH_SHORT
                             ).show()
                             showEditDialog.value = false
                         } else {
                             Toast.makeText(
-                                contextForToast,
+                                currentContext,
                                 "A tétel mennyisége nem megfelelő formátumban van!",
                                 Toast.LENGTH_SHORT
                             ).show()
@@ -253,29 +260,32 @@ fun NewOrderScreen(
                                         orderItemViewModel.saveOrderItemToFirebase(it, {
                                             navController.navigate("OrdersScreen")
                                             Toast.makeText(
-                                                contextForToast,
+                                                currentContext,
                                                 "Rendelés hozzáadva",
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         })
                                     }
+
                                     orderItemViewModel.clearOrderItemsList()
                                     orderViewModel.saveOrderToFirebase(
                                         MOrder(
                                             orderId = orderID,
                                             date = LocalDate.now().toString(),
                                             customerID = customerID.toString(),
-                                            status = 0
+                                            status = 0,
+                                            madeby = FirebaseAuth.getInstance().currentUser!!.email!!
                                         ),
                                         {
                                             Toast.makeText(
-                                                contextForToast,
+                                                currentContext,
                                                 "Rendelés hozzáadva",
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
                                     )
                                 }
+
                                 navController.popBackStack()
                                 orderItemViewModel.clearOrderItemsList()
 //                                } else if(orderViewModel.isOrderIncluded(orderID!!)){
@@ -329,7 +339,7 @@ fun NewOrderScreen(
                         Log.d("TAG", "edit selected NewOrderScreen: ${selectedOrderItem?.id}")
                         showEditDialog.value = true
                         Toast.makeText(
-                            contextForToast,
+                            currentContext,
                             "${selectedOrderItem?.id}",
                             Toast.LENGTH_SHORT
                         ).show()

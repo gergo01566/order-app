@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.onlab.PermissionRequester
 
 import com.example.onlab.screen.ProductListScreen
 import com.example.onlab.screen.customer.CustomerDetailsScreen
@@ -42,6 +43,7 @@ fun AppNavigation(){
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
     val mProductViewModel = viewModel<MProductViewModel>()
     val loginScreenViewModel = viewModel<LoginScreenViewModel>()
+    val permissionRequester = PermissionRequester()
 
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
         "LoginScreen";
@@ -56,18 +58,18 @@ fun AppNavigation(){
 
         composable(route = ProductScreens.NewProductScreen.name)
         {
-            NewProductScreen(navController = navController, productViewModel = mProductViewModel)
+            NewProductScreen(navController = navController, productViewModel = mProductViewModel, permissionRequester = permissionRequester)
         }
         composable(ProductScreens.NewProductScreen.name + "/{product}",
         arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
         ){ navBackStackEntry ->  
-            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel)
+            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
         }
         composable("CustomerScreen") { // add CustomerScreen composable
             CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
         }
         composable("NewCustomerScreen"){
-            NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel)
+            NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel, permissionRequester = permissionRequester)
         }
         composable("OrdersScreen"){
             OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel, mProductViewModel = productViewModel, loginScreenViewModel = loginScreenViewModel)
@@ -76,7 +78,7 @@ fun AppNavigation(){
             arguments = listOf(navArgument(name = "customer"){
                 type = NavType.StringType
             })){ navBackStackEntry ->
-            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = mCustomerViewModel)
+            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = mCustomerViewModel, permissionRequester = permissionRequester)
         }
         composable("NewOrderScreen/{customer}/{orderId}",
             arguments = listOf(
@@ -92,7 +94,8 @@ fun AppNavigation(){
                 customerViewModel = customerViewModel,
                 orderItemViewModel = orderItemViewModel,
                 productViewModel = productViewModel,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                permissionRequester = permissionRequester
             )
         }
         composable(
