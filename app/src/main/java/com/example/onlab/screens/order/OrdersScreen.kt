@@ -1,44 +1,22 @@
-package com.example.onlab.screen.order
+package com.example.onlab.screens.order
 
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.FabPosition
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import com.example.onlab.R
 import com.example.onlab.components.*
-import com.example.onlab.model.Customer
 import com.example.onlab.model.MOrder
-import com.example.onlab.model.Order
-import com.example.onlab.model.OrderItem
-import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.*
-import java.time.LocalDate
-import java.util.*
 
 @Composable
 fun OrdersScreen(

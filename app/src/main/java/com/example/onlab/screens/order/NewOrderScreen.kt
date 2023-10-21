@@ -1,7 +1,5 @@
-package com.example.onlab.screen.order
+package com.example.onlab.screens.order
 
-import android.app.Activity
-import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -19,8 +17,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
@@ -35,7 +31,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
-import java.util.jar.Manifest
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

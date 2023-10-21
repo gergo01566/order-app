@@ -1,7 +1,7 @@
-package com.example.onlab.screen.login
+package com.example.onlab.screens.login
 
 import android.os.Build
-import android.util.Patterns
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +23,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -39,29 +38,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onlab.R
-import com.example.onlab.navigation.ProductScreens
 import com.example.onlab.viewModels.LoginScreenViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.currentCoroutineContext
-import kotlin.math.log
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.example.onlab.navigation.AppNavigation
-import com.example.onlab.screen.order.OrdersScreen
-import kotlinx.coroutines.coroutineScope
+import com.example.onlab.viewModels.LoginViewModel
 import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel()) {
+fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel(), viewModel: LoginViewModel) {
     val showLoginFrom = rememberSaveable { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
     val passwordReset = remember { mutableStateOf(false) }
 
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
+
+    val uiState by viewModel.uiState
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -73,20 +65,21 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
                 verticalArrangement = Arrangement.Top
             ) {
                 if (showLoginFrom.value)
-                    UserForm(false, false) { email, pwd ->
-                        loginScreenViewModel.signInWithEmailAndPassword(
-                            email = email,
-                            password = pwd,
-                            orders = {
-                                navController.navigate(route = "OrdersScreen")
-                            },
-                            onFailure = {
-                                showDialog.value = true
-                            }
-                        )
+                    UserForm(false, false, uiState = uiState) { email, pwd ->
+                        viewModel.onSignInClick({email, pwd -> Log.d("TAG", "LoginScreen: ")})
+//                        loginScreenViewModel.signInWithEmailAndPassword(
+//                            email = email,
+//                            password = pwd,
+//                            orders = {
+//                                navController.navigate(route = "OrdersScreen")
+//                            },
+//                            onFailure = {
+//                                showDialog.value = true
+//                            }
+//                        )
                     }
                 else {
-                    UserForm(false, true) { email, pwd ->
+                    UserForm(false, true, uiState = uiState) { email, pwd ->
                         loginScreenViewModel.createUserWithEmailAndPassword(
                             email = email,
                             password = pwd,
@@ -257,15 +250,15 @@ fun AlertDialogExample(
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
-@Preview
 @Composable
 fun UserForm(
     loading: Boolean = false,
     isCreateAccount: Boolean = false,
+    uiState: LoginUiState,
     onDone: (String, String) -> Unit = { email, pwd -> }
 ) {
-    val email = rememberSaveable { mutableStateOf("") }
-    val password = rememberSaveable { mutableStateOf("") }
+    val email = rememberSaveable { mutableStateOf(uiState.email) }
+    val password = rememberSaveable { mutableStateOf(uiState.password) }
     val passwordVisibility = rememberSaveable { mutableStateOf(false) }
     val passwordFocusRequest = FocusRequester.Default
     val keyboardController = LocalSoftwareKeyboardController.current

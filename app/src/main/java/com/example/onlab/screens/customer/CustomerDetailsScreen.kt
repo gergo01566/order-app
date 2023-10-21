@@ -1,27 +1,21 @@
-package com.example.onlab.screen.customer
+package com.example.onlab.screens.customer
 
-import android.Manifest
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -30,14 +24,21 @@ import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.MCustomer
-import com.example.onlab.screen.product.ProductButton
+import com.example.onlab.screens.product.ProductButton
 import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
+
+//make unit tests for this class
+@ExperimentalMaterialApi
 
 @ExperimentalPermissionsApi
 @Composable
-fun CustomerDetailsScreen(navController: NavController, customerID: String? = null, customerViewModel: MCustomerViewModel, permissionRequester: PermissionRequester){
+fun CustomerDetailsScreen(
+    navController: NavController,
+    customerID: String? = null,
+    customerViewModel: MCustomerViewModel,
+    permissionRequester: PermissionRequester
+){
 
     val contextForToast = LocalContext.current.applicationContext
 

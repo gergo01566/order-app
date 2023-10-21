@@ -1,4 +1,4 @@
-package com.example.onlab.screen.login
+package com.example.onlab.screens.login
 
 data class LoadingState(val status: Status, val message: String? = null) {
 

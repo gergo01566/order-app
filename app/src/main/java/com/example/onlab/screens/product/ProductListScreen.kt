@@ -1,4 +1,4 @@
-package com.example.onlab.screen
+package com.example.onlab.screens
 
 import android.util.Log
 import android.widget.Toast

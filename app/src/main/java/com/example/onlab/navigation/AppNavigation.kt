@@ -8,23 +8,25 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.onlab.OnlabApplication
 import com.example.onlab.PermissionRequester
 
-import com.example.onlab.screen.ProductListScreen
-import com.example.onlab.screen.customer.CustomerDetailsScreen
-import com.example.onlab.screen.customer.CustomerScreen
-import com.example.onlab.screen.customer.NewCustomerScreen
-import com.example.onlab.screen.login.LoginScreen
-import com.example.onlab.screen.order.NewOrderScreen
-import com.example.onlab.screen.order.OrdersScreen
-import com.example.onlab.screen.product.NewProductScreen
-import com.example.onlab.screen.product.ProductDetailsScreen
-import com.example.onlab.screen.profile.ProfileScreen
+import com.example.onlab.screens.ProductListScreen
+import com.example.onlab.screens.customer.CustomerDetailsScreen
+import com.example.onlab.screens.customer.CustomerScreen
+import com.example.onlab.screens.customer.NewCustomerScreen
+import com.example.onlab.screens.login.LoginScreen
+import com.example.onlab.screens.order.NewOrderScreen
+import com.example.onlab.screens.order.OrdersScreen
+import com.example.onlab.screens.product.NewProductScreen
+import com.example.onlab.screens.product.ProductDetailsScreen
+import com.example.onlab.screens.profile.ProfileScreen
 import com.example.onlab.viewModels.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.FirebaseAuth
@@ -44,6 +46,7 @@ fun AppNavigation(){
     val mProductViewModel = viewModel<MProductViewModel>()
     val loginScreenViewModel = viewModel<LoginScreenViewModel>()
     val permissionRequester = PermissionRequester()
+    val loginViewModel = viewModel<LoginViewModel>()
 
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
         "LoginScreen";
@@ -119,7 +122,7 @@ fun AppNavigation(){
             ProductListScreen(navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
-                LoginScreen(navController = navController)
+                LoginScreen(navController = navController, loginScreenViewModel = loginScreenViewModel, viewModel = loginViewModel)
         }
         composable("ProfileScreen"){
             ProfileScreen(navController = navController)

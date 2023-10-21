@@ -1,6 +1,5 @@
-package com.example.onlab.screen.customer
+package com.example.onlab.screens.customer
 
-import android.Manifest
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -22,10 +21,9 @@ import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.MCustomer
-import com.example.onlab.screen.product.ProductButton
+import com.example.onlab.screens.product.ProductButton
 import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable

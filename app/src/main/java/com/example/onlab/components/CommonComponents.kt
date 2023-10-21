@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.net.toUri
 import androidx.navigation.NavController
@@ -67,7 +66,7 @@ import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.product.ProductButton
+import com.example.onlab.screens.product.ProductButton
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

@@ -11,7 +11,10 @@ import com.example.onlab.repository.FireRepository
 import com.example.onlab.repository.OrderFireRepository
 import com.example.onlab.repository.OrderItemFireRepository
 import com.example.onlab.repository.ProductFireRepository
+import com.example.onlab.service.AuthService
+import com.example.onlab.service.AuthServiceImp
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,6 +58,11 @@ object AppModule {
     @Singleton
     @Provides
     fun provideOrderDao(orderDatabase: ProductDatabase): OrderDatabaseDao = orderDatabase.orderDao()
+
+
+    @Provides
+    @Singleton
+    fun provideAuthService(): AuthService = AuthServiceImp(firestore = FirebaseFirestore.getInstance(), auth = com.google.firebase.auth.FirebaseAuth.getInstance())
 
     @Singleton
     @Provides
