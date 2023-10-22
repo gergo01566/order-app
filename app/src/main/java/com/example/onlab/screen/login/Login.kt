@@ -1,7 +1,6 @@
-package com.example.onlab.screen.login
+package com.example.onlab.screens.login
 
 import android.os.Build
-import android.util.Patterns
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +22,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -33,29 +31,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onlab.R
-import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.viewModels.LoginScreenViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.currentCoroutineContext
-import kotlin.math.log
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.example.onlab.navigation.AppNavigation
-import com.example.onlab.screen.order.OrdersScreen
-import kotlinx.coroutines.coroutineScope
+import com.example.onlab.screen.login.LoginUiState
+import com.example.onlab.viewModels.LoginViewModel
 import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenViewModel = viewModel()) {
+fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewModel()){
     val showLoginFrom = rememberSaveable { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
     val passwordReset = remember { mutableStateOf(false) }
@@ -63,9 +51,11 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
+    val uiState by viewModel.uiState
+
     Scaffold(
         scaffoldState = scaffoldState,
-        content = {
+        content = { it ->
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -73,32 +63,32 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
                 verticalArrangement = Arrangement.Top
             ) {
                 if (showLoginFrom.value)
-                    UserForm(false, false) { email, pwd ->
-                        loginScreenViewModel.signInWithEmailAndPassword(
-                            email = email,
-                            password = pwd,
-                            orders = {
-                                navController.navigate(route = "OrdersScreen")
-                            },
+                    UserForm(
+                        uiState = uiState,
+                        onEmailChange = { viewModel.onEmailChange(it) },
+                        onPasswordChange = {viewModel.onPasswordChange(it)} ){ email, password ->
+                        viewModel.onSignInClick(
                             onFailure = {
                                 showDialog.value = true
-                            }
-                        )
-                    }
-                else {
-                    UserForm(false, true) { email, pwd ->
-                        loginScreenViewModel.createUserWithEmailAndPassword(
-                            email = email,
-                            password = pwd,
-                            orders = {
-                                navController.navigate(route = "OrdersScreen")
                             },
+                            onComplete = {
+                                navController.navigate(route = "CustomerScreen")
+                            })
+                    }
+                else
+                    UserForm(
+                        isCreateAccount = true,
+                        uiState = uiState,
+                        onEmailChange = {viewModel.onEmailChange(it)},
+                        onPasswordChange = {viewModel.onPasswordChange(it)}){ email, password ->
+                        viewModel.onSignUpClick(
                             onFailure = {
                                 showDialog.value = true
-                            }
-                        )
+                            },
+                            onComplete = {
+                                navController.navigate(route = "CustomerScreen")
+                            })
                     }
-                }
 
                 Row(
                     modifier = Modifier.padding(15.dp),
@@ -118,6 +108,7 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
                         color = MaterialTheme.colors.secondaryVariant
                     )
                 }
+
                 if (showLoginFrom.value) {
                     Text(
                         "Elfelejtett jelszó",
@@ -150,29 +141,31 @@ fun LoginScreen(navController: NavController, loginScreenViewModel: LoginScreenV
     if (passwordReset.value) {
         PasswordResetDialog(
             showDialog = passwordReset.value,
-            loginScreenViewModel = loginScreenViewModel,
             onDismissRequest = { passwordReset.value = false },
-            onFailure = {
-                passwordReset.value = false
-                scope.launch { scaffoldState.snackbarHostState.showSnackbar("Helytelen e-mail cím") }
-            },
-            onComplete = {
-                passwordReset.value = false
-                scope.launch { scaffoldState.snackbarHostState.showSnackbar("E-mailt küldtünk jelszavad helyreállításához") }
+            onCompleteRequest = {
+                viewModel.onResetPassword(
+                    email = it,
+                    onFailure = {
+                        passwordReset.value = false
+                        scope.launch { scaffoldState.snackbarHostState.showSnackbar("Helytelen e-mail cím") }
+                    },
+                    onComplete = {
+                        passwordReset.value = false
+                        scope.launch { scaffoldState.snackbarHostState.showSnackbar("E-mailt küldtünk jelszavad helyreállításához") }
+                    }
+                )
             }
         )
     }
 }
 
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordResetDialog(
     showDialog: Boolean,
-    loginScreenViewModel: LoginScreenViewModel,
-    onDismissRequest: () -> Unit,
-    onComplete: () -> Unit,
-    onFailure: () -> Unit
+    onCompleteRequest: (String) -> Unit,
+    onDismissRequest: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
 
@@ -197,16 +190,11 @@ fun PasswordResetDialog(
                         singleLine = true,
                     )
                 }
-
             },
             confirmButton = {
                 androidx.compose.material3.TextButton(
                     onClick = {
-                        if (email.isNotEmpty()) {
-                            loginScreenViewModel.resetPassword(email, onFailure = {onFailure()}){
-                                onComplete()
-                            }
-                        }
+                        onCompleteRequest(email)
                     }
                 ) {
                     Text("Megerősítés")
@@ -225,7 +213,6 @@ fun PasswordResetDialog(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertDialogExample(
     text: String = "Helytelen felhasználónév vagy jelszó",
@@ -233,43 +220,43 @@ fun AlertDialogExample(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
-        AlertDialog(
-            title = {
-                Text(text = title)
-            },
-            text = {
-                Text(text = text)
-            },
-            onDismissRequest = {
-                onDismissRequest()
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirmation()
-                    }
-                ) {
-                    Text("Ok")
+    AlertDialog(
+        title = {
+            Text(text = title)
+        },
+        text = {
+            Text(text = text)
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
                 }
+            ) {
+                Text("Ok")
             }
-        )
+        }
+    )
 
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
-@Preview
 @Composable
 fun UserForm(
     loading: Boolean = false,
     isCreateAccount: Boolean = false,
+    uiState: LoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
     onDone: (String, String) -> Unit = { email, pwd -> }
 ) {
-    val email = rememberSaveable { mutableStateOf("") }
-    val password = rememberSaveable { mutableStateOf("") }
     val passwordVisibility = rememberSaveable { mutableStateOf(false) }
     val passwordFocusRequest = FocusRequester.Default
     val keyboardController = LocalSoftwareKeyboardController.current
-    val valid = validateInputs(email.value, password.value)
+    val valid = validateInputs(uiState.email, uiState.password)
 
     val modifier = Modifier
         .height(500.dp)
@@ -290,29 +277,31 @@ fun UserForm(
         if (isCreateAccount) {
             Text(text = stringResource(id = R.string.help_text), modifier = Modifier.padding(14.dp))
         }
-        EmailInput(
-            emailState = email,
+        NewEmailInputField(
+            email = uiState.email,
             enabled = !loading,
+            onValueChange = { onEmailChange(it)},
             onAction = KeyboardActions {
-            passwordFocusRequest.requestFocus()
-        })
+                passwordFocusRequest.requestFocus()
+            })
         PasswordInput(
             modifier = Modifier.focusRequester(passwordFocusRequest),
-            passwordState = password,
+            password = uiState.password,
             labelID = "Jelszó",
             enabled = !loading,
             passwordVisibility = passwordVisibility,
             onAction = KeyboardActions {
                 if(!valid) return@KeyboardActions
-                onDone(email.value.trim(), password.value.trim())
-            }
+                onDone(uiState.email.trim(), uiState.password.trim())
+            },
+            onPasswordChange = { onPasswordChange(it)},
         )
         SubmitButton(
             textId = if (isCreateAccount) "Regisztráció" else "Bejelentkezés",
             loading = loading,
             validInputs = valid
         ){
-            onDone(email.value.trim(), password.value.trim())
+            onDone(uiState.email.trim(), uiState.password.trim())
             keyboardController?.hide()
         }
     }
@@ -341,18 +330,17 @@ fun SubmitButton(
 @Composable
 fun PasswordInput(
     modifier: Modifier,
-    passwordState: MutableState<String>,
+    password: String,
     labelID: String,
     enabled: Boolean,
+    onPasswordChange: (String) -> Unit,
     passwordVisibility: MutableState<Boolean>,
     imeAction: ImeAction = ImeAction.Done,
     onAction: KeyboardActions,) {
     val visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation()
     OutlinedTextField(
-        value = passwordState.value,
-        onValueChange = {
-        passwordState.value = it
-    },
+        value = password,
+        onValueChange = { onPasswordChange(it)},
         label = { Text(text = labelID)},
         singleLine = true,
         textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
@@ -363,9 +351,9 @@ fun PasswordInput(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = imeAction),
-    visualTransformation = visualTransformation,
-    trailingIcon = {PasswordVisibility(passwordVisibility = passwordVisibility)},
-    keyboardActions = onAction)
+        visualTransformation = visualTransformation,
+        trailingIcon = {PasswordVisibility(passwordVisibility = passwordVisibility)},
+        keyboardActions = onAction)
 }
 
 @Composable
@@ -376,49 +364,28 @@ fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
     }
 }
 
+
 @Composable
-fun EmailInput(
+fun NewEmailInputField(
     modifier: Modifier = Modifier,
-    emailState: MutableState<String>,
+    email: String,
     labelId: String = "Email",
     enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default)
-{
-    InputField(
-        modifier = modifier,
-        valueState = emailState,
-        labelId = labelId,
-        enabled = enabled,
-        keyboardType = KeyboardType.Email,
-        imeAction = imeAction,
-        onAction = onAction
-    )
-
-}
-
-@Composable
-fun InputField(
-    modifier: Modifier = Modifier,
-    valueState: MutableState<String>,
-    labelId: String,
-    enabled: Boolean,
-    isSingleLine:Boolean = true,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
+    onAction: KeyboardActions = KeyboardActions.Default,
+    onValueChange: (String) -> Unit,
 ){
     OutlinedTextField(
-        value = valueState.value,
-        onValueChange = { valueState.value = it},
+        value = email,
+        onValueChange = { onValueChange(it)},
         label = { Text(text = labelId)},
-        singleLine = isSingleLine,
+        singleLine = true,
         textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
         modifier = modifier
             .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
             .fillMaxWidth(),
         enabled = enabled,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction =imeAction),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = imeAction),
         keyboardActions = onAction
     )
 }
@@ -426,4 +393,3 @@ fun InputField(
 fun validateInputs(email: String, password: String): Boolean {
     return email.isNotEmpty() && password.isNotEmpty() && password.length >= 6 && email.contains('@')
 }
-

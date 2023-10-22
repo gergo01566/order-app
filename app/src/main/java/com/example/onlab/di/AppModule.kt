@@ -11,7 +11,14 @@ import com.example.onlab.repository.FireRepository
 import com.example.onlab.repository.OrderFireRepository
 import com.example.onlab.repository.OrderItemFireRepository
 import com.example.onlab.repository.ProductFireRepository
+import com.example.onlab.service.AuthService
+import com.example.onlab.service.AuthServiceImp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,47 +29,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Module
 //used to add bindings to hilt
-object AppModule {
+abstract class AppModule {
 
-    @Singleton
-    @Provides
-    fun provideFireCustomerRepository()= FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))
+    @Binds
+    abstract fun bindAuthService(authService: AuthServiceImp): AuthService
 
-    @Singleton
-    @Provides
-    fun provideFireProductRepository()= ProductFireRepository(queryProduct = FirebaseFirestore.getInstance().collection("products"))
-
-    @Singleton
-    @Provides
-    fun provideFireOrderRepository()= OrderFireRepository(queryOrder = FirebaseFirestore.getInstance().collection("orders"))
-
-    @Singleton
-    @Provides
-    fun provideFireOrderItemRepository()= OrderItemFireRepository(queryOrderItem = FirebaseFirestore.getInstance().collection("order_items"))
-
-    @Singleton
-    @Provides
-    fun provideProductDao(productDatabase: ProductDatabase): ProductDatabaseDao = productDatabase.productDao()
-
-    @Singleton
-    @Provides
-    fun provideCustomerDao(customerDatabase: ProductDatabase): CustomerDatabaseDao = customerDatabase.customerDao()
-
-    @Singleton
-    @Provides
-    fun provideOrderItemDao(customerDatabase: ProductDatabase): OrderItemDatabaseDao = customerDatabase.orderItemDao()
-
-    @Singleton
-    @Provides
-    fun provideOrderDao(orderDatabase: ProductDatabase): OrderDatabaseDao = orderDatabase.orderDao()
-
-    @Singleton
-    @Provides
-    fun provideAppDatabase(@ApplicationContext context: Context): ProductDatabase
-        = Room.databaseBuilder(
-            context,
-            ProductDatabase::class.java,
-            "onlab_db")
-            .fallbackToDestructiveMigration()
-            .build()
 }

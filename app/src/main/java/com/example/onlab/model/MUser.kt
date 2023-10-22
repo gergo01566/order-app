@@ -6,6 +6,7 @@ data class MUser(
     val displayName: String,
     val address: String,
 ){
+    constructor(): this(null, "", "", "")
     fun toMap(): MutableMap<String, Any>{
         return mutableMapOf(
             "user_id" to this.userId,

@@ -19,12 +19,12 @@ import com.example.onlab.screen.ProductListScreen
 import com.example.onlab.screen.customer.CustomerDetailsScreen
 import com.example.onlab.screen.customer.CustomerScreen
 import com.example.onlab.screen.customer.NewCustomerScreen
-import com.example.onlab.screen.login.LoginScreen
 import com.example.onlab.screen.order.NewOrderScreen
 import com.example.onlab.screen.order.OrdersScreen
 import com.example.onlab.screen.product.NewProductScreen
 import com.example.onlab.screen.product.ProductDetailsScreen
 import com.example.onlab.screen.profile.ProfileScreen
+import com.example.onlab.screens.login.LoginScreen
 import com.example.onlab.viewModels.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.auth.FirebaseAuth
@@ -43,6 +43,7 @@ fun AppNavigation(){
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
     val mProductViewModel = viewModel<MProductViewModel>()
     val loginScreenViewModel = viewModel<LoginScreenViewModel>()
+    val loginViewModel = viewModel<LoginViewModel>()
     val permissionRequester = PermissionRequester()
 
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
@@ -119,7 +120,7 @@ fun AppNavigation(){
             ProductListScreen(navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
-                LoginScreen(navController = navController)
+                LoginScreen(navController = navController, viewModel = loginViewModel)
         }
         composable("ProfileScreen"){
             ProfileScreen(navController = navController)
