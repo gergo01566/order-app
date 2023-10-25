@@ -271,22 +271,22 @@ fun ImagePickerButton(permissionRequester: PermissionRequester, onImageSelected:
         .height(40.dp),
         text = "Kép hozzáadása",
         onClick = {
-            permissionRequester.requestPermission(
-                context = context,
-                permission = android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                showRationale = {
-                    // Show rationale before requesting permission
-                    Toast.makeText(context, "We need access to your photos to proceed.", Toast.LENGTH_SHORT).show()
-                },
-                onPermissionDenied = {
-                    // Handle permission denied
-                    openAlertDialog.value = true
-                    Toast.makeText(context, "You have decided not to grant access to your photos.", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Log.d("show", "ImagePickerButton: we need permission please")
-                imagePicker.launch("image/*")
-            }
+//            permissionRequester.requestPermission(
+//                context = context,
+//                permission = android.Manifest.permission.READ_EXTERNAL_STORAGE,
+//                showRationale = {
+//                    // Show rationale before requesting permission
+//                    Toast.makeText(context, "We need access to your photos to proceed.", Toast.LENGTH_SHORT).show()
+//                },
+//                onPermissionDenied = {
+//                    // Handle permission denied
+//                    openAlertDialog.value = true
+//                    Toast.makeText(context, "You have decided not to grant access to your photos.", Toast.LENGTH_SHORT).show()
+//                }
+//            ) {
+//                Log.d("show", "ImagePickerButton: we need permission please")
+//                imagePicker.launch("image/*")
+//            }
         }
     )
 

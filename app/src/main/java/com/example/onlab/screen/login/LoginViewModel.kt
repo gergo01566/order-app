@@ -27,7 +27,7 @@ class LoginViewModel @Inject constructor(
         uiState.value = uiState.value.copy(password = newValue)
     }
 
-    fun onSignInClick(onFailure: () -> Unit, onComplete: () -> Unit ) {
+    fun onSignInClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit ) {
         if (email.isBlank()) {
             return
         }
@@ -37,11 +37,13 @@ class LoginViewModel @Inject constructor(
         }
 
         launchCatching {
-            authService.signInWithEmailAndPassowrd(email, password, onFailure, onComplete)
+            authService.signInWithEmailAndPassowrd(email, password, onFailure) {
+                navigateFromTo("LoginScreen", "OrdersScreen")
+            }
         }
     }
 
-    fun onSignUpClick( onFailure: () -> Unit, onComplete: () -> Unit) {
+    fun onSignUpClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit) {
         if (email.isBlank()) {
             return
         }
@@ -51,7 +53,9 @@ class LoginViewModel @Inject constructor(
         }
 
         launchCatching {
-            authService.createUser(email, password, onFailure, onComplete)
+            authService.createUser(email, password, onFailure) {
+                navigateFromTo("LoginScreen", "OrdersScreen")
+            }
         }
     }
 

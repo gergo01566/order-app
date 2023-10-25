@@ -2,12 +2,15 @@
 
 package com.example.onlab.navigation
 
+import AppState
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -120,7 +123,12 @@ fun AppNavigation(){
             ProductListScreen(navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
-                LoginScreen(navController = navController, viewModel = loginViewModel)
+                LoginScreen(
+                    navigateFromTo = { from , to ->
+                        navController.navigate(to) {
+                            popUpTo(from) { inclusive = true }
+                        }},
+                    viewModel = loginViewModel)
         }
         composable("ProfileScreen"){
             ProfileScreen(navController = navController)
@@ -133,5 +141,9 @@ fun AppNavigation(){
         orderViewModel.getOrdersByStatus(0)
         orderViewModel.getOrdersByStatus(1)
     }
+
 }
+
+
+
 

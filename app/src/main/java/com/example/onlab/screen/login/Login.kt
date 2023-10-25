@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewModel()){
+fun LoginScreen(navigateFromTo: (String, String) -> Unit, viewModel: LoginViewModel = viewModel()){
     val showLoginFrom = rememberSaveable { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
     val passwordReset = remember { mutableStateOf(false) }
@@ -67,12 +67,12 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
                         uiState = uiState,
                         onEmailChange = { viewModel.onEmailChange(it) },
                         onPasswordChange = {viewModel.onPasswordChange(it)} ){ email, password ->
-                        viewModel.onSignInClick(
+                        viewModel.onSignInClick(navigateFromTo,
                             onFailure = {
                                 showDialog.value = true
                             },
                             onComplete = {
-                                navController.navigate(route = "CustomerScreen")
+
                             })
                     }
                 else
@@ -81,12 +81,11 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewMo
                         uiState = uiState,
                         onEmailChange = {viewModel.onEmailChange(it)},
                         onPasswordChange = {viewModel.onPasswordChange(it)}){ email, password ->
-                        viewModel.onSignUpClick(
+                        viewModel.onSignUpClick(navigateFromTo,
                             onFailure = {
                                 showDialog.value = true
                             },
                             onComplete = {
-                                navController.navigate(route = "CustomerScreen")
                             })
                     }
 

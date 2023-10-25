@@ -13,6 +13,9 @@ import androidx.compose.material.TextButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -32,12 +35,16 @@ import kotlin.math.log
 
 class PermissionRequester {
 
+    @Composable
     fun requestPermission(
         context: Context,
         permission: String,
         showRationale: () -> Unit,
         onPermissionDenied: () -> Unit,
-        onPermissionGranted: () -> Unit
+        onPermissionGranted: () -> Unit,
+        showDialog: MutableState<Boolean> = remember {
+            mutableStateOf(false)
+        }
     ){
         when{
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED -> {
@@ -52,11 +59,27 @@ class PermissionRequester {
             }
             ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, permission) -> {
                 Log.d("show", "requestPermission: show")
-                showRationale()
+                showDialog.value = true
             }
             else -> {
                 Log.d("show", "requestPermission: else")
                 ActivityCompat.requestPermissions(context as Activity, arrayOf(permission), 1)
+            }
+        }
+
+        when {
+            showDialog.value -> {
+                Log.d("show", "requestPermission: showDialog")
+                NotificationPermissionRationaleDialog(
+                    icon = painterResource(id = R.drawable.active),
+                    headline = "Értesülj!",
+                    strapline = "Küldj és fogadj értesítéseket az új rendelésekről.",
+                    image = painterResource(id = R.drawable.get_notified),
+                    onSkip = { showDialog.value = false },
+                    onConfirm = {
+                        ActivityCompat.requestPermissions(this@PermissionRequester as Activity, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
+                    }
+                )
             }
         }
     }

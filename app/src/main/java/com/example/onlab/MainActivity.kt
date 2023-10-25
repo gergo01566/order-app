@@ -41,48 +41,34 @@ class MainActivity : ComponentActivity() {
             val shouldShowRequestPermissionRational: Boolean = shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
             val openAlertDialog = remember { mutableStateOf(false) }
             val context = LocalContext.current
-            OnlabTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-
-                    LaunchedEffect(key1 = shouldShowRequestPermissionRational, block = {
-                        permissionRequester.requestPermission(
-                            context = context,
-                            permission = android.Manifest.permission.POST_NOTIFICATIONS,
-                            showRationale = {
-                                Log.d("show", "onCreate: meghivv")
-                                openAlertDialog.value = true
-                            },
-                            onPermissionDenied = {}
-                        ) {
-                            //requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    })
-
-                    AppNavigation()
-
-                    when {
-                        openAlertDialog.value -> {
-                            permissionRequester.NotificationPermissionRationaleDialog(
-                                icon = painterResource(id = R.drawable.active),
-                                headline = "Értesülj!",
-                                strapline = "Küldj és fogadj értesítéseket az új rendelésekről.",
-                                image = painterResource(id = R.drawable.get_notified),
-                                onSkip = {
-                                    openAlertDialog.value = false
-                                }
-                            ) {
-                                openAlertDialog.value = false
-                                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
-                            }
-                        }
-                    }
-
-            }
-        }
+            OrderApp()
+//            OnlabTheme {
+//                // A surface container using the 'background' color from the theme
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colors.background
+//                ) {
+//
+////                    LaunchedEffect(key1 = shouldShowRequestPermissionRational, block = {
+////                        permissionRequester.requestPermission(
+////                            context = context,
+////                            permission = android.Manifest.permission.POST_NOTIFICATIONS,
+////                            showRationale = {
+////                                Log.d("show", "onCreate: meghivv")
+////                                openAlertDialog.value = true
+////                            },
+////                            onPermissionDenied = {}
+////                        ) {
+////                            //requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+////                        }
+////                    })
+//
+//                    AppNavigation()
+//
+//
+//
+//            }
+//        }
         }
     }
 }
