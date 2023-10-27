@@ -82,6 +82,7 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
     implementation("com.google.dagger:hilt-android:2.44")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
     kapt("com.google.dagger:hilt-android-compiler:2.44")
 
     def room_version = "2.5.1"
@@ -98,6 +99,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     implementation("io.coil-kt:coil-compose:2.2.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
 
     implementation "androidx.compose.runtime:runtime-livedata:1.0.5"
 
@@ -109,6 +111,14 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.0.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.0.1")
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
+            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {
+            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
+        }
+    }
 }
 
 // Allow references to generated code

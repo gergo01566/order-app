@@ -11,4 +11,6 @@ abstract class ServiceModule {
 
     @Binds
     abstract fun bindAuthService(authService: AuthServiceImp): AuthService
+
+    @Binds abstract fun provideProductStorageService(impl: ProductStorageServiceImp): ProductStorageService
 }

@@ -11,13 +11,12 @@ import com.example.onlab.repository.FireRepository
 import com.example.onlab.repository.OrderFireRepository
 import com.example.onlab.repository.OrderItemFireRepository
 import com.example.onlab.repository.ProductFireRepository
-import com.example.onlab.service.AuthService
-import com.example.onlab.service.AuthServiceImp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -34,6 +33,13 @@ object FirebaseModule {
     @Provides fun auth(): FirebaseAuth = Firebase.auth
 
     @Provides fun firestore(): FirebaseFirestore = Firebase.firestore
+
+    @Provides fun firestorage(): FirebaseStorage = FirebaseStorage.getInstance()
+
+//    @Provides
+//    fun provideFirebaseStorage(): FirebaseStorage {
+//        return FirebaseStorage.getInstance()
+//    }
 
     @Singleton
     @Provides

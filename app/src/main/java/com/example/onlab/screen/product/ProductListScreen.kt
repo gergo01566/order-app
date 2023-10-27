@@ -18,15 +18,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.*
 import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.screen.product.ProductListViewModel
 import com.example.onlab.viewModels.*
 import java.util.*
 import com.example.onlab.model.Category as Categ
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 @Composable
 fun ProductListScreen(
@@ -35,34 +40,38 @@ fun ProductListScreen(
     ordering: Boolean,
     productViewModel: MProductViewModel,
     customerViewModel: MCustomerViewModel,
-    orderItemViewModel: MOrderItemViewModel
+    orderItemViewModel: MOrderItemViewModel,
+    newViewModel: ProductListViewModel = hiltViewModel()
 ) {
     val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
-    var selectedCategory by remember { mutableStateOf<Categ?>(null) }
+    var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
     val context = LocalContext.current
 
-    var listOfProducts = emptyList<MProduct>()
+    var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
+    //val selectedCategory = newViewModel.selectedCategory
+    var searchText by remember { mutableStateOf("") }
 
-    if (!productViewModel.data.value.data.isNullOrEmpty()){
-        Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
-        listOfProducts = productViewModel.getAllProductsFromDatabase()!!
-        if (selectedCategory != null) {
-            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())!!
-        }
-    }
+//    if (!productViewModel.data.value.data.isNullOrEmpty()){
+//        Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
+//        listOfProducts = productViewModel.getAllProductsFromDatabase()!!
+//        if (selectedCategory != null) {
+//            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())!!
+//        }
+//    }
 
     showConfirmationDialog(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedProduct?.let {
-                productViewModel.deleteProduct(it.id.toString()){
-                    showDialog.value = false
-                    Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
-                }
+                newViewModel.onDeleteProduct(it.id.toString())
+//                productViewModel.deleteProduct(it.id.toString()){
+//                    showDialog.value = false
+//                    Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
+//                }
             }
         }
     ) {
@@ -127,11 +136,11 @@ fun ProductListScreen(
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
-            if(productViewModel.data.value.loading == true){
-                LinearProgressIndicator(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp))
-            }
+//            if(productViewModel.data.value.loading == true){
+//                LinearProgressIndicator(modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(16.dp))
+//            }
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier
@@ -142,7 +151,10 @@ fun ProductListScreen(
                 MenuBar(
                     categories = categoryList,
                     selectedCategory = selectedCategory,
-                    onCategorySelected = { category -> selectedCategory = category }
+                    onCategorySelected = { category ->
+                        newViewModel.onCategoryChanged(category = category!!)
+                        selectedCategory = category
+                    }
                 )
 
                 Column(modifier = Modifier
@@ -150,14 +162,15 @@ fun ProductListScreen(
                     .padding(horizontal = 16.dp)) {
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = productViewModel.searchText.value,
-                        onValueChange = { newText->
-                            productViewModel.onSearchTextChanged(newText) },
-                        placeholder = { Text(text = "Keresés")})
+                        value = searchText, // Use searchText as a value
+                        onValueChange = { newText ->
+                            newViewModel.onSearchTextChanged(newText)
+                            searchText = newText },
+                        placeholder = { Text(text = "Keresés") })
                 }
 
                 CreateList(
-                    data = listOfProducts.sortedBy { it.title },
+                    data = listOfProducts!!.value.sortedBy { it.title },
                     onDelete = {
                     Log.d("TAG", "ProductListScreen: ${it.id}")
                     showDialog.value = true
@@ -222,15 +235,6 @@ fun MenuBar(
     LazyRow(
         modifier = Modifier.padding(13.dp)
     ) {
-        item {
-            Text(
-                text = "Összes",
-                color = if (selectedCategory == null) MaterialTheme.colors.primary else Color.Gray,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .clickable(onClick = { onCategorySelected(null) })
-            )
-        }
 
         items(categories) { category ->
             Text(

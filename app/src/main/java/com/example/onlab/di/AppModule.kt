@@ -13,11 +13,14 @@ import com.example.onlab.repository.OrderItemFireRepository
 import com.example.onlab.repository.ProductFireRepository
 import com.example.onlab.service.AuthService
 import com.example.onlab.service.AuthServiceImp
+import com.example.onlab.service.ProductStorageService
+import com.example.onlab.service.ProductStorageServiceImp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -33,5 +36,8 @@ abstract class AppModule {
 
     @Binds
     abstract fun bindAuthService(authService: AuthServiceImp): AuthService
+
+    @Binds
+    abstract fun bindProductStorageService(imp: ProductStorageServiceImp): ProductStorageService
 
 }

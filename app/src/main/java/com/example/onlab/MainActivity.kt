@@ -30,17 +30,17 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val permissionRequester = PermissionRequester()
+//        val permissionRequester = PermissionRequester()
 
         FirebaseMessaging.getInstance().isAutoInitEnabled = true
         FirebaseMessaging.getInstance().subscribeToTopic("pushNotifications")
         FirebaseMessaging.getInstance().subscribeToTopic("pushNotificatio")
 
         setContent {
-            val scope = rememberCoroutineScope()
-            val shouldShowRequestPermissionRational: Boolean = shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
-            val openAlertDialog = remember { mutableStateOf(false) }
-            val context = LocalContext.current
+//            val scope = rememberCoroutineScope()
+//            val shouldShowRequestPermissionRational: Boolean = shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
+//            val openAlertDialog = remember { mutableStateOf(false) }
+//            val context = LocalContext.current
             OrderApp()
 //            OnlabTheme {
 //                // A surface container using the 'background' color from the theme

@@ -1,6 +1,7 @@
 package com.example.onlab.model
 
 enum class Category {
+    Összes,
     Italok,
     Sütemények,
     Tészták,
