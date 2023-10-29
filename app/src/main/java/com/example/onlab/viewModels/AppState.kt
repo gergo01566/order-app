@@ -26,7 +26,7 @@ class AppState(
 ) {
     init {
         coroutineScope.launch {
-            scaffoldState.snackbarHostState.showSnackbar(snackBarText)
+            //scaffoldState.snackbarHostState.showSnackbar(snackBarText)
         }
 
         fun navigate(route: String) {

@@ -11,10 +11,10 @@ interface ProductStorageService {
 
     suspend fun getProduct(productId: String): MProduct?
 
-    suspend fun saveProduct(product: MProduct)
+    suspend fun saveProduct(product: MProduct, onComplete: () -> Unit)
 
-    suspend fun updateProduct(product: MProduct)
+    suspend fun updateProduct(product: MProduct, onComplete: () -> Unit)
 
-    suspend fun deleteProduct(productId: String)
+    suspend fun deleteProduct(productId: String, onComplete: () -> Unit)
 
 }

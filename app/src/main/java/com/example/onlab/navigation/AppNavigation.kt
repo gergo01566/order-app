@@ -4,6 +4,7 @@ package com.example.onlab.navigation
 
 import AppState
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
@@ -56,19 +57,39 @@ fun AppNavigation(){
     }
 
     NavHost(navController = navController, startDestination = startDestination){
-        composable(ProductScreens.ListScreen.name){
-            ProductListScreen(navController = navController,ordering = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+        composable(DestinationProductList){
+            ProductListScreen(onNavigate = {
+                Log.d("Nav", "productId: $it") // Log the value
+                navController.navigate(buildDetailsRoute(it))
+            },navController = navController,ordering = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
 
         composable(route = ProductScreens.NewProductScreen.name)
         {
             NewProductScreen(navController = navController, productViewModel = mProductViewModel, permissionRequester = permissionRequester)
         }
-        composable(ProductScreens.NewProductScreen.name + "/{product}",
-        arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
-        ){ navBackStackEntry ->  
-            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
+//        composable(
+//            DestinationProductDetails + "/{product}",
+//        arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
+//        ){ navBackStackEntry ->
+//            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
+//        }
+
+        composable(DestinationProductDetailsRoute){
+            ProductDetailsScreen(navigateFromTo = { from , to ->
+                navController.navigate(to) {
+                    popUpTo(from) { inclusive = true }
+                }},navController = navController ,it.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
         }
+
+//        composable(route = ProductScreens.DetailsScreen.name){
+//            ProductDetailsScreen(onNavigate = {
+//                                              navController.navigate(buildDetailsRoute(it))
+//            },navController = navController, it.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
+//        }
+
+        //composable()
+
         composable("CustomerScreen") { // add CustomerScreen composable
             CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
         }
@@ -103,7 +124,7 @@ fun AppNavigation(){
             )
         }
         composable(
-            route = "${ProductScreens.ListScreen.name}/{orderId}/{list}", // include customerId parameter in the route
+            route = "${DestinationProductList}/{orderId}/{list}", // include customerId parameter in the route
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType }, // add argument for customerId
                 navArgument("list") { type = NavType.BoolType }
@@ -111,16 +132,22 @@ fun AppNavigation(){
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, orderID = orderId, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(onNavigate = {
+                Log.d("Nav", "productId: $it") // Log the value
+                navController.navigate(buildDetailsRoute(it))
+            }, navController = navController, orderID = orderId, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable(
-            route = "${ProductScreens.ListScreen.name}/{list}", // include customerId parameter in the route
+            route = "${DestinationProductList}/{list}", // include customerId parameter in the route
             arguments = listOf(
                 navArgument("list") { type = NavType.BoolType }
             )
         ) { backStackEntry ->
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(onNavigate = {
+                Log.d("Nav", "productId: $it") // Log the value
+                navController.navigate(buildDetailsRoute(it))
+            }, navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
         }
         composable("LoginScreen"){
                 LoginScreen(
@@ -141,8 +168,15 @@ fun AppNavigation(){
         orderViewModel.getOrdersByStatus(0)
         orderViewModel.getOrdersByStatus(1)
     }
-
 }
+fun buildDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"
+
+const val DestinationProductList = "ListScreen"
+const val DestinationProductDetails = "ProductDetailsScreen"
+const val DestinationOneArg = "arg"
+const val DestinationProductDetailsRoute = "$DestinationProductDetails/{$DestinationOneArg}"
+
+
 
 
 

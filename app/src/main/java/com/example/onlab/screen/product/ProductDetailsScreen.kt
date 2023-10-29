@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -45,13 +46,9 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
-fun ProductDetailsScreen(navController: NavController, productID: String? = null, productViewModel: MProductViewModel, permissionRequester: PermissionRequester) {
+fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController: NavController, productID: String? = null, productViewModel: MProductViewModel, permissionRequester: PermissionRequester, newViewModel: ProductDetailsViewModel= hiltViewModel()) {
 
-    var product by remember {
-        mutableStateOf(productViewModel.data.value.data?.first{mProduct->
-            mProduct.id == productID.toString()
-        })
-    }
+    val product by newViewModel.product
 
     var buttonEnabled by remember { mutableStateOf(false) }
 
@@ -77,18 +74,6 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     )
-
-    var pricePerPiece by remember {
-        mutableStateOf(product!!.pricePerPiece.toString())
-    }
-
-    var pricePerKarton by remember {
-        mutableStateOf(product!!.pricePerKarton.toString())
-    }
-
-    var imageUri by remember {
-        mutableStateOf<Uri?>(product!!.image.toUri())
-    }
 
     val contextForToast = LocalContext.current.applicationContext
 
@@ -120,11 +105,12 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            productViewModel.deleteProduct(productID!!){
-                showDialog.value = false
-                Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
-                navController.navigate(route = ProductScreens.ListScreen.name)
-            }
+            newViewModel.onDeleteProduct(product.id!!, navigateFromTo = navigateFromTo)
+//            productViewModel.deleteProduct(productID!!){
+//                showDialog.value = false
+//                Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
+//                navController.navigate(route = ProductScreens.ListScreen.name)
+//            }
         },
         onDismiss = {
             showDialog.value = false
@@ -155,59 +141,13 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     .padding(bottom = padding.calculateBottomPadding() / 2),
                 horizontalAlignment = Alignment.Start
             ) {
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = product?.title ?: "",
-                    onValueChange = { newValue ->
-                        if(newValue.length <= 20){
-                            product = product?.copy(title = newValue) ?: product
-                            changesMade = true
-                        } else {
-                            Toast.makeText(
-                                contextForToast,
-                                "A termék neve max. 20 karakter lehet",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                    label = { Text(text = "Termék neve") },
-                    placeholder = { Text(text = "Add meg a termék nevét!") }
-                )
-                TextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding((10.dp)),
-                value = pricePerPiece,
-                onValueChange = { newValue ->
-                    pricePerPiece = newValue
-                    product = product!!.copy(pricePerPiece = pricePerPiece.toIntOrNull() ?: 0)
-                    changesMade = true
-                },
-                label = { Text(text = "Termék ára/db") },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                placeholder = { Text(text = "Add meg a termék darab árát!") }
-                )
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding((10.dp)),
-                    value = pricePerKarton,
-                    onValueChange = { newValue ->
-                        pricePerKarton = newValue
-                        product = product!!.copy(pricePerKarton = pricePerKarton.toIntOrNull() ?: 0)
-                        changesMade = true
-                    },
-                    label = { Text(text = "Termék ára/karton") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text(text = "Add meg a termék karton árát!") }
-                )
+                BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = product.title, onNewValue = { newViewModel.onTitleChange(it) })
+                BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = product.pricePerPiece.toString(), onNewValue = { newViewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
+                BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = product.pricePerKarton.toString(), onNewValue = { newViewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
                 CategoryDropDownMenu(
-                    selectedCategory = product!!.category,
+                    selectedCategory = product.category,
                     onCategorySelected = { category ->
-                        selectedItem = category
-                        product = product!!.copy(category = category.toString())
+                        newViewModel.onCategoryChange(category.toString())
                         changesMade = true
                     }
                 )
@@ -218,8 +158,9 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         .height(150.dp)
                 ) {
                     ImagePickerButton(onImageSelected = {
-                        imageUri = it
-                        product = product!!.copy(image = it.toString())
+                        newViewModel.onImageChange(it.toString())
+//                        imageUri = it
+//                        product = product.copy(image = it.toString())
                     }, permissionRequester = permissionRequester)
                     Surface(
                         modifier = Modifier
@@ -228,7 +169,7 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                         shape = RoundedCornerShape(15.dp)
                     ) {
                         AsyncImage(
-                            model = imageUri,
+                            model = product.image.toUri(),
                             contentDescription = "profile image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -241,24 +182,18 @@ fun ProductDetailsScreen(navController: NavController, productID: String? = null
                     .padding((10.dp))
                     .height(40.dp),
                     text = "Termék mentése",
-                    enabled = product!!.title.isNotEmpty() && product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0,
+                    enabled = product.title.isNotEmpty() && product.pricePerPiece != 0 && product.pricePerKarton != 0,
                     onClick = {
-                        if (product!!.pricePerPiece != 0 && product!!.pricePerKarton != 0) {
-                            val productToUpdate = hashMapOf(
-                                "product_title" to product?.title,
-                                "product_category" to product?.category,
-                                "price_piece" to product?.pricePerPiece,
-                                "price_carton" to product?.pricePerKarton,
-                                "product_image" to product?.image
-                            ).toMap()
-                            productViewModel.updateProduct(productToUpdate as Map<String, String?>, productID!!, onSuccess = {
-                                navController.navigate(route = ProductScreens.ListScreen.name)
-                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
-                            }, onFailure = {
-                                Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
-                            })
-                        }else {
-                            Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
+                        if (product.pricePerPiece != 0 && product.pricePerKarton != 0) {
+                            newViewModel.onUpdateProduct(product, navigateFromTo)
+//                            productViewModel.updateProduct(productToUpdate as Map<String, String?>, productID!!, onSuccess = {
+//                                navController.navigate(route = ProductScreens.ListScreen.name)
+//                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
+//                            }, onFailure = {
+//                                Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
+//                            })
+//                        }else {
+//                            Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
                         }
                     }
                 )
@@ -310,5 +245,27 @@ fun ProductButton(
 
     }
 }
+
+@Composable
+fun BasicField(
+    text: String,
+    label: String,
+    value: String,
+    onNewValue: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        singleLine = true,
+        maxLines = 1,
+        modifier = modifier.fillMaxWidth().padding(10.dp),
+        value = value,
+        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
+        label = { Text(label) },
+        onValueChange = { onNewValue(it) },
+        placeholder = { Text(text) }
+    )
+}
+
 
 

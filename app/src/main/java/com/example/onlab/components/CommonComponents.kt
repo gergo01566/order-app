@@ -67,6 +67,7 @@ import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
 import java.io.File
 import java.io.FileOutputStream
@@ -188,6 +189,7 @@ fun createTopBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun CategoryDropDownMenu(
@@ -203,7 +205,7 @@ fun CategoryDropDownMenu(
         expanded = expanded,
         onExpandedChange = { expanded = it }
     ) {
-        TextField(
+        OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = selectedCategory,
             onValueChange = {},
@@ -218,6 +220,7 @@ fun CategoryDropDownMenu(
         )
 
         ExposedDropdownMenu(
+            modifier = Modifier.fillMaxWidth(),
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
@@ -285,7 +288,7 @@ fun ImagePickerButton(permissionRequester: PermissionRequester, onImageSelected:
 //                }
 //            ) {
 //                Log.d("show", "ImagePickerButton: we need permission please")
-//                imagePicker.launch("image/*")
+                imagePicker.launch("image/*")
 //            }
         }
     )

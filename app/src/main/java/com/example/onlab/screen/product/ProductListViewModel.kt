@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.DataOrException
 import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
+import com.example.onlab.navigation.DestinationProductDetails
+import com.example.onlab.navigation.DestinationProductList
 import com.example.onlab.service.ProductStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,11 +46,11 @@ class ProductListViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000)
         )
 
-
-
-    fun onDeleteProduct(productId: String){
+    fun onDeleteProduct(productId: String, onComplete: () -> Unit){
         launchCatching {
-            storageService.deleteProduct(productId)
+            storageService.deleteProduct(productId){
+                onComplete()
+            }
         }
     }
 

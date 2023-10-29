@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -35,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ProductListScreen(
+    onNavigate: (String) -> Unit,
     navController: NavController,
     orderID: String? = null,
     ordering: Boolean,
@@ -43,35 +45,23 @@ fun ProductListScreen(
     orderItemViewModel: MOrderItemViewModel,
     newViewModel: ProductListViewModel = hiltViewModel()
 ) {
-    val categoryList = getCategoryTypes(com.example.onlab.model.Category::class.java)
-    var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
     val context = LocalContext.current
 
     var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
-    //val selectedCategory = newViewModel.selectedCategory
     var searchText by remember { mutableStateOf("") }
-
-//    if (!productViewModel.data.value.data.isNullOrEmpty()){
-//        Log.d("FBB", "CustomerScreen: ${productViewModel.data.value.data!!.toList().toString()}")
-//        listOfProducts = productViewModel.getAllProductsFromDatabase()!!
-//        if (selectedCategory != null) {
-//            listOfProducts = productViewModel.getProductsByCategory(selectedCategory.toString())!!
-//        }
-//    }
+    var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
     showConfirmationDialog(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedProduct?.let {
-                newViewModel.onDeleteProduct(it.id.toString())
-//                productViewModel.deleteProduct(it.id.toString()){
-//                    showDialog.value = false
-//                    Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
-//                }
+                newViewModel.onDeleteProduct(it.id.toString()){
+                    Toast.makeText(context, "Termék törölve!", Toast.LENGTH_SHORT).show()
+                    showDialog.value = false}
             }
         }
     ) {
@@ -136,11 +126,6 @@ fun ProductListScreen(
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
-//            if(productViewModel.data.value.loading == true){
-//                LinearProgressIndicator(modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp))
-//            }
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier
@@ -149,7 +134,7 @@ fun ProductListScreen(
                     .padding(bottom = it.calculateBottomPadding())
             ) {
                 MenuBar(
-                    categories = categoryList,
+                    categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
                     selectedCategory = selectedCategory,
                     onCategorySelected = { category ->
                         newViewModel.onCategoryChanged(category = category!!)
@@ -162,7 +147,7 @@ fun ProductListScreen(
                     .padding(horizontal = 16.dp)) {
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = searchText, // Use searchText as a value
+                        value = searchText,
                         onValueChange = { newText ->
                             newViewModel.onSearchTextChanged(newText)
                             searchText = newText },
@@ -176,8 +161,9 @@ fun ProductListScreen(
                     showDialog.value = true
                     selectedProduct = it },
                     onEdit = {
-                        navController.navigate(route = ProductScreens.NewProductScreen.name+"/${it.id}")
-                        Log.d("ID", "ProductListScreen: ${it.id}")
+                        onNavigate(it.id.toString())
+                        //navController.navigate(route = ProductScreens.DetailsScreen.name+"/${it.id}")
+                        //Log.d("ID", "ProductListScreen: ${it.id}")
                              },
                     onClick = {
                         if(ordering) {
@@ -246,6 +232,20 @@ fun MenuBar(
             )
         }
     }
+}
+
+@Composable
+fun SearchBar(
+    modifier: Modifier = Modifier,
+    text: Int,
+    value: String,
+    onValueChange: (String) -> Unit,
+){
+    TextField(
+        modifier = modifier,
+        value = value,
+        onValueChange = { newText -> onValueChange(newText) },
+        placeholder = { Text(stringResource(id = text)) })
 }
 
 

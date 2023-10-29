@@ -29,7 +29,7 @@ fun OrderApp () {
             permission = android.Manifest.permission.POST_NOTIFICATIONS,
             showRationale = { },
             onPermissionDenied = {
-                state.snackBarText = "Permission denied"
+                //state.snackBarText = "Permission denied"
             },
             onPermissionGranted = { }
         )
