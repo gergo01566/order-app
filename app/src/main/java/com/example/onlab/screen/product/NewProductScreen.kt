@@ -41,7 +41,12 @@ import java.util.*
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @Composable
-fun NewProductScreen(navController: NavController, productViewModel: MProductViewModel, permissionRequester: PermissionRequester) {
+fun NewProductScreen(
+    productViewModel: MProductViewModel,
+    permissionRequester: PermissionRequester,
+    navigateBack: () -> Unit,
+    navigateFromTo: (String, String) -> Unit
+) {
 
     val listItems = getCategoryTypes(Category::class.java)
 
@@ -73,16 +78,18 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
 
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text = "Új termék", withIcon = true){
+            createTopBar(text = "Új termék", withIcon = true){
                 if(buttonEnabled){
                     showAlertDialog = true
                 } else {
-                    navController.popBackStack()
+                    navigateBack()
                 }
             }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
+            BottomNavBar(selectedItem = items[2]){
+                navigateFromTo("NewProductScreen", it)
+            }
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -178,7 +185,7 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                         productViewModel.saveProductToFirebase(mProduct,{
                             Toast.makeText(contextForToast, "Termék hozzáadva", Toast.LENGTH_SHORT).show()
                             productViewModel.getAllProductsFromDB()
-                            navController.navigate(route = ProductScreens.ListScreen.name)
+                            navigateFromTo("NewProductScreen", ProductScreens.ListScreen.name )
                         })
                     } else {
                         Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
@@ -190,13 +197,13 @@ fun NewProductScreen(navController: NavController, productViewModel: MProductVie
                     if(buttonEnabled){
                         showAlertDialog = true
                     } else {
-                        navController.popBackStack()
+                        navigateBack()
                     }
                 }
 
                 if(showAlertDialog){
                     DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
-                        navController.popBackStack()
+                        navigateBack()
                         showAlertDialog = false
                     }
                 }

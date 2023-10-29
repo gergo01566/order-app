@@ -2,7 +2,6 @@
 
 package com.example.onlab.navigation
 
-import AppState
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -10,13 +9,10 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavGraph
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
+import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.onlab.PermissionRequester
 
 import com.example.onlab.screen.ProductListScreen
@@ -47,65 +43,145 @@ fun AppNavigation(){
     val mCustomerViewModel = viewModel<MCustomerViewModel>()
     val mProductViewModel = viewModel<MProductViewModel>()
     val loginScreenViewModel = viewModel<LoginScreenViewModel>()
-    val loginViewModel = viewModel<LoginViewModel>()
     val permissionRequester = PermissionRequester()
 
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-        "LoginScreen";
+        DestinationLogin
     } else {
-        "CustomerScreen";
+        DestinationCustomerList
     }
 
     NavHost(navController = navController, startDestination = startDestination){
+
         composable(DestinationProductList){
-            ProductListScreen(onNavigate = {
-                Log.d("Nav", "productId: $it") // Log the value
-                navController.navigate(buildDetailsRoute(it))
-            },navController = navController,ordering = false, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+            ProductListScreen(
+                onNavigate = {
+                    Log.d("Nav", "productId: $it") // Log the value
+                    navController.navigate(buildProductDetailsRoute(it))
+                },
+                orderItemViewModel = orderItemViewModel,
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) { inclusive = true }
+                    }
+                },
+                navigateBack = { navController.popBackStack()},
+                ordering = false
+            )
         }
 
-        composable(route = ProductScreens.NewProductScreen.name)
-        {
-            NewProductScreen(navController = navController, productViewModel = mProductViewModel, permissionRequester = permissionRequester)
-        }
-//        composable(
-//            DestinationProductDetails + "/{product}",
-//        arguments = listOf(navArgument(name = "product"){type = NavType.StringType})
-//        ){ navBackStackEntry ->
-//            ProductDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
-//        }
-
-        composable(DestinationProductDetailsRoute){
-            ProductDetailsScreen(navigateFromTo = { from , to ->
+        composable(route = DestinationNewProduct) {
+            NewProductScreen(
+                productViewModel = mProductViewModel,
+                permissionRequester = permissionRequester,
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            ){ from, to ->
                 navController.navigate(to) {
                     popUpTo(from) { inclusive = true }
-                }},navController = navController ,it.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
+                }
+            }
         }
 
-//        composable(route = ProductScreens.DetailsScreen.name){
-//            ProductDetailsScreen(onNavigate = {
-//                                              navController.navigate(buildDetailsRoute(it))
-//            },navController = navController, it.arguments?.getString("product"), productViewModel = mProductViewModel, permissionRequester = permissionRequester)
-//        }
+        composable(route = DestinationProductDetails) {
+            ProductDetailsScreen(
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) { inclusive = true }
+                    }
+                },
+                permissionRequester = permissionRequester,
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
-        //composable()
+        composable(DestinationProductDetailsRoute){
+            ProductDetailsScreen(
+                navigateFromTo = { from , to ->
+                    navController.navigate(to) {
+                        popUpTo(from) {
+                            inclusive = true
+                        }
+                    }
+                },
+                navigateBack = { navController.popBackStack() },
+                permissionRequester = permissionRequester
+            )
+        }
 
-        composable("CustomerScreen") { // add CustomerScreen composable
-            CustomerScreen(navController = navController, mCustomerViewModel = mCustomerViewModel)
+        composable(DestinationCustomerList) {
+            CustomerScreen(
+                navController = navController,
+                mCustomerViewModel = mCustomerViewModel,
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            ){ from, to ->
+                navController.navigate(to) {
+                    popUpTo(from) {
+                        inclusive = true
+                    }
+                }
+            }
         }
-        composable("NewCustomerScreen"){
-            NewCustomerScreen(navController = navController, customerViewModel = mCustomerViewModel, permissionRequester = permissionRequester)
+
+        composable(DestinationNewCustomer){
+            NewCustomerScreen(
+                customerViewModel = mCustomerViewModel,
+                permissionRequester = permissionRequester,
+                navigateBack = { navController.popBackStack() }
+            ){ from, to ->
+                navController.navigate(to) {
+                    popUpTo(from) {
+                        inclusive = true
+                    }
+                }
+            }
         }
-        composable("OrdersScreen"){
-            OrdersScreen(navController = navController,orderViewModel= orderViewModel, customerViewModel = customerViewModel, orderItemViewModel = orderItemViewModel, mProductViewModel = productViewModel, loginScreenViewModel = loginScreenViewModel)
+
+        composable(DestinationOrderList){
+            OrdersScreen(
+                navController = navController,
+                orderViewModel= orderViewModel,
+                customerViewModel = customerViewModel,
+                orderItemViewModel = orderItemViewModel,
+                mProductViewModel = productViewModel,
+                loginScreenViewModel = loginScreenViewModel,
+                navigateBack = { navController.popBackStack()}
+            ){ from, to ->
+                navController.navigate(to) {
+                    popUpTo(from) { inclusive = true }
+                }
+            }
         }
-        composable("CustomerDetailsScreen" + "/{customer}",
-            arguments = listOf(navArgument(name = "customer"){
-                type = NavType.StringType
-            })){ navBackStackEntry ->
-            CustomerDetailsScreen(navController = navController, navBackStackEntry.arguments?.getString("customer") ,customerViewModel = mCustomerViewModel, permissionRequester = permissionRequester)
+
+        composable(
+            "$DestinationCustomerDetails/{customer}",
+            arguments = listOf(
+                navArgument(name = "customer") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            CustomerDetailsScreen(
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) {
+                            inclusive = true
+                        }
+                    }
+                },
+                navController = navController,
+                customerViewModel = mCustomerViewModel,
+                permissionRequester = permissionRequester
+            )
         }
-        composable("NewOrderScreen/{customer}/{orderId}",
+
+
+        composable("$DestinationNewOrder/{customer}/{orderId}",
             arguments = listOf(
                 navArgument(name = "customer") { type = NavType.StringType },
                 navArgument(name = "orderId") { type = NavType.StringType },
@@ -123,58 +199,122 @@ fun AppNavigation(){
                 permissionRequester = permissionRequester
             )
         }
+
         composable(
-            route = "${DestinationProductList}/{orderId}/{list}", // include customerId parameter in the route
+            route = "${DestinationProductList}/{orderId}/{list}",
             arguments = listOf(
-                navArgument("orderId") { type = NavType.StringType }, // add argument for customerId
-                navArgument("list") { type = NavType.BoolType }
+                navArgument("orderId") {
+                    type = NavType.StringType
+                },
+                navArgument("list") {
+                    type = NavType.BoolType
+                }
             )
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(onNavigate = {
-                Log.d("Nav", "productId: $it") // Log the value
-                navController.navigate(buildDetailsRoute(it))
-            }, navController = navController, orderID = orderId, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+
+            ProductListScreen(
+                onNavigate = {
+                    Log.d("Nav", "productId: $it")
+                    navController.navigate(buildProductDetailsRoute(it))
+                },
+                orderID = orderId,
+                ordering = list,
+                orderItemViewModel = orderItemViewModel,
+                navigateBack = {
+                    navController.popBackStack()
+                },
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
+
         composable(
-            route = "${DestinationProductList}/{list}", // include customerId parameter in the route
+            route = "${DestinationProductList}/{list}",
             arguments = listOf(
-                navArgument("list") { type = NavType.BoolType }
+                navArgument("list") {
+                    type = NavType.BoolType
+                }
             )
         ) { backStackEntry ->
             val list = backStackEntry.arguments?.getBoolean("list") ?: false
-            ProductListScreen(onNavigate = {
-                Log.d("Nav", "productId: $it") // Log the value
-                navController.navigate(buildDetailsRoute(it))
-            }, navController = navController, ordering = list, productViewModel = mProductViewModel, customerViewModel = mCustomerViewModel, orderItemViewModel = orderItemViewModel)
+
+            ProductListScreen(
+                onNavigate = {
+                    Log.d("Nav", "productId: $it")
+                    navController.navigate(buildProductDetailsRoute(it))
+                },
+                ordering = list,
+                orderItemViewModel = orderItemViewModel,
+                navigateBack = {
+                    navController.popBackStack()
+                },
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
-        composable("LoginScreen"){
+
+        composable(
+            route = "${DestinationProductList}/{list}",
+            arguments = listOf(
+                navArgument("list") {
+                    type = NavType.BoolType
+                }
+            )
+        ) { backStackEntry ->
+            val list = backStackEntry.arguments?.getBoolean("list") ?: false
+
+            ProductListScreen(
+                onNavigate = {
+                    Log.d("Nav", "productId: $it")
+                    navController.navigate(buildProductDetailsRoute(it))
+                },
+                ordering = list,
+                orderItemViewModel = orderItemViewModel,
+                navigateBack = {
+                    navController.popBackStack()
+                },
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(DestinationLogin){
                 LoginScreen(
                     navigateFromTo = { from , to ->
                         navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
                         }},
-                    viewModel = loginViewModel)
+                )
         }
-        composable("ProfileScreen"){
-            ProfileScreen(navController = navController)
+
+        composable(DestinationProfile){
+            ProfileScreen(navController = navController){ from, to ->
+                navController.navigate(to) {
+                    popUpTo(from) { inclusive = true }
+                }
+            }
         }
     }
 
-    fun loadAllDatas(){
-        productViewModel.getAllProductsFromDB()
-        customerViewModel.getAllCustomersFromDatabase()
-        orderViewModel.getOrdersByStatus(0)
-        orderViewModel.getOrdersByStatus(1)
-    }
 }
-fun buildDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"
-
-const val DestinationProductList = "ListScreen"
-const val DestinationProductDetails = "ProductDetailsScreen"
-const val DestinationOneArg = "arg"
-const val DestinationProductDetailsRoute = "$DestinationProductDetails/{$DestinationOneArg}"
+fun buildProductDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"
 
 
 

@@ -1,14 +1,17 @@
 package com.example.onlab.service
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
+import com.example.onlab.data.DataOrException
 import com.example.onlab.model.Category
+import com.example.onlab.model.MOrder
 import com.example.onlab.model.MProduct
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.dataObjects
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -21,19 +24,31 @@ ProductStorageService  {
 
     override val category: Category? = null
 
+    override var loading: MutableStateFlow<Boolean> = true
+
+
+
+
     override val products: Flow<List<MProduct>> = if (searchQuery.isEmpty()) {
+        loading = true
         if (category == null) {
-            firestore.collection("products").dataObjects()
+            firestore.collection("products").dataObjects<MProduct>().onCompletion {
+                loading = false
+            }
         } else {
-            firestore.collection("products").whereEqualTo("category", category.toString()).dataObjects()
+            firestore.collection("products").whereEqualTo("category", category.toString()).dataObjects<MProduct>().onCompletion {
+                loading.value = false
+            }
         }
     } else {
         val query = firestore.collection("products")
         if (category != null) {
             query.whereEqualTo("category", category.toString())
         }
-        firestore.collection("products").dataObjects<MProduct>().filter { product -> product.any { it.doesMatchSearchQuery(searchQuery) } }
-    }
+        firestore.collection("products").dataObjects<MProduct>().filter { product -> product.any { it.doesMatchSearchQuery(searchQuery) } }.onCompletion {
+            loading.value = false
+        }
+    }.onCompletion { loading.value = false }
 
 
     override suspend fun getProduct(productId: String): MProduct? {

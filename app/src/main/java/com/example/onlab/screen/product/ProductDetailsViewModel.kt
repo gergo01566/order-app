@@ -54,11 +54,27 @@ class ProductDetailsViewModel @Inject constructor(
         product.value = product.value.copy(image = newValue)
     }
 
-    fun onUpdateProduct(product: MProduct, navigateFromTo: (String, String) -> Unit) {
+    private fun onUpdateProduct(product: MProduct, navigateFromTo: (String, String) -> Unit) {
         launchCatching {
             storageService.updateProduct(product){
                 navigateFromTo(DestinationProductDetails, DestinationProductList)
             }
+        }
+    }
+
+    private fun onSaveProduct(product: MProduct, navigateFromTo: (String, String) -> Unit){
+        launchCatching {
+            storageService.saveProduct(product){
+                navigateFromTo(DestinationProductDetails, DestinationProductList)
+            }
+        }
+    }
+
+    fun onDoneClick(product: MProduct, navigateFromTo: (String, String) -> Unit){
+        if (product.id!!.isBlank()){
+            onSaveProduct(product, navigateFromTo)
+        } else {
+            onUpdateProduct(product, navigateFromTo)
         }
     }
 }

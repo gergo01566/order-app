@@ -37,7 +37,13 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable
-fun CustomerDetailsScreen(navController: NavController, customerID: String? = null, customerViewModel: MCustomerViewModel, permissionRequester: PermissionRequester){
+fun CustomerDetailsScreen(
+    navigateFromTo:(String, String) -> Unit,
+    navController: NavController,
+    customerID: String? = null,
+    customerViewModel: MCustomerViewModel,
+    permissionRequester: PermissionRequester
+){
 
     val contextForToast = LocalContext.current.applicationContext
 
@@ -98,7 +104,7 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
     }
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text = customer!!.firstName + " " + customer!!.lastName + " adatai", withIcon = true){
+            createTopBar(text = customer!!.firstName + " " + customer!!.lastName + " adatai", withIcon = true){
                 if(changesMade){
                     showNavigationDialog.value = true
                 }
@@ -110,7 +116,9 @@ fun CustomerDetailsScreen(navController: NavController, customerID: String? = nu
             }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
+            BottomNavBar(selectedItem = items[1], navigateTo = {
+                navigateFromTo("CustomerDetailsScreen", it)
+            })
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End

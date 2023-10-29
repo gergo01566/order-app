@@ -23,11 +23,20 @@ import coil.compose.rememberImagePainter
 import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.model.MCustomer
+import com.example.onlab.navigation.DestinationCustomerDetails
+import com.example.onlab.navigation.DestinationCustomerList
+import com.example.onlab.navigation.DestinationNewCustomer
+import com.example.onlab.navigation.DestinationNewOrder
 import com.example.onlab.viewModels.MCustomerViewModel
 import java.util.*
 
 @Composable
-fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerViewModel) {
+fun CustomerScreen(
+    navController: NavController,
+    mCustomerViewModel: MCustomerViewModel,
+    navigateBack: ()->Unit,
+    navigateFromTo:(String, String)->Unit
+) {
 
     val contextForToast = LocalContext.current.applicationContext
 
@@ -59,17 +68,21 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
 
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text = "Ügyfelek", withIcon = false)
+            createTopBar(text = "Ügyfelek", withIcon = false){
+                navigateBack()
+            }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
+            BottomNavBar(selectedItem = items[1]){
+                navigateFromTo(DestinationCustomerList, it)
+            }
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier =  Modifier.padding(bottom = 60.dp),
                 text = { Text(text = "Új ügyfél") },
                 onClick = {
-                    navController.navigate(route = "NewCustomerScreen")
+                    navigateFromTo(DestinationCustomerList, DestinationNewCustomer)
                 },
                 shape = RoundedCornerShape(20.dp),
                 backgroundColor = MaterialTheme.colors.primary,
@@ -112,12 +125,12 @@ fun CustomerScreen(navController: NavController, mCustomerViewModel: MCustomerVi
                     selectedCustomer = it
                     },
                     onEdit = {
-                        navController.navigate(route = "CustomerDetailsScreen" + "/${it.id.toString()}")
+                        navController.navigate(route = DestinationCustomerDetails + "/${it.id.toString()}")
                     },
                     iconContent = {
                     CreateIcon(Icons.Rounded.ShoppingCart){
                         val orderID: String = UUID.randomUUID().toString()
-                        navController.navigate(route = "NewOrderScreen" + "/${it.id}" + "/${orderID}")
+                        navController.navigate(route = DestinationNewOrder + "/${it.id}" + "/${orderID}")
                     }
                     }
                 ) { customer ->

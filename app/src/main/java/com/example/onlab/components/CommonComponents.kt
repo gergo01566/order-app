@@ -66,7 +66,7 @@ import com.example.onlab.R
 import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
 import com.example.onlab.model.getCategoryTypes
-import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.navigation.*
 import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
 import java.io.File
@@ -109,13 +109,10 @@ val items = listOf(
     BottomNavItem("Beállítások", Icons.Default.Settings)
 )
 
-
-
-
 @Composable
 fun BottomNavBar(
-    navController: NavController,
     selectedItem: BottomNavItem,
+    navigateTo: (String) -> Unit
 ) {
     BottomNavigation(
         modifier = Modifier.height(70.dp),
@@ -126,10 +123,10 @@ fun BottomNavBar(
                 selected = selectedItem == item,
                 onClick = {
                     when (item.name) {
-                        "Ügyfelek" -> navController.navigate("CustomerScreen")
-                        "Termékek" -> navController.navigate("${ProductScreens.ListScreen.name}/false")
-                        "Rendelések" -> navController.navigate("OrdersScreen")
-                        "Beállítások" -> navController.navigate("ProfileScreen")
+                        "Ügyfelek" -> navigateTo(DestinationCustomerList)
+                        "Termékek" -> navigateTo("${DestinationProductList}/false")
+                        "Rendelések" -> navigateTo(DestinationOrderList)
+                        "Beállítások" -> navigateTo(DestinationProfile)
                         else -> Log.d("TAG", "BottomNavBar: Clicked")
                     }
                 },
@@ -161,10 +158,9 @@ fun BottomNavBar(
 @Composable
 fun createTopBar(
     modifier: Modifier = Modifier,
-    navController: NavController,
     text: String,
     withIcon: Boolean,
-    onBack: () -> Unit = { navController.popBackStack() },
+    onBack: () -> Unit,
 ) {
     TopAppBar(
         backgroundColor = MaterialTheme.colors.primary,
@@ -189,7 +185,6 @@ fun createTopBar(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun CategoryDropDownMenu(

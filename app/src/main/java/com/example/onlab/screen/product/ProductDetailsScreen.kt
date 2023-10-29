@@ -6,15 +6,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -22,21 +18,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.model.Category
 import com.example.onlab.model.getCategoryTypes
-import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.viewModels.MProductViewModel
+import com.example.onlab.navigation.DestinationProductDetails
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import java.io.IOException
@@ -46,9 +37,14 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalComposeUiApi
 @Composable
-fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController: NavController, productID: String? = null, productViewModel: MProductViewModel, permissionRequester: PermissionRequester, newViewModel: ProductDetailsViewModel= hiltViewModel()) {
+fun ProductDetailsScreen(
+    navigateFromTo: (String, String) -> Unit,
+    navigateBack:()-> Unit,
+    permissionRequester: PermissionRequester,
+    viewModel: ProductDetailsViewModel= hiltViewModel()
+) {
 
-    val product by newViewModel.product
+    val product by viewModel.product
 
     var buttonEnabled by remember { mutableStateOf(false) }
 
@@ -105,7 +101,7 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            newViewModel.onDeleteProduct(product.id!!, navigateFromTo = navigateFromTo)
+            viewModel.onDeleteProduct(product.id!!, navigateFromTo = navigateFromTo)
 //            productViewModel.deleteProduct(productID!!){
 //                showDialog.value = false
 //                Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
@@ -119,16 +115,18 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
 
     Scaffold(
         topBar = {
-            createTopBar(navController = navController, text =product!!.title , withIcon = true){
+            createTopBar(text =product!!.title , withIcon = true){
                 if(changesMade){
                     showAlertDialog = true
                 } else {
-                    navController.popBackStack()
+                    navigateBack()
                 }
             }
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
+            BottomNavBar(selectedItem = items[2], navigateTo = {
+                navigateFromTo(DestinationProductDetails, it)
+            })
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -141,13 +139,13 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
                     .padding(bottom = padding.calculateBottomPadding() / 2),
                 horizontalAlignment = Alignment.Start
             ) {
-                BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = product.title, onNewValue = { newViewModel.onTitleChange(it) })
-                BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = product.pricePerPiece.toString(), onNewValue = { newViewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
-                BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = product.pricePerKarton.toString(), onNewValue = { newViewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
+                BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = product.title, onNewValue = { viewModel.onTitleChange(it) })
+                BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = product.pricePerPiece.toString(), onNewValue = { viewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
+                BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = product.pricePerKarton.toString(), onNewValue = { viewModel.onPriceCartonChange(it) }, keyboardType = KeyboardType.Number)
                 CategoryDropDownMenu(
                     selectedCategory = product.category,
                     onCategorySelected = { category ->
-                        newViewModel.onCategoryChange(category.toString())
+                        viewModel.onCategoryChange(category.toString())
                         changesMade = true
                     }
                 )
@@ -158,7 +156,7 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
                         .height(150.dp)
                 ) {
                     ImagePickerButton(onImageSelected = {
-                        newViewModel.onImageChange(it.toString())
+                        viewModel.onImageChange(it.toString())
 //                        imageUri = it
 //                        product = product.copy(image = it.toString())
                     }, permissionRequester = permissionRequester)
@@ -185,7 +183,7 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
                     enabled = product.title.isNotEmpty() && product.pricePerPiece != 0 && product.pricePerKarton != 0,
                     onClick = {
                         if (product.pricePerPiece != 0 && product.pricePerKarton != 0) {
-                            newViewModel.onUpdateProduct(product, navigateFromTo)
+                            viewModel.onDoneClick(product, navigateFromTo)
 //                            productViewModel.updateProduct(productToUpdate as Map<String, String?>, productID!!, onSuccess = {
 //                                navController.navigate(route = ProductScreens.ListScreen.name)
 //                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
@@ -211,14 +209,14 @@ fun ProductDetailsScreen(navigateFromTo: (String, String) -> Unit, navController
                     if (changesMade){
                         showAlertDialog = true
                     } else {
-                        navController.popBackStack()
+                        navigateBack()
                     }
                 }
 
                 if(showAlertDialog){
                     DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
                         showAlertDialog = false
-                        navController.popBackStack()
+                        navigateBack()
                     }
                 }
             }
@@ -259,7 +257,7 @@ fun BasicField(
         singleLine = true,
         maxLines = 1,
         modifier = modifier.fillMaxWidth().padding(10.dp),
-        value = value,
+        value = if (value=="0") "" else value,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         label = { Text(label) },
         onValueChange = { onNewValue(it) },

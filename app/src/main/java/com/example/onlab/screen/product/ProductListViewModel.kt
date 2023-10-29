@@ -25,6 +25,7 @@ class ProductListViewModel @Inject constructor(
     var selectedCategory by mutableStateOf<Category?>(null)
         private set
 
+    val loading : Flow<Boolean> = storageService.loading
 
     val searchResults: Flow<List<MProduct>> =
         combine(

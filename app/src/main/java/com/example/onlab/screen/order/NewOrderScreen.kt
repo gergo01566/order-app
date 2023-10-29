@@ -149,19 +149,19 @@ fun NewOrderScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            createTopBar(
-                navController = navController,
-                text = "${customer!!.firstName} rendelése",
-                withIcon = true,
-                onBack = {
-                    if(orderItemViewModel.isOrderChanged(orderID!!)){
-                        openDialog.value = true
-                    } else {
-                        orderItemViewModel.clearOrderItemsList()
-                        navController.popBackStack()
-                    }
-                }
-            )
+//            createTopBar(
+//                navController = navController,
+//                text = "${customer!!.firstName} rendelése",
+//                withIcon = true,
+//                onBack = {
+//                    if(orderItemViewModel.isOrderChanged(orderID!!)){
+//                        openDialog.value = true
+//                    } else {
+//                        orderItemViewModel.clearOrderItemsList()
+//                        navController.popBackStack()
+//                    }
+//                }
+//            )
         },
         bottomBar = {
             androidx.compose.material3.BottomAppBar {

@@ -53,7 +53,8 @@ import java.net.URL
 
 @Composable
 fun ProfileScreen(
-    navController: NavController
+    navController: NavController,
+    navigateFromTo: (String, String) -> Unit
     //user: User,
 //    onLogout: () -> Unit,
 //    onDeleteProfile: () -> Unit,
@@ -83,8 +84,10 @@ fun ProfileScreen(
         },
         bottomBar = {
             BottomNavBar(
-                navController = navController as NavHostController,
-                selectedItem = items[3]
+                selectedItem = items[3],
+                navigateTo = {
+                    navigateFromTo("ProfileScreen", it)
+                }
             )
         },
         floatingActionButton = {

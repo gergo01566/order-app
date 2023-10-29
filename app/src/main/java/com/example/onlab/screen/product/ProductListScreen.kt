@@ -32,16 +32,17 @@ import java.util.*
 import com.example.onlab.model.Category as Categ
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.onlab.navigation.DestinationProductDetails
+import com.example.onlab.navigation.DestinationProductList
 
 
 @Composable
 fun ProductListScreen(
     onNavigate: (String) -> Unit,
-    navController: NavController,
+    navigateFromTo: (String, String) -> Unit,
     orderID: String? = null,
     ordering: Boolean,
-    productViewModel: MProductViewModel,
-    customerViewModel: MCustomerViewModel,
+    navigateBack: () -> Unit,
     orderItemViewModel: MOrderItemViewModel,
     newViewModel: ProductListViewModel = hiltViewModel()
 ) {
@@ -51,6 +52,7 @@ fun ProductListScreen(
     val context = LocalContext.current
 
     var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
+    val loading = newViewModel.loading.collectAsStateWithLifecycle()
     var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
@@ -87,7 +89,7 @@ fun ProductListScreen(
                     )
                     orderItemViewModel.addOrderItem(orderItem)
                     Log.d("DB", "ADD, lista tartalma ennyi elem: ${orderItemViewModel.getOrderItemsList().size}")
-                    navController.popBackStack()
+                    navigateBack()
 //                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
 //                        navController.popBackStack()
 //                    })
@@ -102,13 +104,19 @@ fun ProductListScreen(
 
     Scaffold(
         topBar = {
-            if (ordering) createTopBar(navController = navController, text = "Új rendelés", withIcon = true)
+            if (ordering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
+                navigateBack()
+            })
             else {
-                createTopBar(navController = navController, text = "Termékek", withIcon = false)
+                createTopBar(text = "Termékek", withIcon = false){
+                    navigateBack()
+                }
             }
         },
         bottomBar = {
-            if (!ordering) BottomNavBar(navController = navController as NavHostController, selectedItem = items[2])
+            if (!ordering) BottomNavBar(selectedItem = items[2]){
+                navigateFromTo(DestinationProductList, it)
+            }
         },
         floatingActionButton = {
             if(!ordering){
@@ -116,7 +124,7 @@ fun ProductListScreen(
                     modifier =  Modifier.padding(bottom = 60.dp),
                     text = { Text(text = "Új termék") },
                     onClick = {
-                        navController.navigate(route = ProductScreens.NewProductScreen.name)
+                        navigateFromTo(DestinationProductList, DestinationProductDetails)
                     },
                     shape = RoundedCornerShape(20.dp),
                     backgroundColor = MaterialTheme.colors.primary,
@@ -126,6 +134,11 @@ fun ProductListScreen(
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
+            if (loading){
+                CircularProgressIndicator()
+            } else {
+
+            }
             it.calculateBottomPadding()
             Column(
                 modifier = Modifier

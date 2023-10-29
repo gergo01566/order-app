@@ -29,7 +29,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable
-fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomerViewModel, permissionRequester: PermissionRequester){
+fun NewCustomerScreen(customerViewModel: MCustomerViewModel, permissionRequester: PermissionRequester, navigateBack: () -> Unit, navigateFromTo: (String, String) -> Unit){
     val contextForToast = LocalContext.current.applicationContext
 
     var customer by remember { mutableStateOf(MCustomer(firstName = "", lastName = "", address = "", phoneNumber = "", image = "")) }
@@ -47,20 +47,21 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
     Scaffold(
         topBar = {
             createTopBar(
-                navController = navController,
                 text = "Új ügyfél",
                 withIcon = true,
                 onBack = {
                     if (buttonEnabled){
                         showAlertDialog = true
                     } else {
-                        navController.popBackStack()
+                        navigateBack()
                     }
                 }
             )
         },
         bottomBar = {
-            BottomNavBar(navController = navController as NavHostController, selectedItem = items[1])
+            BottomNavBar(selectedItem = items[1]){
+                navigateFromTo("NewCustomerScreen", it)
+            }
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
@@ -151,7 +152,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     if(buttonEnabled){
                         showAlertDialog = true
                     } else {
-                        navController.popBackStack()
+                        navigateBack()
                     }
                 }
 
@@ -159,7 +160,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                     DismissChangesDialog(
                         onDismiss = { showAlertDialog = false },
                         onConfirm = {
-                            navController.popBackStack()
+                            navigateBack()
                             showAlertDialog = false
                         }
                     )
@@ -179,7 +180,7 @@ fun NewCustomerScreen(navController: NavController, customerViewModel: MCustomer
                         val mCustomer = MCustomer(firstName = customer.firstName, lastName = customer.lastName, address = customer.address, phoneNumber = customer.phoneNumber, image = imageUri.toString())
                         customerViewModel.saveCustomerToFirebase(mCustomer, onSuccess = {
                             Toast.makeText(contextForToast, "Ügyfél hozzáadva", Toast.LENGTH_SHORT).show()
-                            navController.navigate(route = "CustomerScreen")
+                            navigateFromTo("NewCustomerScreen", "CustomerScreen")
                             customerViewModel.getAllCustomersFromDatabase()
                         }, {
                             Log.d("FB", "saveToFirebase: Error:")

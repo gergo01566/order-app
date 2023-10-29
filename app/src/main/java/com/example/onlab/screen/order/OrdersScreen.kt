@@ -48,6 +48,8 @@ fun OrdersScreen(
     orderItemViewModel: MOrderItemViewModel,
     mProductViewModel: MProductViewModel,
     loginScreenViewModel: LoginScreenViewModel,
+    navigateBack: () -> Unit,
+    navigateFromTo: (String, String) -> Unit
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
@@ -92,16 +94,19 @@ fun OrdersScreen(
     Scaffold(
         topBar = {
             createTopBar(
-                navController = navController,
                 text = "Rendelések",
-                withIcon = false
+                withIcon = false,
+                onBack = {
+                    navigateBack()
+                }
             )
         },
         bottomBar = {
             BottomNavBar(
-                navController = navController as NavHostController,
                 selectedItem = items[0]
-            )
+            ){
+                navigateFromTo("OrdersScreen", it)
+            }
         },
         floatingActionButton = {
         },
