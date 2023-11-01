@@ -22,7 +22,7 @@ class ProductDetailsViewModel @Inject constructor(
     init {
         val productId = savedStateHandle.get<String>(DestinationOneArg)
         launchCatching {
-            product.value = storageService.getProduct(productId!!) ?: MProduct()
+            //product.value = storageService.getProduct(productId!!) ?: MProduct()
         }
     }
 

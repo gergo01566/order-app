@@ -48,7 +48,7 @@ fun AppNavigation(){
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
         DestinationLogin
     } else {
-        DestinationCustomerList
+        DestinationProductList
     }
 
     NavHost(navController = navController, startDestination = startDestination){

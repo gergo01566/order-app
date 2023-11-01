@@ -32,6 +32,8 @@ import java.util.*
 import com.example.onlab.model.Category as Categ
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.onlab.data.DataOrException
+import com.example.onlab.data.ValueOrException
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
 
@@ -50,11 +52,18 @@ fun ProductListScreen(
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
     val context = LocalContext.current
+    //val loadingState by newViewModel.loadingState
 
-    var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
-    val loading = newViewModel.loading.collectAsStateWithLifecycle()
+    //val viewModel = remember { ProductListViewModel() }
+
+
+    //var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
     var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
+
+    //val data = newViewModel.data.collectAsState(DataOrException(emptyList(), false, null))
+    //val data = newViewModel.data.value.data?.collectAsStateWithLifecycle(initialValue = emptyList())
+    //val loadingState by newViewModel.loading.collectAsStateWithLifecycle(LoadingState.LOADING)
 
     showConfirmationDialog(
         showDialog = showDialog,
@@ -134,92 +143,106 @@ fun ProductListScreen(
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
-            if (loading){
-                CircularProgressIndicator()
-            } else {
+            when(val productsResponse = newViewModel.productsResponse){
+                is ValueOrException.Loading -> CircularProgressIndicator()
+                is ValueOrException.Failure -> CircularProgressIndicator()
+                is ValueOrException.Success -> {
+                    it.calculateBottomPadding()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(bottom = it.calculateBottomPadding())
+                    ) {
+                        MenuBar(
+                            categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
+                            selectedCategory = selectedCategory,
+                            onCategorySelected = { category ->
+                                newViewModel.onCategoryChanged(category = category!!)
+                                selectedCategory = category
+                            }
+                        )
 
-            }
-            it.calculateBottomPadding()
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(bottom = it.calculateBottomPadding())
-            ) {
-                MenuBar(
-                    categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { category ->
-                        newViewModel.onCategoryChanged(category = category!!)
-                        selectedCategory = category
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)) {
+                            TextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = searchText,
+                                onValueChange = { newText ->
+                                    newViewModel.onSearchTextChanged(newText)
+                                    searchText = newText },
+                                placeholder = { Text(text = "Keresés") })
+                        }
+
+                        CreateList(
+
+                            data = productsResponse.data.sortedBy { it.title },
+                            //data = listOfProducts!!.value.sortedBy { it.title },
+                            //data = data.value.data!!.sortedBy { it.title },
+                            onDelete = {
+                                Log.d("TAG", "ProductListScreen: ${it.id}")
+                                showDialog.value = true
+                                selectedProduct = it },
+                            onEdit = {
+                                onNavigate(it.id.toString())
+                                //navController.navigate(route = ProductScreens.DetailsScreen.name+"/${it.id}")
+                                //Log.d("ID", "ProductListScreen: ${it.id}")
+                            },
+                            onClick = {
+                                if(ordering) {
+                                    selectedProduct = it
+                                    showFullScreenDialog.value = true
+                                }
+                                else{
+                                    Log.d("TAG", "ProductListScreen: ez nem jott ossze")
+                                }
+                            },
+                            iconClickEnabled = !ordering,
+                            itemContent = { product ->
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    Column(
+                                        modifier = Modifier.size(70.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        AsyncImage(
+                                            model = product.image.toUri(),
+                                            contentDescription = "profile image",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(80.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(text = product.title, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
+                                            style = MaterialTheme.typography.caption
+                                        )
+
+                                    }
+                                }
+                            })
+
                     }
-                )
-
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)) {
-                    TextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = searchText,
-                        onValueChange = { newText ->
-                            newViewModel.onSearchTextChanged(newText)
-                            searchText = newText },
-                        placeholder = { Text(text = "Keresés") })
                 }
-
-                CreateList(
-                    data = listOfProducts!!.value.sortedBy { it.title },
-                    onDelete = {
-                    Log.d("TAG", "ProductListScreen: ${it.id}")
-                    showDialog.value = true
-                    selectedProduct = it },
-                    onEdit = {
-                        onNavigate(it.id.toString())
-                        //navController.navigate(route = ProductScreens.DetailsScreen.name+"/${it.id}")
-                        //Log.d("ID", "ProductListScreen: ${it.id}")
-                             },
-                    onClick = {
-                        if(ordering) {
-                            selectedProduct = it
-                            showFullScreenDialog.value = true
-                        }
-                        else{
-                            Log.d("TAG", "ProductListScreen: ez nem jott ossze")
-                        }
-                    },
-                    iconClickEnabled = !ordering,
-                    itemContent = { product ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier.size(70.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                AsyncImage(
-                                    model = product.image.toUri(),
-                                    contentDescription = "profile image",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(80.dp),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(10.dp)
-                            ) {
-                                Text(text = product.title, fontWeight = FontWeight.Bold)
-                                Text(
-                                    text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
-                                    style = MaterialTheme.typography.caption
-                                )
-
-                            }
-                        }
-                    })
-
             }
+//            if (newViewModel.loadingState.value == LoadingState.LOADING){
+//                CircularProgressIndicator()
+//            } else {
+
+//            if (newViewModel.state.collectAsState().value == LoadingState.LOADING){
+//                //Log.d("LOAD", "ProductListScreen: ${data.value.loading}")
+//                CircularProgressIndicator()
+//            } else if (newViewModel.state.collectAsState().value == LoadingState.LOADED) {
+
+           // }
         }
     )
 }
