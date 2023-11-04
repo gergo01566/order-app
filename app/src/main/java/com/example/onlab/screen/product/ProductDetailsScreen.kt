@@ -25,8 +25,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
-import com.example.onlab.model.Category
-import com.example.onlab.model.getCategoryTypes
+import com.example.onlab.data.ValueOrException
+import com.example.onlab.model.MProduct
 import com.example.onlab.navigation.DestinationProductDetails
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -44,19 +44,11 @@ fun ProductDetailsScreen(
     viewModel: ProductDetailsViewModel= hiltViewModel()
 ) {
 
-    val product by viewModel.product
-
-    var buttonEnabled by remember { mutableStateOf(false) }
+    val uiState by viewModel.state
 
     var changesMade by remember { mutableStateOf(false) }
 
     var showAlertDialog by remember { mutableStateOf(false) }
-
-    val listItems = getCategoryTypes(Category::class.java)
-
-    var selectedItem by remember {
-        mutableStateOf(listItems[0])
-    }
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -71,26 +63,30 @@ fun ProductDetailsScreen(
         )
     )
 
-    val contextForToast = LocalContext.current.applicationContext
-
 
     LaunchedEffect(permissionsState) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "image/*"
             }
             Log.d("not granted", "ProductDetailsScreen: NOT ALL PERMISSION GRANTED")
         } else {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "image/*"
             }
             Log.d("granted", "ProductDetailsScreen: ALL PERMISSION GRANTED")
             try {
-                val inputStream = context.contentResolver.openInputStream(Uri.parse(product!!.image))
-                loadedBitmap = BitmapFactory.decodeStream(inputStream)
+                when(val productsResponse = viewModel.productResponse){
+                    is ValueOrException.Success -> {
+                        val inputStream = context.contentResolver.openInputStream(Uri.parse(
+                            productsResponse.data.image))
+                        loadedBitmap = BitmapFactory.decodeStream(inputStream)
+                    }
+                    else -> {}
+                }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -101,127 +97,132 @@ fun ProductDetailsScreen(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
-            viewModel.onDeleteProduct(product.id!!, navigateFromTo = navigateFromTo)
-//            productViewModel.deleteProduct(productID!!){
-//                showDialog.value = false
-//                Toast.makeText(context, "Termék törölve", Toast.LENGTH_SHORT).show()
-//                navController.navigate(route = ProductScreens.ListScreen.name)
-//            }
+            viewModel.onDeleteProduct(uiState.id, navigateFromTo = navigateFromTo)
         },
         onDismiss = {
             showDialog.value = false
         }
     )
 
-    Scaffold(
-        topBar = {
-            createTopBar(text =product!!.title , withIcon = true){
-                if(changesMade){
-                    showAlertDialog = true
-                } else {
-                    navigateBack()
-                }
-            }
-        },
-        bottomBar = {
-            BottomNavBar(selectedItem = items[2], navigateTo = {
-                navigateFromTo(DestinationProductDetails, it)
-            })
-        },
-        isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End,
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .statusBarsPadding()
-                    .padding(bottom = padding.calculateBottomPadding() / 2),
-                horizontalAlignment = Alignment.Start
-            ) {
-                BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = product.title, onNewValue = { viewModel.onTitleChange(it) })
-                BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = product.pricePerPiece.toString(), onNewValue = { viewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
-                BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = product.pricePerKarton.toString(), onNewValue = { viewModel.onPriceCartonChange(it) }, keyboardType = KeyboardType.Number)
-                CategoryDropDownMenu(
-                    selectedCategory = product.category,
-                    onCategorySelected = { category ->
-                        viewModel.onCategoryChange(category.toString())
-                        changesMade = true
-                    }
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-                        .height(150.dp)
-                ) {
-                    ImagePickerButton(onImageSelected = {
-                        viewModel.onImageChange(it.toString())
-//                        imageUri = it
-//                        product = product.copy(image = it.toString())
-                    }, permissionRequester = permissionRequester)
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        shape = RoundedCornerShape(15.dp)
-                    ) {
-                        AsyncImage(
-                            model = product.image.toUri(),
-                            contentDescription = "profile image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
-
-                ProductButton(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),
-                    text = "Termék mentése",
-                    enabled = product.title.isNotEmpty() && product.pricePerPiece != 0 && product.pricePerKarton != 0,
-                    onClick = {
-                        if (product.pricePerPiece != 0 && product.pricePerKarton != 0) {
-                            viewModel.onDoneClick(product, navigateFromTo)
-//                            productViewModel.updateProduct(productToUpdate as Map<String, String?>, productID!!, onSuccess = {
-//                                navController.navigate(route = ProductScreens.ListScreen.name)
-//                                Toast.makeText(contextForToast, "Termék módosítva", Toast.LENGTH_SHORT).show()
-//                            }, onFailure = {
-//                                Toast.makeText(contextForToast, "Termék nem lett módosítva", Toast.LENGTH_SHORT).show()
-//                            })
-//                        }else {
-//                            Toast.makeText(contextForToast, "Csak számokat használj az ár megadásánál", Toast.LENGTH_LONG).show()
+    when(viewModel.productResponse) {
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Failure -> CircularProgressIndicator()
+        is ValueOrException.Success ->
+            Scaffold(
+                topBar = {
+                    createTopBar(text = uiState.title , withIcon = true){
+                        if(changesMade){
+                            showAlertDialog = true
+                        } else {
+                            navigateBack()
                         }
                     }
-                )
+                },
+                bottomBar = {
+                    BottomNavBar(selectedItem = items[2], navigateTo = {
+                        navigateFromTo(DestinationProductDetails, it)
+                    })
+                },
+                isFloatingActionButtonDocked = true,
+                floatingActionButtonPosition = FabPosition.End,
+                content = { padding ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .statusBarsPadding()
+                            .padding(bottom = padding.calculateBottomPadding() / 2),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = uiState.title, onNewValue = { viewModel.onTitleChange(it) })
+                        BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = uiState.pricePerPiece, onNewValue = { viewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
+                        BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = uiState.pricePerCarton, onNewValue = { viewModel.onPriceCartonChange(it) }, keyboardType = KeyboardType.Number)
+                        CategoryDropDownMenu(
+                            selectedCategory = uiState.category,
+                            onCategorySelected = { category ->
+                                viewModel.onCategoryChange(category.toString())
+                                changesMade = true
+                            }
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, top = 10.dp)
+                                .height(150.dp)
+                        ) {
+                            ImagePickerButton(onImageSelected = {
+                                viewModel.onImageChange(it.toString())
+                            }, permissionRequester = permissionRequester)
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = RoundedCornerShape(15.dp)
+                            ) {
+                                AsyncImage(
+                                    model = uiState.image.toUri(),
+                                    contentDescription = "profile image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
 
-                ProductButton(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),
-                    text = "Termék törlése",
-                    onClick = { showDialog.value = true},
-                    color = Color.Red,
-                )
+                        ProductButton(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding((10.dp))
+                            .height(40.dp),
+                            text = "Termék mentése",
+                            enabled = uiState.title.isNotEmpty() && uiState.pricePerPiece.isNotEmpty() && uiState.pricePerCarton.isNotEmpty(),
+                            onClick = {
+                                    viewModel.onDoneClick(MProduct(uiState), navigateFromTo)
 
-                BackHandler{
-                    if (changesMade){
-                        showAlertDialog = true
-                    } else {
-                        navigateBack()
+                            }
+                        )
+
+                        ProductButton(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding((10.dp))
+                            .height(40.dp),
+                            text = "Termék törlése",
+                            onClick = { showDialog.value = true},
+                            color = Color.Red,
+                        )
+
+                        BackHandler{
+                            if (changesMade){
+                                showAlertDialog = true
+                            } else {
+                                navigateBack()
+                            }
+                        }
+
+                        if(showAlertDialog){
+                            DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
+                                showAlertDialog = false
+                                navigateBack()
+                            }
+                        }
                     }
                 }
 
-                if(showAlertDialog){
-                    DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
-                        showAlertDialog = false
-                        navigateBack()
-                    }
-                }
-            }
-        }
-    )
+            )
+
+
+    }
+
+    when(val saveProductResponse = viewModel.saveProductResponse) {
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> print(saveProductResponse.e)
+    }
+
+    when(val updateProductResponse = viewModel.updateProductResponse) {
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> print(updateProductResponse.e)
+    }
+
 }
 
 @Composable
@@ -256,7 +257,9 @@ fun BasicField(
     OutlinedTextField(
         singleLine = true,
         maxLines = 1,
-        modifier = modifier.fillMaxWidth().padding(10.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(10.dp),
         value = if (value=="0") "" else value,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         label = { Text(label) },

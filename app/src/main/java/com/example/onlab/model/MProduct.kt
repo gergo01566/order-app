@@ -2,6 +2,7 @@ package com.example.onlab.model
 
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
+import com.example.onlab.screen.product.ProductUiState
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 import java.util.*
@@ -30,6 +31,14 @@ data class MProduct(
     @set:PropertyName("product_image")
     var image: String,
 ){
+    constructor(productUiState: ProductUiState) : this(
+        productUiState.id,
+        productUiState.title,
+        productUiState.category,
+        productUiState.pricePerPiece.toInt(),
+        productUiState.pricePerCarton.toInt(),
+        productUiState.image
+    )
     constructor() : this("", "", "", 0, 0, "")
 
     fun doesMatchSearchQuery(query: String): Boolean{

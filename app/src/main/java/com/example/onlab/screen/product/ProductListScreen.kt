@@ -1,4 +1,4 @@
-package com.example.onlab.screen
+package com.example.onlab.screen.product
 
 import android.util.Log
 import android.widget.Toast
@@ -20,19 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.*
-import com.example.onlab.navigation.ProductScreens
-import com.example.onlab.screen.product.ProductListViewModel
 import com.example.onlab.viewModels.*
 import java.util.*
 import com.example.onlab.model.Category as Categ
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.onlab.data.DataOrException
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
@@ -52,18 +45,30 @@ fun ProductListScreen(
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
     val context = LocalContext.current
-    //val loadingState by newViewModel.loadingState
 
-    //val viewModel = remember { ProductListViewModel() }
-
-
-    //var listOfProducts = newViewModel.searchResults.collectAsStateWithLifecycle(emptyList())
     var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
-    //val data = newViewModel.data.collectAsState(DataOrException(emptyList(), false, null))
-    //val data = newViewModel.data.value.data?.collectAsStateWithLifecycle(initialValue = emptyList())
-    //val loadingState by newViewModel.loading.collectAsStateWithLifecycle(LoadingState.LOADING)
+    when(newViewModel.deleteProductResponse){
+        is ValueOrException.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                CircularProgressIndicator()
+            }
+        }
+        is ValueOrException.Success -> {
+            Snackbar {
+                Text(text = "Termék törölve")
+            }
+        }
+        is ValueOrException.Failure -> {
+            Snackbar {
+                Text(text = "Nem sikerült törölni a terméket")
+            }
+        }
+    }
 
     showConfirmationDialog(
         showDialog = showDialog,
@@ -72,7 +77,8 @@ fun ProductListScreen(
             selectedProduct?.let {
                 newViewModel.onDeleteProduct(it.id.toString()){
                     Toast.makeText(context, "Termék törölve!", Toast.LENGTH_SHORT).show()
-                    showDialog.value = false}
+                    showDialog.value = false
+                }
             }
         }
     ) {
@@ -99,9 +105,6 @@ fun ProductListScreen(
                     orderItemViewModel.addOrderItem(orderItem)
                     Log.d("DB", "ADD, lista tartalma ennyi elem: ${orderItemViewModel.getOrderItemsList().size}")
                     navigateBack()
-//                    orderItemViewModel.saveOrderItemToFirebase(orderItem, {
-//                        navController.popBackStack()
-//                    })
                 } else {
                     Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()
                 }
@@ -143,9 +146,22 @@ fun ProductListScreen(
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
+
             when(val productsResponse = newViewModel.productsResponse){
-                is ValueOrException.Loading -> CircularProgressIndicator()
-                is ValueOrException.Failure -> CircularProgressIndicator()
+                is ValueOrException.Loading -> {
+                    Log.d("LOG", "ProductListScreen: LOADING")
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        CircularProgressIndicator()
+                    }
+                }
+                is ValueOrException.Failure -> {
+                    Snackbar {
+                        Text(text = "Nem sikerült törölni a terméket")
+                    }
+                }
                 is ValueOrException.Success -> {
                     it.calculateBottomPadding()
                     Column(
@@ -176,18 +192,14 @@ fun ProductListScreen(
                         }
 
                         CreateList(
-
                             data = productsResponse.data.sortedBy { it.title },
-                            //data = listOfProducts!!.value.sortedBy { it.title },
-                            //data = data.value.data!!.sortedBy { it.title },
                             onDelete = {
                                 Log.d("TAG", "ProductListScreen: ${it.id}")
                                 showDialog.value = true
                                 selectedProduct = it },
                             onEdit = {
                                 onNavigate(it.id.toString())
-                                //navController.navigate(route = ProductScreens.DetailsScreen.name+"/${it.id}")
-                                //Log.d("ID", "ProductListScreen: ${it.id}")
+
                             },
                             onClick = {
                                 if(ordering) {
@@ -233,16 +245,6 @@ fun ProductListScreen(
                     }
                 }
             }
-//            if (newViewModel.loadingState.value == LoadingState.LOADING){
-//                CircularProgressIndicator()
-//            } else {
-
-//            if (newViewModel.state.collectAsState().value == LoadingState.LOADING){
-//                //Log.d("LOAD", "ProductListScreen: ${data.value.loading}")
-//                CircularProgressIndicator()
-//            } else if (newViewModel.state.collectAsState().value == LoadingState.LOADED) {
-
-           // }
         }
     )
 }

@@ -1,72 +1,39 @@
 package com.example.onlab.screen.customer
 
-import android.Manifest
-import android.net.Uri
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
-import com.example.onlab.data.DataOrException
+import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MCustomer
+import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
-import com.example.onlab.viewModels.MCustomerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable
 fun CustomerDetailsScreen(
     navigateFromTo:(String, String) -> Unit,
-    navController: NavController,
-    customerID: String? = null,
-    customerViewModel: MCustomerViewModel,
+    onNavigateBack: () -> Unit,
+    viewModel: CustomerDetailsViewModel = hiltViewModel(),
     permissionRequester: PermissionRequester
 ){
+    val uiState by viewModel.uiState
 
-    val contextForToast = LocalContext.current.applicationContext
-
-    var buttonEnabled by remember { mutableStateOf(false) }
-
-    var changesMade by remember { mutableStateOf(false) }
-
-    var customer by remember {
-        mutableStateOf(customerViewModel.data.value.data?.first{ mCustomer ->
-            Log.d("customerID", "CustomerDetailsScreen: $customerID")
-            mCustomer.id == customerID.toString()
-        })
-    }
-
-    val customerList = produceState<DataOrException<List<MCustomer>,
-            Boolean, java.lang.Exception>>(initialValue = DataOrException(data = emptyList(), true, Exception(""))){
-            value = customerViewModel.data.value
-    }.value
-
-    var imageUri by remember {
-        mutableStateOf<Uri?>(customer!!.image.toUri())
-    }
-
+    val changesMade by remember { mutableStateOf(false) }
 
     val showDialog = remember { mutableStateOf(false) }
     val showNavigationDialog = remember { mutableStateOf(false) }
@@ -75,12 +42,8 @@ fun CustomerDetailsScreen(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd az ügyfelet?",
         onConfirm = {
-            customerViewModel.deleteCustomer(customerID){
-                showDialog.value = false
-                navController.navigate(route = "CustomerScreen")
-                Toast.makeText(contextForToast, "Ügyfél törölve", Toast.LENGTH_SHORT).show()
-                customerViewModel.getAllCustomersFromDatabase()
-            }
+            viewModel.onDeleteCustomer(uiState.id, navigateFromTo = navigateFromTo)
+            showDialog.value = false
         },
         onDismiss = {
             showDialog.value = false
@@ -91,7 +54,7 @@ fun CustomerDetailsScreen(
         DismissChangesDialog(onDismiss = {
             showNavigationDialog.value = false
         }) {
-            navController.popBackStack()
+            onNavigateBack()
             showNavigationDialog.value = false
         }
     }
@@ -99,201 +62,94 @@ fun CustomerDetailsScreen(
         if (changesMade){
             showNavigationDialog.value= true
         } else {
-            navController.popBackStack()
+            onNavigateBack()
         }
     }
-    Scaffold(
-        topBar = {
-            createTopBar(text = customer!!.firstName + " " + customer!!.lastName + " adatai", withIcon = true){
-                if(changesMade){
-                    showNavigationDialog.value = true
-                }
-                else navController.popBackStack()
-            }
-            if(customerList.loading == true){
-                LinearProgressIndicator()
-                customerList.loading = false
-            }
-        },
-        bottomBar = {
-            BottomNavBar(selectedItem = items[1], navigateTo = {
-                navigateFromTo("CustomerDetailsScreen", it)
-            })
-        },
-        isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .statusBarsPadding()
-                .padding(bottom = padding.calculateBottomPadding() / 2),
-            horizontalAlignment = Alignment.Start
-        ) {
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp)),
-                maxLines = 1,
-                value = customer?.firstName ?: "",
-                onValueChange = { newValue ->
-                    if (newValue.length <= 20) {
-                        customer = customer?.copy(firstName = newValue) ?: customer
-                        changesMade = true // Mark changes as made
+    when(viewModel.customerResponse){
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Failure -> CircularProgressIndicator()
+        is ValueOrException.Success -> {
+            Scaffold(
+                topBar = {
+                    createTopBar(text = uiState.firstName + " " + uiState.lastName + " adatai", withIcon = true){
+                        if(changesMade){
+                            showNavigationDialog.value = true
+                        }
+                        else onNavigateBack()
                     }
-                    else if(newValue.isEmpty()) buttonEnabled = false
-                    else Toast.makeText(
-                        contextForToast,
-                        "A keresztnév max. 20 karakter lehet",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 },
-                label = { Text(text = "Ügyfél keresztneve") },
-                placeholder = { Text(text = "Add meg az ügyfél nevét!") }
-            )
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp)),
-                value = customer?.lastName ?: "",
-                maxLines = 1,
-                onValueChange = { newValue ->
-                    if (newValue.length <= 20){
-                        customer = customer?.copy(lastName = newValue) ?: customer
-                        changesMade = true // Mark changes as made
-                    }
-                    else if(newValue.isEmpty()) buttonEnabled = false
-                    else Toast.makeText(
-                        contextForToast,
-                        "A vezetéknév max. 20 karakter lehet",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                bottomBar = {
+                    BottomNavBar(selectedItem = items[1], navigateTo = {
+                        navigateFromTo("CustomerDetailsScreen", it)
+                    })
                 },
-                label = { Text(text = "Ügyfél vezetékneve") },
-                placeholder = { Text(text = "Add meg az ügyfél nevét!") }
-            )
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp)),
-                value = customer?.address ?: "",
-                onValueChange = { newValue ->
-                    if (newValue.length <= 30) {
-                        customer = customer?.copy(address = newValue) ?: customer
-                        changesMade = true // Mark changes as made
-                    }
-                    else Toast.makeText(
-                        contextForToast,
-                        "A cím max. 30 karakter lehet",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
-                label = { Text(text = "Ügyfél címe") },
-                placeholder = { Text(text = "Add meg az ügyfél címét!") }
-            )
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp)),
-                value = customer?.phoneNumber ?: "",
-                onValueChange = { newValue ->
-                    if (newValue.length <= 15){
-                        customer = customer?.copy(phoneNumber = newValue) ?: customer
-                        changesMade = true // Mark changes as made
-                    }
-                    else Toast.makeText(
-                        contextForToast,
-                        "A telefonszám max. 15 számjegyű lehet",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
-                label = { Text(text = "Ügyfél telefonszáma") },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                placeholder = { Text(text = "Add meg az ügyfél telefonszámát!") }
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-                    .height(150.dp)
-            ) {
-                ImagePickerButton(onImageSelected = {
-                    imageUri = it
-                    customer = customer!!.copy(image = it.toString())
-                }, permissionRequester = permissionRequester)
-                Surface(
+                isFloatingActionButtonDocked = true,
+                floatingActionButtonPosition = FabPosition.End
+            ) { padding ->
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    shape = RoundedCornerShape(15.dp)
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .statusBarsPadding()
+                        .padding(bottom = padding.calculateBottomPadding() / 2),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    AsyncImage(
-                        model = customer?.image,
-                        contentDescription = "profile image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                    BasicField(text = "Add meg az ügyfél nevét!", label = "Ügyfél keresztneve", value = uiState.firstName , onNewValue = {viewModel.onFirstNameChange(it)})
+                    BasicField(text = "Add meg az ügyfél nevét!", label = "Ügyfél vezetékneve", value = uiState.lastName , onNewValue = {viewModel.onLastNameChange(it)})
+                    BasicField(text = "Add meg az ügyfél címét!", label = "Ügyfél címe", value = uiState.address , onNewValue = {viewModel.onAddressChange(it)})
+                    BasicField(text = "Add meg az ügyfél telefonszámát!", label = "Ügyfél telefonszáma", value = uiState.phoneNumber , onNewValue = {viewModel.onPhoneNumberChange(it)}, keyboardType = KeyboardType.Number)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp, top = 10.dp)
+                            .height(150.dp)
+                    ) {
+                        ImagePickerButton(onImageSelected = {
+                           viewModel.onImageChange(it.toString())
+                        }, permissionRequester = permissionRequester)
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            shape = RoundedCornerShape(15.dp)
+                        ) {
+                            AsyncImage(
+                                model = uiState.image.toUri(),
+                                contentDescription = "profile image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+
+                    ProductButton(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding((10.dp))
+                        .height(40.dp),
+                        text = "Ügyfél mentése",
+                        enabled = uiState.firstName.isNotEmpty() && uiState.lastName.isNotEmpty() && uiState.address.isNotEmpty(),
+                        onClick = {
+                            viewModel.onDoneClick(MCustomer(uiState), navigateFromTo)
+                        }
+                    )
+
+                    ProductButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding((10.dp))
+                            .height(40.dp),
+                        text = "Ügyfél törlése",
+                        onClick = {
+                            showDialog.value = true
+                        },
+                        color = Color.Red
                     )
                 }
             }
-
-            buttonEnabled = customer!!.firstName.isNotEmpty() && customer!!.lastName.isNotEmpty() && customer!!.address.isNotEmpty()
-
-            ProductButton(modifier = Modifier
-                .fillMaxWidth()
-                .padding((10.dp))
-                .height(40.dp),
-                text = "Ügyfél mentése",
-                enabled = buttonEnabled,
-                onClick = {
-                    if (customer!!.phoneNumber.toDoubleOrNull() != null || customer!!.phoneNumber.toLongOrNull() != null) {
-                        val customerToUpdate = hashMapOf(
-                            "first_name" to customer?.firstName,
-                            "last_name" to customer?.lastName,
-                            "customer_address" to customer?.address,
-                            "phone_number" to customer?.phoneNumber,
-                            "customer_image" to customer?.image
-                        ).toMap()
-                        customerViewModel.updateCustomer(
-                            customerToUpdate,
-                            customerID!!,
-                            onSuccess = {
-                                navController.navigate(route = "CustomerScreen")
-                                Toast.makeText(
-                                    contextForToast,
-                                    "Ügyfél módosítva",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            },
-                            onFailure = {
-                                Toast.makeText(
-                                    contextForToast,
-                                    "Ügyfél nem lett módosítva",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            })
-                    } else {
-                        Toast.makeText(
-                            contextForToast,
-                            "Csak számokat használj az telefonszám megadásánál",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            )
-
-            ProductButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding((10.dp))
-                    .height(40.dp),
-                text = "Ügyfél törlése",
-                onClick = {
-                    showDialog.value = true
-                },
-                color = Color.Red
-            )
-
         }
     }
+
 }
+
+

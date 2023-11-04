@@ -1,6 +1,8 @@
 package com.example.onlab.model
 
 import androidx.room.PrimaryKey
+import com.example.onlab.screen.customer.CustomerUiState
+import com.example.onlab.screen.product.ProductUiState
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 import java.util.*
@@ -29,8 +31,16 @@ data class MCustomer(
     @set:PropertyName("customer_image")
     var image: String,
 )
-
 {
+    constructor(customerUiState: CustomerUiState) : this(
+        customerUiState.id,
+        customerUiState.firstName,
+        customerUiState.lastName,
+        customerUiState.address,
+        customerUiState.phoneNumber,
+        customerUiState.image
+    )
+
     constructor() : this("", "", "", "", "", "")
     fun doesMatchSearchQuery(query: String): Boolean{
         val matchingCombinations = listOf("$firstName", "${firstName.first()}", "$lastName", "${lastName.first()}" )

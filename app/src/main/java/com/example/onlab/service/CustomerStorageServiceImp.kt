@@ -2,8 +2,7 @@ package com.example.onlab.service
 
 import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.Category
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.MCustomer
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
@@ -13,22 +12,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class ProductStorageServiceImp
+class CustomerStorageServiceImp
 @Inject
 constructor(private val firestore: FirebaseFirestore, private val storage: FirebaseStorage) :
-ProductStorageService {
+    CustomerStorageService {
 
     override var searchQuery: String = ""
 
-    override val category: Category? = null
-
-    override fun getAllProducts() = callbackFlow {
-        val query = firestore.collection("products")
-
-        // Add a filter for the selected category if it's not null
-        category?.let { selectedCategory ->
-            query.whereEqualTo("category", selectedCategory)
-        }
+    override fun getAllCustomers() = callbackFlow {
+        val query = firestore.collection("customers")
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
             if (e != null) {
@@ -37,11 +29,11 @@ ProductStorageService {
                 }
             }
             val response = if (snapshot != null && !snapshot.isEmpty) {
-                val products = snapshot.toObjects(MProduct::class.java)
-                    .filter { product ->
-                        searchQuery.isBlank() || product.title.startsWith(searchQuery, ignoreCase = true)
+                val customers = snapshot.toObjects(MCustomer::class.java)
+                    .filter { customer ->
+                        searchQuery.isBlank() || customer.firstName.startsWith(searchQuery, ignoreCase = true)
                     }
-                ValueOrException.Success(products)
+                ValueOrException.Success(customers)
             } else {
                 ValueOrException.Failure(e)
             }
@@ -53,47 +45,37 @@ ProductStorageService {
         }
     }
 
-    override fun getProductsByCategoryAndText(
+    override fun getCustomersByText(
         text: String?,
-        category: Category?
     ) = callbackFlow {
-        val query = firestore.collection("products")
-
-        // Add a filter for the selected category if it's not equal to "Osszes"
-        if (category?.name != "Összes") {
-            query.whereEqualTo("product_category", category?.name)
-        }
+        val query = firestore.collection("customers")
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
             val response = if (snapshot != null) {
-                val products = snapshot.toObjects(MProduct::class.java)
-                    .filter { product ->
-                        val matchesSearch = text!!.isEmpty() || product.doesMatchSearchQuery(text)
-                        val matchesCategory = category == null || category == Category.Összes || product.category == category.toString()
-                        matchesCategory && matchesSearch
+                val customers = snapshot.toObjects(MCustomer::class.java)
+                    .filter { customer ->
+                        text!!.isEmpty() || customer.doesMatchSearchQuery(text)
                     }
-                ValueOrException.Success(products)
+                ValueOrException.Success(customers)
             } else {
                 ValueOrException.Failure(e)
             }
             trySend(response)
         }
-
-
         awaitClose {
             snapshotListener.remove()
         }
     }
 
-    override suspend fun getProduct(productId: String): ValueOrException<MProduct> {
+    override suspend fun getCustomer(customerId: String): ValueOrException<MCustomer> {
         return try {
             val documentSnapshot =
-                firestore.collection("products").document(productId).get().await()
+                firestore.collection("customers").document(customerId).get().await()
             if (documentSnapshot.exists()) {
-                val product = documentSnapshot.toObject<MProduct>()
-                ValueOrException.Success(product!!)
+                val customer = documentSnapshot.toObject<MCustomer>()
+                ValueOrException.Success(customer!!)
             } else {
-                ValueOrException.Failure(Exception("Product not found"))
+                ValueOrException.Failure(Exception("Customer not found"))
             }
         } catch (e: Exception) {
             ValueOrException.Failure(e)
@@ -101,19 +83,19 @@ ProductStorageService {
     }
 
 
-    override suspend fun saveProduct(
-        product: MProduct,
+    override suspend fun addCustomer(
+        customer: MCustomer,
     ): ValueOrException<Boolean> {
         return try {
-            firestore.collection("products").add(product).addOnSuccessListener { documentRef ->
-                firestore.collection("products").document(documentRef.id).update(
-                    (if (product.image == "") {
+            firestore.collection("customers").add(customer).addOnSuccessListener { documentRef ->
+                firestore.collection("customers").document(documentRef.id).update(
+                    (if (customer.image == "") {
                         hashMapOf(
                             "product_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
                         )
                     } else {
                         val fileName =
-                            "${System.currentTimeMillis()}_${product.image.toUri().lastPathSegment}"
+                            "${System.currentTimeMillis()}_${customer.image.toUri().lastPathSegment}"
                         val imageRef = storage.reference.child("images/${fileName}")
 
                         val downloadUrl = imageRef.downloadUrl.toString()
@@ -121,11 +103,11 @@ ProductStorageService {
 
                         firestore.collection("images").document(fileName).set(imageDoc)
                         hashMapOf(
-                            "product_image" to downloadUrl
+                            "customer_image" to downloadUrl
                         )
                     }) as Map<String, Any>
                 ).addOnSuccessListener {
-                    firestore.collection("products").document(documentRef.id).update(
+                    firestore.collection("customers").document(documentRef.id).update(
                         hashMapOf(
                             "id" to documentRef.id,
                         ) as Map<String, Any>
@@ -138,33 +120,33 @@ ProductStorageService {
         }
     }
 
-    override suspend fun deleteProduct(
-        productId: String,
+    override suspend fun deleteCustomer(
+        customerId: String,
     ): ValueOrException<Boolean> {
         return try {
-            firestore.collection("products").document(productId).delete().await()
+            firestore.collection("customers").document(customerId).delete().await()
             ValueOrException.Success(true)
         } catch (e: Exception) {
             ValueOrException.Failure(e)
         }
     }
 
-    override suspend fun updateProduct(
-        product: MProduct,
+    override suspend fun updateCustomer(
+        customer: MCustomer,
     ): ValueOrException<Boolean> {
         try {
-            val productToUpdate = mapOf(
-                "product_title" to product.title,
-                "product_category" to product.category,
-                "price_piece" to product.pricePerPiece,
-                "price_carton" to product.pricePerKarton,
-                "product_image" to if (product.image.startsWith("https")) {
-                    product.image.toUri()
+            val customerToUpdate = mapOf(
+                "first_name" to customer.firstName,
+                "last_name" to customer.lastName,
+                "customer_address" to customer.address,
+                "phone_number" to customer.phoneNumber,
+                "customer_image" to if (customer.image.startsWith("https")) {
+                    customer.image.toUri()
                 } else {
-                    product.image
+                    customer.image
                 }
             )
-            firestore.collection("products").document(product.id!!).update(productToUpdate).await()
+            firestore.collection("customers").document(customer.id!!).update(customerToUpdate).await()
             return ValueOrException.Success(true)
         } catch (e: Exception) {
             return ValueOrException.Failure(e)

@@ -17,3 +17,4 @@ const val DestinationProfile = "ProfileScreen"
 
 const val DestinationOneArg = "arg"
 const val DestinationProductDetailsRoute = "$DestinationProductDetails/{$DestinationOneArg}"
+const val DestinationCustomerDetailsRoute = "$DestinationCustomerDetails/{$DestinationOneArg}"
