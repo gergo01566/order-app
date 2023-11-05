@@ -1,7 +1,5 @@
 package com.example.onlab.screen.order
 
-import android.app.Activity
-import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -19,50 +17,44 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
+import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.*
-import com.example.onlab.navigation.ProductScreens
+import com.example.onlab.navigation.DestinationCustomerList
+import com.example.onlab.navigation.DestinationNewOrder
+import com.example.onlab.navigation.DestinationOrderList
 import com.example.onlab.viewModels.*
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
-import java.util.jar.Manifest
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NewOrderScreen(
-    navController: NavController,
     customerID: String? = null,
-    orderID: String? = null,
-    customerViewModel: MCustomerViewModel,
     orderItemViewModel: MOrderItemViewModel,
     productViewModel: MProductViewModel,
     orderViewModel: MOrderViewModel,
-    permissionRequester: PermissionRequester
+    onNavigateTo: (String,String) -> Unit,
+    onNavigateBack: () -> Unit,
+    viewModel: OrderDetailsViewModel = hiltViewModel(),
+    navigateFromTo: (String, String) -> Unit
 ) {
-    val customer by remember {
-        mutableStateOf(customerViewModel.getCustomerById(customerID!!))
-    }
-
-    Log.d("DB", "New order screen , lista ennyi elemet tartalmaz: ${orderItemViewModel.getOrderItemsList().size}")
 
     var copyOfOrderItems by remember { mutableStateOf<List<MOrderItem>>(emptyList()) }
 
-    LaunchedEffect(orderID) {
-        orderItemViewModel.initOrders(orderID!!)
-    }
-
-    //orderItemViewModel.initOrders(orderID!!)
-    copyOfOrderItems = orderItemViewModel.getOrderItemsList()
+//    LaunchedEffect(orderID) {
+//        orderItemViewModel.initOrders(orderID!!)
+//    }
+//
+//    orderItemViewModel.initOrders(orderID!!)
+//    copyOfOrderItems = orderItemViewModel.getOrderItemsList()
 
     val currentContext = LocalContext.current.applicationContext
 
@@ -82,7 +74,7 @@ fun NewOrderScreen(
         DismissChangesDialog(onDismiss = { openDialog.value = false }) {
             openDialog.value = false
             orderItemViewModel.clearOrderItemsList()
-            navController.navigate("CustomerScreen")
+            navigateFromTo(DestinationNewOrder, DestinationCustomerList)
         }
     }
 
@@ -173,13 +165,14 @@ fun NewOrderScreen(
                             .fillMaxWidth()
                             .weight(1f),
                         onClick = {
-                            navController.navigate(
-                                "${ProductScreens.ListScreen.name}/${
-                                    UUID.fromString(
-                                        orderID
-                                    )
-                                }/true"
-                            )
+                            onNavigateTo(viewModel.orderId.toString(), "true")
+//                            navController.navigate(
+//                                "${ProductScreens.ListScreen.name}/${
+//                                    UUID.fromString(
+//                                        orderID
+//                                    )
+//                                }/true"
+//                            )
                         },
                         containerColor = MaterialTheme.colors.primary,
                         elevation = androidx.compose.material3.FloatingActionButtonDefaults.bottomAppBarFabElevation(),
@@ -191,10 +184,10 @@ fun NewOrderScreen(
                         )
                     }
                     BackHandler {
-                        if (!copyOfOrderItems.isNullOrEmpty()) {
+                        if (copyOfOrderItems.isNotEmpty()) {
                             openDialog.value = true
                         } else {
-                            navController.popBackStack()
+                            onNavigateBack()
                         }
                     }
                     Row(
@@ -208,10 +201,10 @@ fun NewOrderScreen(
                                 .padding(end = 10.dp, start = 10.dp)
                                 .weight(1f),
                             onClick = {
-                                if (!copyOfOrderItems.isNullOrEmpty()) {
+                                if (copyOfOrderItems.isNotEmpty()) {
                                     openDialog.value = true
                                 } else {
-                                    navController.navigate("CustomerScreen")
+                                    navigateFromTo(DestinationNewOrder, DestinationCustomerList)
                                 }
 
                             },
@@ -228,15 +221,15 @@ fun NewOrderScreen(
                                 .padding(end = 10.dp, start = 10.dp)
                                 .weight(1f),
                             onClick = {
-                                if (copyOfOrderItems.isNullOrEmpty()) {
+                                if (copyOfOrderItems.isEmpty()) {
                                     coroutineScope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
                                             message = "Rendelés mentése sikertelen, nincs rendelési tétel a listában."
                                         )
                                     }
-                                }else if (orderViewModel.isOrderIncluded(orderID!!)) {
+                                }else if (orderViewModel.isOrderIncluded(viewModel.orderId.toString())) {
                                     copyOfOrderItems.forEach { newVersion ->
-                                        val oldVersion = orderItemViewModel.getOrderItemsByOrder(orderId = orderID)
+                                        val oldVersion = orderItemViewModel.getOrderItemsByOrder(orderId = viewModel.orderId.toString())
                                             .find { it.id == newVersion.id }
 
                                         if (oldVersion != null) {
@@ -258,7 +251,7 @@ fun NewOrderScreen(
                                 } else {
                                     copyOfOrderItems.forEach {
                                         orderItemViewModel.saveOrderItemToFirebase(it, {
-                                            navController.navigate("OrdersScreen")
+                                            navigateFromTo(DestinationNewOrder, DestinationOrderList)
                                             Toast.makeText(
                                                 currentContext,
                                                 "Rendelés hozzáadva",
@@ -270,7 +263,7 @@ fun NewOrderScreen(
                                     orderItemViewModel.clearOrderItemsList()
                                     orderViewModel.saveOrderToFirebase(
                                         MOrder(
-                                            orderId = orderID,
+                                            orderId = viewModel.orderId,
                                             date = LocalDate.now().toString(),
                                             customerID = customerID.toString(),
                                             status = 0,
@@ -285,8 +278,7 @@ fun NewOrderScreen(
                                         }
                                     )
                                 }
-
-                                navController.popBackStack()
+                                onNavigateBack()
                                 orderItemViewModel.clearOrderItemsList()
 //                                } else if(orderViewModel.isOrderIncluded(orderID!!)){
 //                                    navController.popBackStack()
@@ -326,26 +318,43 @@ fun NewOrderScreen(
                 .fillMaxHeight()
                 .padding(bottom = it.calculateBottomPadding())
         ) {
-            copyOfOrderItems?.let {
-                CreateList(
-                    data = copyOfOrderItems,
-                    onDelete = {
-                        showDialog.value = true
-                        selectedOrderItem = it
-                    },
-                    onEdit = {
-                        Log.d("TAG", "edit it NewOrderScreen: ${it.id}")
-                        selectedOrderItem = it
-                        Log.d("TAG", "edit selected NewOrderScreen: ${selectedOrderItem?.id}")
-                        showEditDialog.value = true
-                        Toast.makeText(
-                            currentContext,
-                            "${selectedOrderItem?.id}",
-                            Toast.LENGTH_SHORT
-                        ).show()
 
-                    },
-                    onClick = {
+            //copyOfOrderItems?.let {
+
+            when (val orderItemsResponse = viewModel.orderItemsResponse){
+                is ValueOrException.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        CircularProgressIndicator()
+                    }
+                }
+                is ValueOrException.Failure -> {
+                    Snackbar {
+                        Text(text = "Nem sikerült törölni a terméket")
+                    }
+                }
+                is ValueOrException.Success -> {
+                    CreateList(
+                        data = orderItemsResponse.data,
+                        onDelete = {
+                            showDialog.value = true
+                            selectedOrderItem = it
+                        },
+                        onEdit = {
+                            Log.d("TAG", "edit it NewOrderScreen: ${it.id}")
+                            selectedOrderItem = it
+                            Log.d("TAG", "edit selected NewOrderScreen: ${selectedOrderItem?.id}")
+                            showEditDialog.value = true
+                            Toast.makeText(
+                                currentContext,
+                                "${selectedOrderItem?.id}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                        },
+                        onClick = {
 //                            if(list == true) {
 //                                selectedProduct = it
 //                                showFullScreenDialog.value = true
@@ -353,49 +362,53 @@ fun NewOrderScreen(
 //                            else{
 //                                Log.d("TAG", "ProductListScreen: ez nem jott ossze")
 //                            }
-                    }, itemContent = { orderItem ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier.size(70.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                AsyncImage(
-                                    model = productViewModel.getProductById(orderItem.productID)!!.image.toUri(),
-                                    contentDescription = "profile image",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(80.dp),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(10.dp)
-                            ) {
-                                productViewModel.getProductById(orderItem.productID)
-                                    ?.let { it1 ->
-                                        Text(
-                                            text = it1.title,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                if (orderItem.carton) {
-                                    Text(
-                                        text = "${orderItem.amount} karton",
-                                        style = MaterialTheme.typography.caption
-                                    )
-                                } else {
-                                    Text(
-                                        text = "${orderItem.amount} darab",
-                                        style = MaterialTheme.typography.caption
+                        }, itemContent = { orderItem ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier.size(70.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    AsyncImage(
+                                        model = productViewModel.getProductById(orderItem.productID)!!.image.toUri(),
+                                        contentDescription = "profile image",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(80.dp),
+                                        contentScale = ContentScale.Crop
                                     )
                                 }
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(10.dp)
+                                ) {
+                                    productViewModel.getProductById(orderItem.productID)
+                                        ?.let { it1 ->
+                                            Text(
+                                                text = it1.title,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    if (orderItem.carton) {
+                                        Text(
+                                            text = "${orderItem.amount} karton",
+                                            style = MaterialTheme.typography.caption
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "${orderItem.amount} darab",
+                                            style = MaterialTheme.typography.caption
+                                        )
+                                    }
+                                }
                             }
-                        }
-                    })
+                        })
+                }
             }
+
+
+            //}
 
         }
     }

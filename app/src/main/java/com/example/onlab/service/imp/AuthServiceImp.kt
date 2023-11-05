@@ -1,13 +1,12 @@
-package com.example.onlab.service
+package com.example.onlab.service.imp
 
-import android.util.Log
 import com.example.onlab.model.MUser
+import com.example.onlab.service.AuthService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthServiceImp @Inject constructor(

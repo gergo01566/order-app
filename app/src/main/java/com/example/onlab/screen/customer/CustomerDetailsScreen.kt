@@ -13,7 +13,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
@@ -32,9 +31,7 @@ fun CustomerDetailsScreen(
     permissionRequester: PermissionRequester
 ){
     val uiState by viewModel.uiState
-
     val changesMade by remember { mutableStateOf(false) }
-
     val showDialog = remember { mutableStateOf(false) }
     val showNavigationDialog = remember { mutableStateOf(false) }
 
@@ -148,6 +145,24 @@ fun CustomerDetailsScreen(
                 }
             }
         }
+    }
+
+    when(val updateCustomerResponse = viewModel.updateCustomerResponse){
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> print(updateCustomerResponse.e)
+    }
+
+    when(val addCustomerResponse = viewModel.addCustomerResponse){
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> print(addCustomerResponse.e)
+    }
+
+    when(val deleteCustomerResponse = viewModel.deleteCustomerResponse){
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> print(deleteCustomerResponse.e)
     }
 
 }

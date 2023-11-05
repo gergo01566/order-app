@@ -165,9 +165,7 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         return data.value.data!!.filter {
             it.customerID == customerId
         }
-    }
-
-    fun generatePDF(
+    }fun generatePDF(
         context: Context,
         orderId: String,
         customerViewModel: MCustomerViewModel,

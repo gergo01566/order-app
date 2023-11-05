@@ -1,6 +1,7 @@
 package com.example.onlab.di
 
 import com.example.onlab.service.*
+import com.example.onlab.service.imp.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,5 +20,11 @@ abstract class AppModule {
 
     @Binds
     abstract fun bindCustomerStorageService(imp: CustomerStorageServiceImp): CustomerStorageService
+
+    @Binds
+    abstract fun bindOrderStorageService(imp: OrderStorageServiceImp): OrderStorageService
+
+    @Binds
+    abstract fun bindOrderItemStorageService(imp: OrderItemStorageServiceImp): OrderItemStorageService
 
 }

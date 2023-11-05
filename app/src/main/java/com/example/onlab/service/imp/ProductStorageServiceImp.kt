@@ -1,9 +1,10 @@
-package com.example.onlab.service
+package com.example.onlab.service.imp
 
 import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Category
 import com.example.onlab.model.MProduct
+import com.example.onlab.service.ProductStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
@@ -16,7 +17,7 @@ import javax.inject.Inject
 class ProductStorageServiceImp
 @Inject
 constructor(private val firestore: FirebaseFirestore, private val storage: FirebaseStorage) :
-ProductStorageService {
+    ProductStorageService {
 
     override var searchQuery: String = ""
 

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.*
@@ -36,7 +37,6 @@ fun ProductListScreen(
     onNavigate: (String) -> Unit,
     navigateFromTo: (String, String) -> Unit,
     orderID: String? = null,
-    ordering: Boolean,
     navigateBack: () -> Unit,
     orderItemViewModel: MOrderItemViewModel,
     newViewModel: ProductListViewModel = hiltViewModel()
@@ -116,7 +116,7 @@ fun ProductListScreen(
 
     Scaffold(
         topBar = {
-            if (ordering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
+            if (newViewModel.isOrdering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
                 navigateBack()
             })
             else {
@@ -126,12 +126,12 @@ fun ProductListScreen(
             }
         },
         bottomBar = {
-            if (!ordering) BottomNavBar(selectedItem = items[2]){
+            if (!newViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){
                 navigateFromTo(DestinationProductList, it)
             }
         },
         floatingActionButton = {
-            if(!ordering){
+            if(!newViewModel.isOrdering){
                 ExtendedFloatingActionButton(
                     modifier =  Modifier.padding(bottom = 60.dp),
                     text = { Text(text = "Új termék") },
@@ -202,7 +202,7 @@ fun ProductListScreen(
 
                             },
                             onClick = {
-                                if(ordering) {
+                                if(newViewModel.isOrdering) {
                                     selectedProduct = it
                                     showFullScreenDialog.value = true
                                 }
@@ -210,7 +210,7 @@ fun ProductListScreen(
                                     Log.d("TAG", "ProductListScreen: ez nem jott ossze")
                                 }
                             },
-                            iconClickEnabled = !ordering,
+                            iconClickEnabled = !newViewModel.isOrdering,
                             itemContent = { product ->
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     Column(

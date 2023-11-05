@@ -124,7 +124,7 @@ fun BottomNavBar(
                 onClick = {
                     when (item.name) {
                         "Ügyfelek" -> navigateTo(DestinationCustomerList)
-                        "Termékek" -> navigateTo("${DestinationProductList}/false")
+                        "Termékek" -> navigateTo(DestinationProductList)
                         "Rendelések" -> navigateTo(DestinationOrderList)
                         "Beállítások" -> navigateTo(DestinationProfile)
                         else -> Log.d("TAG", "BottomNavBar: Clicked")

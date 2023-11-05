@@ -46,7 +46,7 @@ fun AppNavigation(){
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
         DestinationLogin
     } else {
-        DestinationProductList
+        DestinationOrderList
     }
 
     NavHost(navController = navController, startDestination = startDestination){
@@ -64,7 +64,6 @@ fun AppNavigation(){
                     }
                 },
                 navigateBack = { navController.popBackStack()},
-                ordering = false
             )
         }
 
@@ -103,6 +102,23 @@ fun AppNavigation(){
                 onNavigateBack = { navController.popBackStack() },
                 permissionRequester = permissionRequester
             )
+        }
+
+        composable(DestinationOrderDetailsRoute){
+            Log.d("log", "AppNavigation: itt vaok")
+            NewOrderScreen(
+                orderItemViewModel = orderItemViewModel,
+                productViewModel = productViewModel,
+                onNavigateTo = { orderId, isOrdering -> navController.navigate(buildProductListRoute(orderId,isOrdering)) },
+                onNavigateBack = { navController.popBackStack() },
+                orderViewModel = orderViewModel,
+            ){ from, to ->
+                navController.navigate(to) {
+                    popUpTo(from) {
+                        inclusive = true
+                    }
+                }
+            }
         }
 
         composable(DestinationProductDetailsRoute){
@@ -151,19 +167,19 @@ fun AppNavigation(){
             }
         }
 
-        composable(DestinationNewCustomer){
-            NewCustomerScreen(
-                customerViewModel = mCustomerViewModel,
-                permissionRequester = permissionRequester,
-                navigateBack = { navController.popBackStack() }
-            ){ from, to ->
-                navController.navigate(to) {
-                    popUpTo(from) {
-                        inclusive = true
-                    }
-                }
-            }
-        }
+//        composable(DestinationNewCustomer){
+//            NewCustomerScreen(
+//                customerViewModel = mCustomerViewModel,
+//                permissionRequester = permissionRequester,
+//                navigateBack = { navController.popBackStack() }
+//            ){ from, to ->
+//                navController.navigate(to) {
+//                    popUpTo(from) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//        }
 
         composable(DestinationOrderList){
             OrdersScreen(
@@ -172,7 +188,12 @@ fun AppNavigation(){
                 customerViewModel = customerViewModel,
                 orderItemViewModel = orderItemViewModel,
                 mProductViewModel = productViewModel,
-                loginScreenViewModel = loginScreenViewModel,
+                onNavigate = { orderId, customerId ->
+                    navController.navigate(buildOrderDetailsRoute(orderId,customerId))
+                    Log.d("log", "AppNavigation: $orderId")
+                    Log.d("log", "AppNavigation: $customerId")
+
+                },
                 navigateBack = { navController.popBackStack()}
             ){ from, to ->
                 navController.navigate(to) {
@@ -202,22 +223,44 @@ fun AppNavigation(){
 //        }
 
 
-        composable("$DestinationNewOrder/{customer}/{orderId}",
-            arguments = listOf(
-                navArgument(name = "customer") { type = NavType.StringType },
-                navArgument(name = "orderId") { type = NavType.StringType },
-            )
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-            NewOrderScreen(
-                navController = navController,
-                customerID = backStackEntry.arguments?.getString("customer"),
-                orderID = orderId,
-                customerViewModel = customerViewModel,
+//        composable("$DestinationNewOrder/{customer}/{orderId}",
+//            arguments = listOf(
+//                navArgument(name = "customer") { type = NavType.StringType },
+//                navArgument(name = "orderId") { type = NavType.StringType },
+//            )
+//        ) { backStackEntry ->
+//            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+//            NewOrderScreen(
+//                navController = navController,
+//                customerID = backStackEntry.arguments?.getString("customer"),
+//                orderID = orderId,
+//                orderItemViewModel = orderItemViewModel,
+//                productViewModel = productViewModel,
+//                orderViewModel = orderViewModel,
+//                permissionRequester = permissionRequester
+//            ){ from, to ->
+//                navController.navigate(to) {
+//                    popUpTo(from) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//
+//        }
+
+        composable(DestinationProductListRoute){
+            ProductListScreen(
+                onNavigate = {
+                    Log.d("Nav", "productId: $it") // Log the value
+                    navController.navigate(buildProductDetailsRoute(it))
+                },
                 orderItemViewModel = orderItemViewModel,
-                productViewModel = productViewModel,
-                orderViewModel = orderViewModel,
-                permissionRequester = permissionRequester
+                navigateFromTo = { from, to ->
+                    navController.navigate(to) {
+                        popUpTo(from) { inclusive = true }
+                    }
+                },
+                navigateBack = { navController.popBackStack()},
             )
         }
 
@@ -241,7 +284,6 @@ fun AppNavigation(){
                     navController.navigate(buildProductDetailsRoute(it))
                 },
                 orderID = orderId,
-                ordering = list,
                 orderItemViewModel = orderItemViewModel,
                 navigateBack = {
                     navController.popBackStack()
@@ -271,7 +313,6 @@ fun AppNavigation(){
                     Log.d("Nav", "productId: $it")
                     navController.navigate(buildProductDetailsRoute(it))
                 },
-                ordering = list,
                 orderItemViewModel = orderItemViewModel,
                 navigateBack = {
                     navController.popBackStack()
@@ -298,10 +339,8 @@ fun AppNavigation(){
 
             ProductListScreen(
                 onNavigate = {
-                    Log.d("Nav", "productId: $it")
                     navController.navigate(buildProductDetailsRoute(it))
                 },
-                ordering = list,
                 orderItemViewModel = orderItemViewModel,
                 navigateBack = {
                     navController.popBackStack()
@@ -338,6 +377,8 @@ fun AppNavigation(){
 fun buildProductDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"
 fun buildCustomerDetailsRoute(argument: String) = "${DestinationCustomerDetails}/$argument"
 fun buildNewOrderRoute(customerId: String, orderId: String) = "${DestinationNewOrder}/$customerId/$orderId"
+fun buildOrderDetailsRoute(customerId: String, orderId: String) = "${DestinationNewOrder}/$orderId/$customerId"
+fun buildProductListRoute(orderId: String, isOrdering: String) = "${DestinationProductList}/$orderId/$isOrdering"
 
 
 

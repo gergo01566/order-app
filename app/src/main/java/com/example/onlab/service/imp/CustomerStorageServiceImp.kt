@@ -1,8 +1,9 @@
-package com.example.onlab.service
+package com.example.onlab.service.imp
 
 import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MCustomer
+import com.example.onlab.service.CustomerStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
@@ -91,7 +92,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
                 firestore.collection("customers").document(documentRef.id).update(
                     (if (customer.image == "") {
                         hashMapOf(
-                            "product_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
+                            "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
                         )
                     } else {
                         val fileName =
