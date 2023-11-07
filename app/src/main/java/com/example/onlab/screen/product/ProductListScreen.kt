@@ -20,27 +20,30 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.model.*
-import com.example.onlab.viewModels.*
 import java.util.*
 import com.example.onlab.model.Category as Categ
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
+import com.example.onlab.screen.order.OrderDetailsViewModel
 
 
 @Composable
 fun ProductListScreen(
     onNavigate: (String) -> Unit,
     navigateFromTo: (String, String) -> Unit,
-    orderID: String? = null,
     navigateBack: () -> Unit,
-    orderItemViewModel: MOrderItemViewModel,
-    newViewModel: ProductListViewModel = hiltViewModel()
+    onAddOrderItem: (MOrderItem) -> Unit,
+    navigateBackToOrder: (String, String) ->Unit,
+    orderDetailsViewModel: OrderDetailsViewModel = hiltViewModel(),
+    productListViewModel: ProductListViewModel = hiltViewModel(),
+    state: List<MOrderItem>
 ) {
+    Log.d("update", "productlist: $state") // Log the value
+
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
@@ -49,7 +52,7 @@ fun ProductListScreen(
     var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
-    when(newViewModel.deleteProductResponse){
+    when(productListViewModel.deleteProductResponse){
         is ValueOrException.Loading -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -75,7 +78,7 @@ fun ProductListScreen(
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedProduct?.let {
-                newViewModel.onDeleteProduct(it.id.toString()){
+                productListViewModel.onDeleteProduct(it.id.toString()){
                     Toast.makeText(context, "Termék törölve!", Toast.LENGTH_SHORT).show()
                     showDialog.value = false
                 }
@@ -96,15 +99,20 @@ fun ProductListScreen(
                     val orderItem = MOrderItem(
                         id = UUID.randomUUID().toString(),
                         amount = quantity.toInt(),
-                        orderID = orderID!!,
+                        orderID = productListViewModel.orderId,
                         productID = selectedProduct!!.id.toString(),
                         statusID = 0,
                         carton = !state,
                         piece = state
                     )
-                    orderItemViewModel.addOrderItem(orderItem)
-                    Log.d("DB", "ADD, lista tartalma ennyi elem: ${orderItemViewModel.getOrderItemsList().size}")
-                    navigateBack()
+                    onAddOrderItem(orderItem)
+                    //orderDetailsViewModel.addOrderItemLocally(orderItem)
+                    //productListViewModel.addOrderItem(orderItem)
+                    //orderDetailsViewModel.addOrderItemLocally(orderItem)
+                    //orderItemViewModel.addOrderItem(orderItem)
+                    navigateBackToOrder(productListViewModel.orderId, productListViewModel.customerId)
+                    //navigateBack()
+                    //showFullScreenDialog.value = false
                 } else {
                     Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()
                 }
@@ -116,7 +124,7 @@ fun ProductListScreen(
 
     Scaffold(
         topBar = {
-            if (newViewModel.isOrdering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
+            if (productListViewModel.isOrdering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
                 navigateBack()
             })
             else {
@@ -126,12 +134,12 @@ fun ProductListScreen(
             }
         },
         bottomBar = {
-            if (!newViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){
+            if (!productListViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){
                 navigateFromTo(DestinationProductList, it)
             }
         },
         floatingActionButton = {
-            if(!newViewModel.isOrdering){
+            if(!productListViewModel.isOrdering){
                 ExtendedFloatingActionButton(
                     modifier =  Modifier.padding(bottom = 60.dp),
                     text = { Text(text = "Új termék") },
@@ -147,7 +155,7 @@ fun ProductListScreen(
         floatingActionButtonPosition = FabPosition.End,
         content = { it ->
 
-            when(val productsResponse = newViewModel.productsResponse){
+            when(val productsResponse = productListViewModel.productsResponse){
                 is ValueOrException.Loading -> {
                     Log.d("LOG", "ProductListScreen: LOADING")
                     Box(
@@ -174,7 +182,7 @@ fun ProductListScreen(
                             categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
                             selectedCategory = selectedCategory,
                             onCategorySelected = { category ->
-                                newViewModel.onCategoryChanged(category = category!!)
+                                productListViewModel.onCategoryChanged(category = category!!)
                                 selectedCategory = category
                             }
                         )
@@ -186,7 +194,7 @@ fun ProductListScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = searchText,
                                 onValueChange = { newText ->
-                                    newViewModel.onSearchTextChanged(newText)
+                                    productListViewModel.onSearchTextChanged(newText)
                                     searchText = newText },
                                 placeholder = { Text(text = "Keresés") })
                         }
@@ -202,7 +210,7 @@ fun ProductListScreen(
 
                             },
                             onClick = {
-                                if(newViewModel.isOrdering) {
+                                if(productListViewModel.isOrdering) {
                                     selectedProduct = it
                                     showFullScreenDialog.value = true
                                 }
@@ -210,7 +218,7 @@ fun ProductListScreen(
                                     Log.d("TAG", "ProductListScreen: ez nem jott ossze")
                                 }
                             },
-                            iconClickEnabled = !newViewModel.isOrdering,
+                            iconClickEnabled = !productListViewModel.isOrdering,
                             itemContent = { product ->
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     Column(

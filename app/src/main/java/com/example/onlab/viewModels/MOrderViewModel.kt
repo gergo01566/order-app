@@ -165,94 +165,95 @@ class MOrderViewModel @Inject constructor(private val repository: OrderFireRepos
         return data.value.data!!.filter {
             it.customerID == customerId
         }
-    }fun generatePDF(
-        context: Context,
-        orderId: String,
-        customerViewModel: MCustomerViewModel,
-        mOrderItemViewModel: MOrderItemViewModel,
-        mProductViewModel: MProductViewModel,
-    ) {
-        val order = data.value.data!!.first { it.orderId == orderId }
-        val customer = customerViewModel.getCustomerById(order.customerID)
-        val orderItems = mOrderItemViewModel.getOrderItemsByOrder(orderId)
-        val products = orderItems.map { mProductViewModel.getProductById(it.productID) }
-
-        val pageHeight = 1120
-        val pageWidth = 792
-        lateinit var scaledbmp: Bitmap
-        val pdfDocument: PdfDocument = PdfDocument()
-        val paint: Paint = Paint()
-        val title: Paint = Paint()
-
-        val directoryPath = "/storage/emulated/0/Documents"
-        val directory = File(directoryPath)
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
-        val fileName = "order_$orderId.pdf"
-        val file = File(directory, fileName)
-
-        var bmp: Bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
-        scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
-        val myPageInfo: PdfDocument.PageInfo? =
-            PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
-        val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
-        val canvas: Canvas = myPage.canvas
-        canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
-        title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        title.textSize = 20F
-        title.color = ContextCompat.getColor(context, R.color.black)
-        canvas.drawText("Ügyfél neve: ${customer?.lastName} ${customer?.firstName}", 209F, 40F, title)
-        canvas.drawText("Ügyfél címe: ${customer?.address} ", 209F, 75F, title)
-        canvas.drawText("Ügyfél telefonszáma: ${customer?.phoneNumber} ", 209F, 110F, title)
-        title.textSize = 15F
-        canvas.drawText("Rendelési azonosító: ${order.orderId}", 209F, 145F, title)
-        canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
-        title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-        title.color = ContextCompat.getColor(context, R.color.black)
-        title.textSize = 15F
-        title.textAlign = Paint.Align.CENTER
-
-        canvas.drawText("Termék neve ", 170F, 270F, title)
-        canvas.drawText("Mennyiség ", 340F, 270F, title)
-        canvas.drawText("Darab", 510F, 270F, title)
-        canvas.drawText("Karton", 680F, 270f, title)
-        title.typeface = Typeface.defaultFromStyle(Typeface.NORMAL)
-        var yPosition = 300f
-        for (orderItem in orderItems) {
-            val product = products.find { it!!.id.toString() == orderItem.productID }
-            canvas.drawText(product!!.title, 170F, yPosition, title)
-            canvas.drawText("${orderItem.amount}", 340F, yPosition , title)
-            canvas.drawText((if (orderItem.piece){"igen"} else {
-                "nem"
-            }).toString(), 510F, yPosition , title)
-            canvas.drawText((if (orderItem.carton){"igen"} else {
-                "nem"
-            }).toString(), 680F, yPosition , title)
-            canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
-            yPosition += 60F
-        }
-        var sikerult = false
-
-        pdfDocument.finishPage(myPage)
-
-        // Save the PDF file
-        try {
-            FileOutputStream(file).use { outputStream ->
-                pdfDocument.writeTo(outputStream)
-            }
-            sikerult = true
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
-        }
-
-// Close the PDF document
-        pdfDocument.close()
-        if(sikerult){
-            Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()
-            sikerult = false
-        }
     }
+//    fun generatePDF(
+//        context: Context,
+//        orderId: String,
+//        customerViewModel: MCustomerViewModel,
+//        mOrderItemViewModel: MOrderItemViewModel,
+//        mProductViewModel: MProductViewModel,
+//    ) {
+//        val order = data.value.data!!.first { it.orderId == orderId }
+//        val customer = customerViewModel.getCustomerById(order.customerID)
+//        val orderItems = mOrderItemViewModel.getOrderItemsByOrder(orderId)
+//        val products = orderItems.map { mProductViewModel.getProductById(it.productID) }
+//
+//        val pageHeight = 1120
+//        val pageWidth = 792
+//        lateinit var scaledbmp: Bitmap
+//        val pdfDocument: PdfDocument = PdfDocument()
+//        val paint: Paint = Paint()
+//        val title: Paint = Paint()
+//
+//        val directoryPath = "/storage/emulated/0/Documents"
+//        val directory = File(directoryPath)
+//        if (!directory.exists()) {
+//            directory.mkdirs()
+//        }
+//        val fileName = "order_$orderId.pdf"
+//        val file = File(directory, fileName)
+//
+//        var bmp: Bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
+//        scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
+//        val myPageInfo: PdfDocument.PageInfo? =
+//            PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+//        val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
+//        val canvas: Canvas = myPage.canvas
+//        canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
+//        title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+//        title.textSize = 20F
+//        title.color = ContextCompat.getColor(context, R.color.black)
+//        canvas.drawText("Ügyfél neve: ${customer?.lastName} ${customer?.firstName}", 209F, 40F, title)
+//        canvas.drawText("Ügyfél címe: ${customer?.address} ", 209F, 75F, title)
+//        canvas.drawText("Ügyfél telefonszáma: ${customer?.phoneNumber} ", 209F, 110F, title)
+//        title.textSize = 15F
+//        canvas.drawText("Rendelési azonosító: ${order.orderId}", 209F, 145F, title)
+//        canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
+//        title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+//        title.color = ContextCompat.getColor(context, R.color.black)
+//        title.textSize = 15F
+//        title.textAlign = Paint.Align.CENTER
+//
+//        canvas.drawText("Termék neve ", 170F, 270F, title)
+//        canvas.drawText("Mennyiség ", 340F, 270F, title)
+//        canvas.drawText("Darab", 510F, 270F, title)
+//        canvas.drawText("Karton", 680F, 270f, title)
+//        title.typeface = Typeface.defaultFromStyle(Typeface.NORMAL)
+//        var yPosition = 300f
+//        for (orderItem in orderItems) {
+//            val product = products.find { it!!.id.toString() == orderItem.productID }
+//            canvas.drawText(product!!.title, 170F, yPosition, title)
+//            canvas.drawText("${orderItem.amount}", 340F, yPosition , title)
+//            canvas.drawText((if (orderItem.piece){"igen"} else {
+//                "nem"
+//            }).toString(), 510F, yPosition , title)
+//            canvas.drawText((if (orderItem.carton){"igen"} else {
+//                "nem"
+//            }).toString(), 680F, yPosition , title)
+//            canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
+//            yPosition += 60F
+//        }
+//        var sikerult = false
+//
+//        pdfDocument.finishPage(myPage)
+//
+//        // Save the PDF file
+//        try {
+//            FileOutputStream(file).use { outputStream ->
+//                pdfDocument.writeTo(outputStream)
+//            }
+//            sikerult = true
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//            Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+//        }
+//
+//// Close the PDF document
+//        pdfDocument.close()
+//        if(sikerult){
+//            Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()
+//            sikerult = false
+//        }
+//    }
 
 }

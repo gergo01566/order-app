@@ -35,7 +35,7 @@ import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NewOrderScreen(
+fun OrderDetailsScreen(
     state: List<MOrderItem>,
     orderViewModel: MOrderViewModel,
     onNavigateTo: (String, String, String) -> Unit,
@@ -237,7 +237,9 @@ fun NewOrderScreen(
                                         )
                                     }
                                 }else if (orderViewModel.isOrderIncluded(viewModel.orderId.toString())) {
-
+                                    state.forEach {
+                                        viewModel.onSaveOrderItem(it)
+                                    }
                                     //copyOfOrderItems.forEach { newVersion ->
 //                                        val oldVersion = orderItemViewModel.getOrderItemsByOrder(orderId = viewModel.orderId.toString())
 //                                            .find { it.id == newVersion.id }
@@ -271,9 +273,6 @@ fun NewOrderScreen(
 //                                    }
 
                                     //orderItemViewModel.clearOrderItemsList()
-                                    state.forEach {
-                                        viewModel.onSaveOrderItem(it)
-                                    }
                                     viewModel.onSaveOrderToFirebae(
                                         MOrder(
                                             orderId = viewModel.orderId,
@@ -333,7 +332,7 @@ fun NewOrderScreen(
 
             //copyOfOrderItems?.let {
 
-            when (val orderItemsResponse = viewModel.orderItemsResponse){
+            when (viewModel.orderItemsResponse){
                 is ValueOrException.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -349,7 +348,7 @@ fun NewOrderScreen(
                 }
                 is ValueOrException.Success -> {
                     CreateList(
-                        data = if (orderItemsResponse.data.isEmpty()) state else orderItemsResponse.data,
+                        data = state,
                         onDelete = {
                             showDialog.value = true
                             selectedOrderItem = it

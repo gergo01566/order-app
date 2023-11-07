@@ -1,12 +1,15 @@
 package com.example.onlab.screen.order
 
+import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MCustomer
 import com.example.onlab.model.MOrder
+import com.example.onlab.model.MOrderItem
 import com.example.onlab.service.CustomerStorageService
 import com.example.onlab.service.OrderStorageService
 import com.example.onlab.viewModels.OrderAppViewModel

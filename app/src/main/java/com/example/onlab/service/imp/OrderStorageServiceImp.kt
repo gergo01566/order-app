@@ -44,10 +44,11 @@ constructor(private val firestore: FirebaseFirestore) :
 
     override suspend fun getOrder(orderId: String): ValueOrException<MOrder> {
         return try {
-            val documentSnapshot =
-                firestore.collection("orders").document(orderId).get().await()
-            if (documentSnapshot.exists()) {
-                val order = documentSnapshot.toObject<MOrder>()
+            val querySnapshot = firestore.collection("orders")
+                .whereEqualTo("order_id", orderId)
+                .get().await()
+            if (!querySnapshot.isEmpty) {
+                val order = querySnapshot.documents[0].toObject<MOrder>()
                 ValueOrException.Success(order!!)
             } else {
                 ValueOrException.Failure(Exception("Order not found"))
@@ -60,9 +61,9 @@ constructor(private val firestore: FirebaseFirestore) :
     override suspend fun addOrder(order: MOrder): ValueOrException<Boolean> {
         return try {
             firestore.collection("orders").add(order).addOnSuccessListener { documentRef ->
-                val docId = documentRef.id
-                firestore.collection("orders").document(docId).update(hashMapOf(
-                    "id" to docId) as Map<String, Any>).addOnCompleteListener {
+                //val docId = documentRef.id
+                firestore.collection("orders").document(documentRef.id).update(hashMapOf(
+                    "id" to documentRef.id) as Map<String, Any>).addOnCompleteListener {
                         ValueOrException.Success(true)
                 }
             }.addOnFailureListener{
@@ -92,8 +93,8 @@ constructor(private val firestore: FirebaseFirestore) :
         }
         return try {
             val orderToUpdate = mapOf(
-                "id" to order.id,
-                "order_id" to order.orderId,
+                //"id" to order.id,
+                //"order_id" to order.orderId,
                 "order_status" to status
             )
             FirebaseFirestore.getInstance().collection("orders").document(order.id!!).update(orderToUpdate).await()

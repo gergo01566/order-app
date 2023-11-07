@@ -23,11 +23,6 @@ import com.example.onlab.viewModels.*
 
 @Composable
 fun OrdersScreen(
-    navController: NavController,
-    orderViewModel: MOrderViewModel,
-    customerViewModel: MCustomerViewModel,
-    orderItemViewModel: MOrderItemViewModel,
-    mProductViewModel: MProductViewModel,
     navigateBack: () -> Unit,
     onNavigate: (String, String) -> Unit,
     viewModel: OrdersListViewModel = hiltViewModel(),
@@ -44,11 +39,11 @@ fun OrdersScreen(
         showDialog = showDialog,
         message = "\"Biztos törölni szeretnéd a rendelést?\"",
         onConfirm = {
-            Log.d("TAG", "OrdersScreen: ${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}")
-            showDialog.value = false
-            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.orderId.toString()).forEach{
-                orderItemViewModel.deleteOrderItem(it.id!!) {}
-            }
+//            Log.d("TAG", "OrdersScreen: ${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}")
+//            showDialog.value = false
+//            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.orderId.toString()).forEach{
+//                orderItemViewModel.deleteOrderItem(it.id!!) {}
+//            }
             viewModel.onDeleteOrder(selectedOrder?.id.toString()){
                 Toast.makeText(
                     contextForToast,
@@ -208,13 +203,13 @@ fun OrdersScreen(
                                                 fontWeight = FontWeight.Normal
                                             )
                                             if (selectedOrder != null && kivalasztva){
-                                                orderViewModel.generatePDF(
-                                                    contextForToast,
-                                                    orderId = selectedOrder!!.orderId.toString(),
-                                                    customerViewModel = customerViewModel,
-                                                    mOrderItemViewModel = orderItemViewModel,
-                                                    mProductViewModel = mProductViewModel
-                                                )
+//                                                orderViewModel.generatePDF(
+//                                                    contextForToast,
+//                                                    orderId = selectedOrder!!.orderId.toString(),
+//                                                    customerViewModel = customerViewModel,
+//                                                    mOrderItemViewModel = orderItemViewModel,
+//                                                    mProductViewModel = mProductViewModel
+//                                                )
                                                 kivalasztva = false
                                             }
                                         }
