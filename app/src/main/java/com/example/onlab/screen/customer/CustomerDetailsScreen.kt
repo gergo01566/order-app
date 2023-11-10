@@ -148,19 +148,19 @@ fun CustomerDetailsScreen(
     }
 
     when(val updateCustomerResponse = viewModel.updateCustomerResponse){
-        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Loading -> LoadingScreen()
         is ValueOrException.Success -> Unit
         is ValueOrException.Failure -> print(updateCustomerResponse.e)
     }
 
     when(val addCustomerResponse = viewModel.addCustomerResponse){
-        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Loading -> LoadingScreen()
         is ValueOrException.Success -> Unit
         is ValueOrException.Failure -> print(addCustomerResponse.e)
     }
 
     when(val deleteCustomerResponse = viewModel.deleteCustomerResponse){
-        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Loading -> LoadingScreen()
         is ValueOrException.Success -> Unit
         is ValueOrException.Failure -> print(deleteCustomerResponse.e)
     }

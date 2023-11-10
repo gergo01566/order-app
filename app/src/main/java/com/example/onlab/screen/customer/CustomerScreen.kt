@@ -24,7 +24,7 @@ import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MCustomer
 import com.example.onlab.navigation.DestinationCustomerDetails
 import com.example.onlab.navigation.DestinationCustomerList
-import com.example.onlab.navigation.DestinationNewCustomer
+import com.example.onlab.screen.product.BasicField
 import java.util.*
 
 @Composable
@@ -35,14 +35,69 @@ fun CustomerScreen(
     navigateBack: () -> Unit,
     navigateFromTo:(String, String)->Unit,
 ) {
-
     val contextForToast = LocalContext.current.applicationContext
-
     var selectedCustomer by remember { mutableStateOf<MCustomer?>(null) }
-
-    var searchText by remember { mutableStateOf("") }
-
     val showDialog = remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            createTopBar(text = "Ügyfelek", withIcon = false){
+                navigateBack()
+            }
+        },
+        bottomBar = {
+            BottomNavBar(selectedItem = items[1]){
+                navigateFromTo(DestinationCustomerList, it)
+            }
+        },
+        floatingActionButton = {
+            AddButton {
+                navigateFromTo(DestinationCustomerList, DestinationCustomerDetails)
+            }
+        },
+        isFloatingActionButtonDocked = true,
+        floatingActionButtonPosition = FabPosition.End,
+        content = { it ->
+            when (val customerResponse = viewModel.customerResponse){
+                is ValueOrException.Loading -> {
+                    LoadingScreen()
+                }
+                is ValueOrException.Failure -> {
+                    Snackbar {
+                        Text(text = "Nem sikerült betölteni")
+                    }
+                }
+                is ValueOrException.Success -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(bottom = it.calculateBottomPadding())
+                    ) {
+                        SearchBar(
+                            onSearchTextChanged = { newText ->
+                                viewModel.onSearchTextChanged(newText)
+                            }
+                        )
+                        CustomerList(
+                            data = customerResponse.data,
+                            onDelete = {
+                                showDialog.value = true
+                                selectedCustomer = it
+                            },
+                            onEditCustomerDetails = {
+                                onNavigateToCustomer(it)
+                            },
+                            onClickOnOpenNewOrderIcon = { customerId, orderId ->
+                                onNavigateToOrder(customerId, orderId)
+                            }
+                        )
+                    }
+                }
+            }
+
+        }
+    )
 
     showConfirmationDialog(
         showDialog = showDialog,
@@ -57,122 +112,103 @@ fun CustomerScreen(
             showDialog.value = false
         }
     )
+}
 
-    Scaffold(
-        topBar = {
-            createTopBar(text = "Ügyfelek", withIcon = false){
-                navigateBack()
-            }
+@Composable
+fun AddButton(onClick: () -> Unit){
+    ExtendedFloatingActionButton(
+        modifier =  Modifier.padding(bottom = 60.dp),
+        text = { Text(text = "Hozzáadás") },
+        onClick = {
+            onClick()
         },
-        bottomBar = {
-            BottomNavBar(selectedItem = items[1]){
-                navigateFromTo(DestinationCustomerList, it)
-            }
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                modifier =  Modifier.padding(bottom = 60.dp),
-                text = { Text(text = "Új ügyfél") },
-                onClick = {
-                    navigateFromTo(DestinationCustomerList, DestinationCustomerDetails)
-                },
-                shape = RoundedCornerShape(20.dp),
-                backgroundColor = MaterialTheme.colors.primary,
-            )
-        },
-        isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End,
-        content = { it ->
-            when (val customerResponse = viewModel.customerResponse){
-                is ValueOrException.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        CircularProgressIndicator()
-                    }
-                }
-                is ValueOrException.Failure -> {
-                    Snackbar {
-                        Text(text = "Nem sikerült betölteni")
-                    }
-                }
-                is ValueOrException.Success -> {
-                    it.calculateBottomPadding()
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .padding(bottom = it.calculateBottomPadding())
-                    ) {
-
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)) {
-
-                            TextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                value = searchText,
-                                onValueChange = { newText ->
-                                    viewModel.onSearchTextChanged(newText)
-                                    searchText = newText
-                                },
-                                label = { Text("Keresés") }
-                            )
-                        }
-
-                        CreateList(
-                            data = customerResponse.data.sortedBy { it.firstName },
-                            onDelete = {
-                                showDialog.value = true
-                                selectedCustomer = it
-                            },
-                            onEdit = {
-                                onNavigateToCustomer(it.id.toString())
-                            },
-                            iconContent = {
-                                CreateIcon(Icons.Rounded.ShoppingCart){
-                                    val orderID: String = UUID.randomUUID().toString()
-                                    it.id?.let { it1 -> onNavigateToOrder(it1, orderID) }
-                                }
-                            }
-                        ) { customer ->
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.size(70.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    AsyncImage(
-                                        model = customer.image.toUri(),
-                                        contentDescription = "profile image",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(80.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                    Image(
-                                        painter = rememberImagePainter(
-                                            data = customer.image,
-                                            builder = {
-                                                placeholder(R.drawable.picture_placeholder)
-                                                error(R.drawable.picture_placeholder)
-                                            }) , contentDescription = "customer_image")
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(10.dp)
-                                ){
-                                    Text(text = customer.firstName + " " + customer.lastName, fontWeight = FontWeight.Bold)
-                                    Text(text = customer.address)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
+        shape = RoundedCornerShape(20.dp),
+        backgroundColor = MaterialTheme.colors.primary,
     )
+}
+
+@Composable
+fun LoadingScreen(){
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ){
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun CustomerList(
+    data: List<MCustomer>,
+    onDelete: (MCustomer)-> Unit,
+    onEditCustomerDetails: (String)-> Unit,
+    onClickOnOpenNewOrderIcon: (String, String) -> Unit,
+){
+    CreateList(
+        data = data.sortedBy { it.firstName },
+        onDelete = {customer ->
+            onDelete(customer)
+        },
+        onEdit = { customer ->
+            onEditCustomerDetails(customer.id.toString())
+        },
+        iconContent = { customer ->
+            CreateIcon(Icons.Rounded.ShoppingCart){
+                val orderID: String = UUID.randomUUID().toString()
+                customer.id?.let {
+                        _customer -> onClickOnOpenNewOrderIcon(_customer, orderID)
+                }
+            }
+        }
+    ) { customer ->
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.size(70.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                AsyncImage(
+                    model = customer.image.toUri(),
+                    contentDescription = "profile image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Image(
+                    painter = rememberImagePainter(
+                        data = customer.image,
+                        builder = {
+                            placeholder(R.drawable.picture_placeholder)
+                            error(R.drawable.picture_placeholder)
+                        }) , contentDescription = "customer_image")
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            ){
+                Text(text = customer.firstName + " " + customer.lastName, fontWeight = FontWeight.Bold)
+                Text(text = customer.address)
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchBar(onSearchTextChanged: (String) -> Unit){
+    var searchText by remember { mutableStateOf("") }
+    Column(modifier = Modifier
+        .fillMaxWidth()
+    ) {
+        BasicField(
+            text = "Keresés",
+            label = "Keresés",
+            value = searchText,
+            onNewValue = { newText ->
+                searchText = newText
+                onSearchTextChanged(newText)
+            }
+        )
+    }
 }

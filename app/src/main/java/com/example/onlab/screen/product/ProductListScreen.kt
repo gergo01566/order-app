@@ -28,6 +28,9 @@ import com.example.onlab.model.Category as Categ
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
+import com.example.onlab.screen.customer.AddButton
+import com.example.onlab.screen.customer.LoadingScreen
+import com.example.onlab.screen.customer.SearchBar
 import com.example.onlab.screen.order.OrderDetailsViewModel
 
 
@@ -48,29 +51,81 @@ fun ProductListScreen(
     val showFullScreenDialog = remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
     val context = LocalContext.current
-
-    var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
+    Scaffold(
+        topBar = {
+            if (productListViewModel.isOrdering)
+                createTopBar( text = "Új rendelés", withIcon = true, onBack = { navigateBack() })
+            else {
+                createTopBar(text = "Termékek", withIcon = false){ navigateBack() }
+            }
+        },
+        bottomBar = {
+            if (!productListViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){ navigateFromTo(DestinationProductList, it) }
+        },
+        floatingActionButton = {
+            if(!productListViewModel.isOrdering){
+                AddButton {
+                    navigateFromTo(DestinationProductList, DestinationProductDetails)
+                }
+            }
+        },
+        isFloatingActionButtonDocked = true,
+        floatingActionButtonPosition = FabPosition.End,
+        content = { it ->
+            when(val productsResponse = productListViewModel.productsResponse){
+                is ValueOrException.Loading -> LoadingScreen()
+                is ValueOrException.Failure -> Snackbar { Text(text = "Nem sikerült törölni a terméket") }
+                is ValueOrException.Success -> {
+                    it.calculateBottomPadding()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(bottom = it.calculateBottomPadding())
+                    ) {
+                        MenuBar(
+                            categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
+                            selectedCategory = selectedCategory,
+                            onCategorySelected = { category ->
+                                productListViewModel.onCategoryChanged(category = category!!)
+                                selectedCategory = category
+                            }
+                        )
+                        SearchBar(onSearchTextChanged = { newText ->
+                            productListViewModel.onSearchTextChanged(newText)
+                        })
+                        ProductList(
+                            data = productsResponse.data,
+                            onDelete = {
+                                showDialog.value = true
+                                selectedProduct = it
+                            },
+                            onEdit = {
+                                onNavigate(it.id.toString())
+                            },
+                            onAddToOrder = {
+                                if(productListViewModel.isOrdering) {
+                                    selectedProduct = it
+                                    showFullScreenDialog.value = true
+                                }
+                                else{
+                                    Log.d("TAG", "ProductListScreen: ez nem jott ossze")
+                                }
+                            },
+                            iconClickEnabled = !productListViewModel.isOrdering,
+                        )
+                    }
+                }
+            }
+        }
+    )
+
     when(productListViewModel.deleteProductResponse){
-        is ValueOrException.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator()
-            }
-        }
-        is ValueOrException.Success -> {
-            Snackbar {
-                Text(text = "Termék törölve")
-            }
-        }
-        is ValueOrException.Failure -> {
-            Snackbar {
-                Text(text = "Nem sikerült törölni a terméket")
-            }
-        }
+        is ValueOrException.Loading -> LoadingScreen()
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> Snackbar { Text(text = "Nem sikerült törölni a terméket") }
     }
 
     showConfirmationDialog(
@@ -106,13 +161,7 @@ fun ProductListScreen(
                         piece = state
                     )
                     onAddOrderItem(orderItem)
-                    //orderDetailsViewModel.addOrderItemLocally(orderItem)
-                    //productListViewModel.addOrderItem(orderItem)
-                    //orderDetailsViewModel.addOrderItemLocally(orderItem)
-                    //orderItemViewModel.addOrderItem(orderItem)
                     navigateBackToOrder(productListViewModel.orderId, productListViewModel.customerId)
-                    //navigateBack()
-                    //showFullScreenDialog.value = false
                 } else {
                     Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()
                 }
@@ -121,140 +170,6 @@ fun ProductListScreen(
             showFullScreenDialog.value = false
         }
     }
-
-    Scaffold(
-        topBar = {
-            if (productListViewModel.isOrdering) createTopBar(text = "Új rendelés", withIcon = true, onBack = {
-                navigateBack()
-            })
-            else {
-                createTopBar(text = "Termékek", withIcon = false){
-                    navigateBack()
-                }
-            }
-        },
-        bottomBar = {
-            if (!productListViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){
-                navigateFromTo(DestinationProductList, it)
-            }
-        },
-        floatingActionButton = {
-            if(!productListViewModel.isOrdering){
-                ExtendedFloatingActionButton(
-                    modifier =  Modifier.padding(bottom = 60.dp),
-                    text = { Text(text = "Új termék") },
-                    onClick = {
-                        navigateFromTo(DestinationProductList, DestinationProductDetails)
-                    },
-                    shape = RoundedCornerShape(20.dp),
-                    backgroundColor = MaterialTheme.colors.primary,
-                )
-            }
-        },
-        isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End,
-        content = { it ->
-
-            when(val productsResponse = productListViewModel.productsResponse){
-                is ValueOrException.Loading -> {
-                    Log.d("LOG", "ProductListScreen: LOADING")
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        CircularProgressIndicator()
-                    }
-                }
-                is ValueOrException.Failure -> {
-                    Snackbar {
-                        Text(text = "Nem sikerült törölni a terméket")
-                    }
-                }
-                is ValueOrException.Success -> {
-                    it.calculateBottomPadding()
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .padding(bottom = it.calculateBottomPadding())
-                    ) {
-                        MenuBar(
-                            categories = getCategoryTypes(com.example.onlab.model.Category::class.java),
-                            selectedCategory = selectedCategory,
-                            onCategorySelected = { category ->
-                                productListViewModel.onCategoryChanged(category = category!!)
-                                selectedCategory = category
-                            }
-                        )
-
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)) {
-                            TextField(
-                                modifier = Modifier.fillMaxWidth(),
-                                value = searchText,
-                                onValueChange = { newText ->
-                                    productListViewModel.onSearchTextChanged(newText)
-                                    searchText = newText },
-                                placeholder = { Text(text = "Keresés") })
-                        }
-
-                        CreateList(
-                            data = productsResponse.data.sortedBy { it.title },
-                            onDelete = {
-                                Log.d("TAG", "ProductListScreen: ${it.id}")
-                                showDialog.value = true
-                                selectedProduct = it },
-                            onEdit = {
-                                onNavigate(it.id.toString())
-
-                            },
-                            onClick = {
-                                if(productListViewModel.isOrdering) {
-                                    selectedProduct = it
-                                    showFullScreenDialog.value = true
-                                }
-                                else{
-                                    Log.d("TAG", "ProductListScreen: ez nem jott ossze")
-                                }
-                            },
-                            iconClickEnabled = !productListViewModel.isOrdering,
-                            itemContent = { product ->
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    Column(
-                                        modifier = Modifier.size(70.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        AsyncImage(
-                                            model = product.image.toUri(),
-                                            contentDescription = "profile image",
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(80.dp),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(10.dp)
-                                    ) {
-                                        Text(text = product.title, fontWeight = FontWeight.Bold)
-                                        Text(
-                                            text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
-                                            style = MaterialTheme.typography.caption
-                                        )
-
-                                    }
-                                }
-                            })
-
-                    }
-                }
-            }
-        }
-    )
 }
 
 
@@ -265,15 +180,14 @@ fun MenuBar(
     onCategorySelected: (Categ?) -> Unit
 ) {
     LazyRow(
-        modifier = Modifier.padding(13.dp)
+        modifier = Modifier.padding(top = 13.dp)
     ) {
-
         items(categories) { category ->
             Text(
                 text = category.name,
                 color = if (category == selectedCategory) MaterialTheme.colors.primary else Color.Gray,
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(end = 30.dp, start = 16.dp)
                     .clickable(onClick = { onCategorySelected(category) })
             )
         }
@@ -281,20 +195,47 @@ fun MenuBar(
 }
 
 @Composable
-fun SearchBar(
-    modifier: Modifier = Modifier,
-    text: Int,
-    value: String,
-    onValueChange: (String) -> Unit,
-){
-    TextField(
-        modifier = modifier,
-        value = value,
-        onValueChange = { newText -> onValueChange(newText) },
-        placeholder = { Text(stringResource(id = text)) })
+fun ProductList(data: List<MProduct>, onDelete: (MProduct) -> Unit, onEdit: (MProduct) -> Unit, onAddToOrder: (MProduct) -> Unit, iconClickEnabled: Boolean){
+    CreateList(
+        data = data.sortedBy { it.title },
+        onDelete = {
+            onDelete(it)
+       },
+        onEdit = {
+            onEdit(it)
+        },
+        onClick = {
+            onAddToOrder(it)
+        },
+        iconClickEnabled = iconClickEnabled,
+        itemContent = { product ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.size(70.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = product.image.toUri(),
+                        contentDescription = "profile image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(10.dp)
+                ) {
+                    Text(text = product.title, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "${product.pricePerPiece}HUF / ${product.pricePerKarton}HUF",
+                        style = MaterialTheme.typography.caption
+                    )
+
+                }
+            }
+        })
 }
-
-
-
-
-
