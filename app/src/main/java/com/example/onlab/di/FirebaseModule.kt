@@ -7,10 +7,8 @@ import com.example.onlab.data.OrderItemDatabaseDao
 import com.example.onlab.data.ProductDatabase
 import com.example.onlab.data.ProductDatabaseDao
 import com.example.onlab.data.customer.CustomerDatabaseDao
-import com.example.onlab.repository.FireRepository
-import com.example.onlab.repository.OrderFireRepository
-import com.example.onlab.repository.OrderItemFireRepository
-import com.example.onlab.repository.ProductFireRepository
+import com.example.onlab.repository.*
+import com.example.onlab.service.OrderItemStorageService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -55,10 +53,6 @@ object FirebaseModule {
 
     @Singleton
     @Provides
-    fun provideFireOrderItemRepository()= OrderItemFireRepository(queryOrderItem = FirebaseFirestore.getInstance().collection("order_items"))
-
-    @Singleton
-    @Provides
     fun provideProductDao(productDatabase: ProductDatabase): ProductDatabaseDao = productDatabase.productDao()
 
     @Singleton
@@ -82,4 +76,8 @@ object FirebaseModule {
             "onlab_db")
             .fallbackToDestructiveMigration()
             .build()
+
+    @Singleton
+    @Provides
+    fun provideMemoryOrderItemRepository() = MemoryOrderItemRepository()
 }

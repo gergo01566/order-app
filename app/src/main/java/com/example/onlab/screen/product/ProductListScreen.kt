@@ -39,9 +39,7 @@ fun ProductListScreen(
     onNavigate: (String) -> Unit,
     navigateFromTo: (String, String) -> Unit,
     navigateBack: () -> Unit,
-    onAddOrderItem: (MOrderItem) -> Unit,
     navigateBackToOrder: (String, String) ->Unit,
-    orderDetailsViewModel: OrderDetailsViewModel = hiltViewModel(),
     productListViewModel: ProductListViewModel = hiltViewModel(),
     state: List<MOrderItem>
 ) {
@@ -156,11 +154,11 @@ fun ProductListScreen(
                         amount = quantity.toInt(),
                         orderID = productListViewModel.orderId,
                         productID = selectedProduct!!.id.toString(),
-                        statusID = 0,
+                        statusID = -1,
                         carton = !state,
                         piece = state
                     )
-                    onAddOrderItem(orderItem)
+                    productListViewModel.onAddOrderItemLocally(orderItem)
                     navigateBackToOrder(productListViewModel.orderId, productListViewModel.customerId)
                 } else {
                     Toast.makeText(context, "A mennyiség megadásánál csak számokat használj!", Toast.LENGTH_SHORT).show()

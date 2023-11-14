@@ -6,12 +6,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.ValueOrException
+import com.example.onlab.di.FirebaseModule_ProvideMemoryOrderItemRepositoryFactory
 import com.example.onlab.model.Category
 import com.example.onlab.model.MOrderItem
 import com.example.onlab.model.MProduct
 import com.example.onlab.navigation.DestinationOneArg
 import com.example.onlab.navigation.DestinationThreeArg
 import com.example.onlab.navigation.DestinationTwoArg
+import com.example.onlab.repository.OrderItemsRepository
 import com.example.onlab.screen.order.OrderDetailsViewModel
 import com.example.onlab.service.ProductStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
@@ -22,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductListViewModel @Inject constructor(
     private val storageService: ProductStorageService,
+    private val memoryOrderItemsRepository: OrderItemsRepository,
     savedStateHandle: SavedStateHandle
 ) : OrderAppViewModel() {
 
@@ -83,6 +86,12 @@ class ProductListViewModel @Inject constructor(
             storageService.getProductsByCategoryAndText(searchText, selectedCategory).collect{ response ->
                 productsResponse = response
             }
+        }
+    }
+
+    fun onAddOrderItemLocally(mOrderItem: MOrderItem){
+        launchCatching {
+            memoryOrderItemsRepository.insertOrderItem(mOrderItem)
         }
     }
 }

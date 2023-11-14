@@ -11,7 +11,6 @@ import javax.inject.Inject
 
 class AuthServiceImp @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
 ) : AuthService {
     override val currentUserId: String
         get() = auth.currentUser?.uid.orEmpty()
@@ -64,5 +63,12 @@ class AuthServiceImp @Inject constructor(
         }
     }
 
+    override suspend fun signOut() {
+        auth.signOut()
+    }
+
+    override suspend fun deleteProfile() {
+        auth.currentUser?.delete()
+    }
 
 }

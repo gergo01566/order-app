@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.onlab.R
@@ -43,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     navigateFromTo: (String, String) -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ){
     val showLoginFrom = rememberSaveable { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
@@ -63,7 +64,9 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top,
             ) {
-                Image(painter = painterResource(id = R.drawable.ic_launcher_round), contentDescription = "Logo", modifier = Modifier.size(200.dp).padding(10.dp))
+                Image(painter = painterResource(id = R.drawable.ic_launcher_round), contentDescription = "Logo", modifier = Modifier
+                    .size(200.dp)
+                    .padding(10.dp))
                 if (showLoginFrom.value)
                     UserForm(
                         uiState = uiState,

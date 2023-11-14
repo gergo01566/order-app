@@ -1,5 +1,6 @@
 package com.example.onlab.service.imp
 
+import android.util.Log
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MOrderItem
 import com.example.onlab.service.OrderItemStorageService
@@ -71,10 +72,13 @@ constructor(private val firestore: FirebaseFirestore):
     override suspend fun deleteOrderItem(
         orderItemId: String,
     ): ValueOrException<Boolean> {
+        Log.d("log", "deleteOrderItem: $")
+
         return try {
-            firestore.collection("order_items").document(orderItemId).delete().await()
+            firestore.collection("order_items").document(orderItemId).delete()
             ValueOrException.Success(true)
         } catch (e: Exception) {
+            Log.d("log", "deleteOrderItem: $e")
             ValueOrException.Failure(e)
         }
     }
@@ -90,12 +94,28 @@ constructor(private val firestore: FirebaseFirestore):
                 "is_karton" to orderItem.carton,
                 "order_id" to orderItem.orderID,
                 "is_piece" to orderItem.piece,
-                "status_id" to orderItem.statusID
+                "status_id" to 3
             ).toMap()
-            firestore.collection("order_items").document(orderItem.id!!).update(orderItemToUpdate).await()
+            Log.d("log", "updateOrderItem: Updating order item with ID ${orderItem.id} to status 3")
+            Log.d("log", "updateOrderItem: OrderItemToUpdate: $orderItemToUpdate")
+
+            firestore.collection("order_items").document(orderItem.id!!).update(orderItemToUpdate)
+
+            Log.d("log", "updateOrderItem: Order item updated successfully")
+
             ValueOrException.Success(true)
         } catch (e: Exception) {
+            Log.d("log", "updateOrderItem: exception $e")
             ValueOrException.Failure(e)
         }
+    }
+
+
+    fun orderItemExist(orderItemId: String): Boolean {
+        var exist = false
+        firestore.collection("order_items").document(orderItemId).get().addOnSuccessListener {
+            exist = it.exists()
+        }
+        return exist
     }
 }

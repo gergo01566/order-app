@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
@@ -36,23 +37,13 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NewOrderScreen(
-    state: List<MOrderItem>,
-    orderViewModel: MOrderViewModel,
     onNavigateTo: (String, String, String) -> Unit,
     onNavigateBack: () -> Unit,
-    onUpdateOrderItem: (MOrderItem) -> Unit,
-    onRemoveOrderItem: (MOrderItem) -> Unit,
     viewModel: OrderDetailsViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit,
 ) {
-    Log.d("update", "neworder: $state") // Log the value
-
-//    LaunchedEffect(orderID) {
-//        orderItemViewModel.initOrders(orderID!!)
-//    }
-//
-//    orderItemViewModel.initOrders(orderID!!)
-//    copyOfOrderItems = orderItemViewModel.getOrderItemsList()
+    val state = viewModel.state.collectAsStateWithLifecycle().value
+    Log.d("log", "screen State: ${viewModel.orderItemsResponse}" )
 
     val currentContext = LocalContext.current.applicationContext
 
@@ -64,9 +55,20 @@ fun NewOrderScreen(
 
     val scaffoldState: ScaffoldState = rememberScaffoldState()
 
-    val coroutineScope: CoroutineScope = rememberCoroutineScope()
 
     val openDialog = remember { mutableStateOf(false) }
+
+    when(viewModel.deleteOrderItemResponse){
+        is ValueOrException.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                CircularProgressIndicator()
+            }
+        }
+        else -> Unit
+    }
 
     if (openDialog.value) {
         DismissChangesDialog(onDismiss = { openDialog.value = false }) {
@@ -104,12 +106,11 @@ fun NewOrderScreen(
                                     amount = quantity.toInt(),
                                     orderID = orderItem.orderID,
                                     productID = orderItem.productID,
-                                    statusID = orderItem.statusID,
+                                    statusID = 0,
                                     carton = !state,
                                     piece = state
                                 )
-                                onUpdateOrderItem(updatedOrderItem)
-                                //orderItemViewModel.updateOrderItem(updatedOrderItem)
+                                viewModel.updateOrderItemLocally(updatedOrderItem)
                                 Toast.makeText(
                                     currentContext,
                                     "Rendelési tétel módosítva",
@@ -139,7 +140,19 @@ fun NewOrderScreen(
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedOrderItem?.let {
-                onRemoveOrderItem(it)
+                val updatedOrderItem = MOrderItem(
+                    id = it.id, // Make sure to set the ID of the orderItem
+                    amount = 0,
+                    orderID = it.orderID,
+                    productID = it.productID,
+                    statusID = 0,
+                    carton = it.carton,
+                    piece = it.piece
+                )
+                //viewModel.deleteOrderItemLocally(it)
+                viewModel.updateOrderItemLocally(updatedOrderItem)
+                //viewModel.deleteOrderItemLocally(it)
+                //onRemoveOrderItem(it)
                 //orderItemViewModel.removeOrderItem(selectedOrderItem!!)
 //                orderItemViewModel.deleteOrderItem(it.id!!) {
 //                    showDialog.value = false
@@ -192,11 +205,11 @@ fun NewOrderScreen(
                         )
                     }
                     BackHandler {
-                        if (state.isNotEmpty()) {
-                            openDialog.value = true
-                        } else {
+//                        if (state.isNotEmpty()) {
+//                            openDialog.value = true
+//                        } else {
                             onNavigateBack()
-                        }
+//                        }
                     }
                     Row(
                         modifier = Modifier
@@ -209,11 +222,11 @@ fun NewOrderScreen(
                                 .padding(end = 10.dp, start = 10.dp)
                                 .weight(1f),
                             onClick = {
-                                if (state.isNotEmpty()) {
-                                    openDialog.value = true
-                                } else {
-                                    navigateFromTo(DestinationNewOrder, DestinationCustomerList)
-                                }
+//                                if (state.isNotEmpty()) {
+//                                    openDialog.value = true
+//                                } else {
+//                                    navigateFromTo(DestinationNewOrder, DestinationCustomerList)
+//                                }
 
                             },
                             elevation = androidx.compose.material3.FloatingActionButtonDefaults.bottomAppBarFabElevation(),
@@ -229,14 +242,16 @@ fun NewOrderScreen(
                                 .padding(end = 10.dp, start = 10.dp)
                                 .weight(1f),
                             onClick = {
+                                viewModel.onSaveClick()
+                                onNavigateBack()
 
-                                if (state.isEmpty()) {
-                                    coroutineScope.launch {
-                                        scaffoldState.snackbarHostState.showSnackbar(
-                                            message = "Rendelés mentése sikertelen, nincs rendelési tétel a listában."
-                                        )
-                                    }
-                                }else if (orderViewModel.isOrderIncluded(viewModel.orderId.toString())) {
+//                                if (state.isEmpty()) {
+//                                    coroutineScope.launch {
+//                                        scaffoldState.snackbarHostState.showSnackbar(
+//                                            message = "Rendelés mentése sikertelen, nincs rendelési tétel a listában."
+//                                        )
+//                                    }
+//                                }else if (orderViewModel.isOrderIncluded(viewModel.orderId.toString())) {
 
                                     //copyOfOrderItems.forEach { newVersion ->
 //                                        val oldVersion = orderItemViewModel.getOrderItemsByOrder(orderId = viewModel.orderId.toString())
@@ -258,7 +273,7 @@ fun NewOrderScreen(
 //                                        }
                                     //}
 
-                                } else {
+//                                } else {
 //                                    copyOfOrderItems.forEach {
 //                                        orderItemViewModel.saveOrderItemToFirebase(it, {
 //                                            navigateFromTo(DestinationNewOrder, DestinationOrderList)
@@ -271,26 +286,26 @@ fun NewOrderScreen(
 //                                    }
 
                                     //orderItemViewModel.clearOrderItemsList()
-                                    state.forEach {
-                                        viewModel.onSaveOrderItem(it)
-                                    }
-                                    viewModel.onSaveOrderToFirebae(
-                                        MOrder(
-                                            orderId = viewModel.orderId,
-                                            date = LocalDate.now().toString(),
-                                            customerID = viewModel.customerId.toString(),
-                                            status = 0,
-                                            madeby = FirebaseAuth.getInstance().currentUser!!.email!!
-                                        )
-                                    ) {
-                                        Toast.makeText(
-                                            currentContext,
-                                            "Rendelés hozzáadva",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                                onNavigateBack()
+//                                    state.forEach {
+//                                        viewModel.onSaveOrderItem(it)
+//                                    }
+//                                        viewModel.onSaveClick()
+//                                    viewModel.onSaveOrderToFirebae(
+//                                        MOrder(
+//                                            orderId = viewModel.orderId,
+//                                            date = LocalDate.now().toString(),
+//                                            customerID = viewModel.customerId.toString(),
+//                                            status = 0,
+//                                            madeby = FirebaseAuth.getInstance().currentUser!!.email!!
+//                                        )
+//                                    ) {
+//                                        Toast.makeText(
+//                                            currentContext,
+//                                            "Rendelés hozzáadva",
+//                                            Toast.LENGTH_SHORT
+//                                        ).show()
+//                                    }
+                                //}
                                 //orderItemViewModel.clearOrderItemsList()
 //                                } else if(orderViewModel.isOrderIncluded(orderID!!)){
 //                                    navController.popBackStack()
@@ -333,7 +348,7 @@ fun NewOrderScreen(
 
             //copyOfOrderItems?.let {
 
-            when (val orderItemsResponse = viewModel.orderItemsResponse){
+            when (state){
                 is ValueOrException.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -349,7 +364,8 @@ fun NewOrderScreen(
                 }
                 is ValueOrException.Success -> {
                     CreateList(
-                        data = if (orderItemsResponse.data.isEmpty()) state else orderItemsResponse.data,
+                        data = state.data.filter { it.amount != 0  },
+//                        data = if (orderItemsResponse.data.isEmpty()) state else orderItemsResponse.data,
                         onDelete = {
                             showDialog.value = true
                             selectedOrderItem = it
@@ -427,6 +443,10 @@ fun NewOrderScreen(
                                                     style = MaterialTheme.typography.caption
                                                 )
                                             }
+                                            Text(
+                                                text = "${orderItem.statusID} status",
+                                                style = MaterialTheme.typography.caption
+                                            )
                                         }
                                     }
                                 }

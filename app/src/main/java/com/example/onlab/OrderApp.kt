@@ -62,7 +62,7 @@ fun rememberAppState(): AppState {
     val permissionRequester = PermissionRequester()
     val snackbarHostState = remember { SnackbarHostState() }
     val scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState)
-    val coroutineScope = rememberCoroutineScope() // Corrected syntax
+    val coroutineScope = rememberCoroutineScope()
 
     return remember {
         AppState(navController = navController, permissionRequester = permissionRequester, scaffoldState = scaffoldState, snackBarText = "Permission denied", coroutineScope = coroutineScope)

@@ -1,5 +1,7 @@
 package com.example.onlab.di
 
+import com.example.onlab.repository.MemoryOrderItemRepository
+import com.example.onlab.repository.OrderItemsRepository
 import com.example.onlab.service.*
 import com.example.onlab.service.imp.*
 import dagger.Binds
@@ -9,7 +11,6 @@ import dagger.hilt.components.SingletonComponent
 
 @InstallIn(SingletonComponent::class)
 @Module
-//used to add bindings to hilt
 abstract class AppModule {
 
     @Binds
@@ -26,5 +27,8 @@ abstract class AppModule {
 
     @Binds
     abstract fun bindOrderItemStorageService(imp: OrderItemStorageServiceImp): OrderItemStorageService
+
+    @Binds
+    abstract fun bindProductRepository(imp: MemoryOrderItemRepository): OrderItemsRepository
 
 }

@@ -40,7 +40,6 @@ import java.util.*
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val orderViewModel = viewModel<MOrderViewModel>()
     val permissionRequester = PermissionRequester()
 
     val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
@@ -82,11 +81,7 @@ fun AppNavigation() {
 
             composable(DestinationOrderDetailsRoute) {
                 logBackStack(it, navController)
-                val viewModel =
-                    it.sharedViewModel<MOrderItemViewModel>(navController = navController)
-                val state by viewModel.sharedOrderItemList.collectAsStateWithLifecycle()
                 NewOrderScreen(
-                    state = state,
                     onNavigateTo = { orderId, isOrdering, customerId ->
                         navController.navigate(
                             buildProductListRoute(
@@ -98,9 +93,6 @@ fun AppNavigation() {
                         }
                     },
                     onNavigateBack = { navController.popBackStack() },
-                    orderViewModel = orderViewModel,
-                    onRemoveOrderItem = { viewModel.removeOrderItem(it) },
-                    onUpdateOrderItem = { viewModel.updateOrderItem(it)}
                 ) { from, to ->
                     navController.navigate(to) {
                         popUpTo("orderAppRoute") {
@@ -166,10 +158,7 @@ fun AppNavigation() {
 
             composable(DestinationProductList){
                 logBackStack(it, navController)
-                val viewModel = it.sharedViewModel<MOrderItemViewModel>(navController = navController)
-                //val state by viewModel.sharedState.collectAsStateWithLifecycle()
                 ProductListScreen(
-                    onAddOrderItem = {  },
                     onNavigate = {
                         Log.d("Nav", "productId: $it") // Log the value
                         navController.navigate(buildProductDetailsRoute(it))
@@ -199,7 +188,6 @@ fun AppNavigation() {
                     it.sharedViewModel<MOrderItemViewModel>(navController = navController)
                 val state by viewModel.sharedOrderItemList.collectAsStateWithLifecycle()
                 ProductListScreen(
-                    onAddOrderItem = { viewModel.addItemToOrderList(it) },
                     state = state,
                     onNavigate = {
                         Log.d("Nav", "productId: $it") // Log the value
@@ -248,9 +236,9 @@ fun AppNavigation() {
             }
 
             composable(DestinationProfile){
-                ProfileScreen(navController = navController){ from, to ->
+                ProfileScreen{ from, to ->
                     navController.navigate(to) {
-                        popUpTo(from) { inclusive = true }
+                        popUpTo("orderAppRoute") { inclusive = true }
                     }
                 }
             }

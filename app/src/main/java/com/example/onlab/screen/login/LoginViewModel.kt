@@ -3,6 +3,8 @@ package com.example.onlab.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.onlab.navigation.DestinationLogin
+import com.example.onlab.navigation.DestinationOrderList
 import com.example.onlab.screen.login.LoginUiState
 import com.example.onlab.service.AuthService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,7 +40,7 @@ class LoginViewModel @Inject constructor(
 
         launchCatching {
             authService.signInWithEmailAndPassowrd(email, password, onFailure) {
-                navigateFromTo("LoginScreen", "OrdersScreen")
+                navigateFromTo(DestinationLogin, DestinationOrderList)
             }
         }
     }

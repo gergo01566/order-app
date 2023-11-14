@@ -11,4 +11,6 @@ interface AuthService {
     suspend fun signInWithEmailAndPassowrd(email: String, password: String, onFailure: () -> Unit, onComplete: () -> Unit)
     suspend fun createUser(email: String, password: String, onFailure: () -> Unit, onComplete: () -> Unit)
     suspend fun resetPassword(email: String, onFailure: () -> Unit, onComplete: () -> Unit)
+    suspend fun signOut()
+    suspend fun deleteProfile()
 }

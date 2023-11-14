@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -44,6 +45,8 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.createTopBar
 import com.example.onlab.components.items
 import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.navigation.DestinationLogin
+import com.example.onlab.navigation.DestinationProfile
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.ktx.Firebase
@@ -53,17 +56,11 @@ import java.net.URL
 
 @Composable
 fun ProfileScreen(
-    navController: NavController,
+    viewModel: ProfileViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit
-    //user: User,
-//    onLogout: () -> Unit,
-//    onDeleteProfile: () -> Unit,
-//    onNavigateToNotifications: () -> Unit
 ) {
 
-    val currentUserName = if (!FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-        FirebaseAuth.getInstance().currentUser?.email?.split("@")?.get(0)
-    } else "N/A"
+    val uiState by viewModel.uiState
 
     val showDialog = remember { mutableStateOf(false) }
 
@@ -71,7 +68,7 @@ fun ProfileScreen(
         showDialog = showDialog,
         message = "Biztos törölni szeretnéd a profilodat?",
         onConfirm = {
-            FirebaseAuth.getInstance().currentUser?.delete()
+            viewModel.onDeleteProfile()
         },
         onDismiss = {
             showDialog.value = false
@@ -112,7 +109,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = currentUserName.toString(),
+                        text = uiState.name,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -124,11 +121,9 @@ fun ProfileScreen(
                 ) {
                     Icon(Icons.Filled.Email, contentDescription = "Email Icon")
                     Spacer(modifier = Modifier.width(8.dp))
-                    FirebaseAuth.getInstance().currentUser?.email?.let { it1 ->
                         Text(
-                            text = it1,
+                            text = uiState.email,
                         )
-                    }
                 }
                 Row(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -181,9 +176,8 @@ fun ProfileScreen(
                         style = TextStyle(fontSize = 20.sp),
                         modifier = Modifier.padding(start = 8.dp),
                         onClick = {
-                            FirebaseAuth.getInstance().signOut().run {
-                                navController.navigate("LoginScreen")
-                            }
+                            viewModel.onLogout()
+                            navigateFromTo(DestinationProfile, DestinationLogin)
                         }
                     )
                 }

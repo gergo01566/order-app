@@ -18,6 +18,7 @@ import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.MCustomer
+import com.example.onlab.navigation.DestinationCustomerDetails
 import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -77,7 +78,7 @@ fun CustomerDetailsScreen(
                 },
                 bottomBar = {
                     BottomNavBar(selectedItem = items[1], navigateTo = {
-                        navigateFromTo("CustomerDetailsScreen", it)
+                        navigateFromTo(DestinationCustomerDetails, it)
                     })
                 },
                 isFloatingActionButtonDocked = true,
