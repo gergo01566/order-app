@@ -1,5 +1,6 @@
 package com.example.onlab.screen.profile
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.example.onlab.service.AuthService
 import com.example.onlab.viewModels.OrderAppViewModel
@@ -18,9 +19,12 @@ class ProfileViewModel @Inject constructor(
         launchCatching {
             AuthService.currentUser.collect{ user ->
                 uiState.value = uiState.value.copy(
-                    name = user.address.split("@")?.get(0) as String,
-                    email = user.address
+                    name = user.displayName,
+                    address = user.address,
+                    email = user.email,
+                    image = user.image
                 )
+                Log.d("loggg", ": $user")
             }
         }
     }

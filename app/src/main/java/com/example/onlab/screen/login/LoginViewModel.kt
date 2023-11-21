@@ -44,7 +44,6 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-
     fun onSignUpClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit) {
         if (email.isBlank()) {
             return
@@ -56,7 +55,7 @@ class LoginViewModel @Inject constructor(
 
         launchCatching {
             authService.createUser(email, password, onFailure) {
-                navigateFromTo("LoginScreen", "OrdersScreen")
+                navigateFromTo(DestinationLogin, DestinationOrderList)
             }
         }
     }

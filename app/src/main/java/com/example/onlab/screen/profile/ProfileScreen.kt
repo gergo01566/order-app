@@ -59,9 +59,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit
 ) {
-
     val uiState by viewModel.uiState
-
     val showDialog = remember { mutableStateOf(false) }
 
     showConfirmationDialog(
@@ -76,9 +74,7 @@ fun ProfileScreen(
     )
 
     Scaffold(
-        topBar = {
-
-        },
+        topBar = { },
         bottomBar = {
             BottomNavBar(
                 selectedItem = items[3],
@@ -87,123 +83,182 @@ fun ProfileScreen(
                 }
             )
         },
-        floatingActionButton = {
-        },
+        floatingActionButton = {}
+        ,
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.End,
         content = {
             it.calculateBottomPadding()
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    AsyncImage(
-                        model = "file:///data/user/0/com.example.onlab/files/image_38fdf064-c709-4960-8269-5bdc308e386e.jpg".toUri(),
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentDescription = "profile image",
-                        contentScale = ContentScale.Crop
-                    )
-
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = uiState.name,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Filled.Email, contentDescription = "Email Icon")
-                    Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = uiState.email,
-                        )
-                }
-                Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Filled.LocationOn, contentDescription = "Address Icon")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Budapest",
-                    )
-                }
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)) {
+                ProfileInfo(uiState.image,uiState.name, uiState.email, uiState.address)
                 Divider(
                     color = Color.Gray,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp)
                 )
-                Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        modifier = Modifier
-                            .clickable { /* Handle icon click */ }
-                            .size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    ClickableText(
-                        text = AnnotatedString("Értesítések"),
-                        style = TextStyle(fontSize = 20.sp),
-                        modifier = Modifier.padding(start = 8.dp),
-                        onClick = {}
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Outlined.ExitToApp,
-                        contentDescription = "Log out",
-                        modifier = Modifier
-                            .clickable { /* Handle icon click */ }
-                            .size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    ClickableText(
-                        text = AnnotatedString("Kijelentkezés"),
-                        style = TextStyle(fontSize = 20.sp),
-                        modifier = Modifier.padding(start = 8.dp),
-                        onClick = {
-                            viewModel.onLogout()
-                            navigateFromTo(DestinationProfile, DestinationLogin)
-                        }
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = "Delete",
-                        modifier = Modifier
-                            .clickable { /* Handle icon click */ }
-                            .size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    ClickableText(
-                        text = AnnotatedString("Profil törlése"),
-                        style = TextStyle(fontSize = 20.sp),
-                        modifier = Modifier.padding(start = 8.dp),
-                        onClick = { showDialog.value = true; }
-                    )
-                }
+                ActionList(
+                    onEditClick = {
+                        //TODO
+                    },
+                    onNotificationClick = {
+                        //TODO
+                    },
+                    onLogoutClick = {
+                        //TODO
+                        viewModel.onLogout()
+                        navigateFromTo(DestinationProfile, DestinationLogin)
+                    },
+                    onDeleteClick = {
+                        showDialog.value = true
+                    }
+                )
             }
         })
+}
 
+@Composable
+@Preview
+fun ProfileInfo(imageUri: String = "", userName: String = "", email: String = "", address: String = ""){
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = imageUri.toUri(),
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape),
+            contentDescription = "profile image",
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = userName,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+        modifier = Modifier.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Filled.Email, contentDescription = "Email Icon")
+
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = email,
+        )
+    }
+    Row(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Filled.LocationOn, contentDescription = "Address Icon")
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = address,
+        )
+    }
+}
+
+@Composable
+@Preview
+fun ActionList(
+    onEditClick:() -> Unit = {},
+    onNotificationClick:() -> Unit = {},
+    onLogoutClick:() -> Unit = {},
+    onDeleteClick:() -> Unit = {},
+){
+    Row(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.Notifications,
+            contentDescription = "Notifications",
+            modifier = Modifier
+                .clickable {
+                    onEditClick()
+                }
+                .size(40.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        ClickableText(
+            text = AnnotatedString("Profil szerkesztése"),
+            style = TextStyle(fontSize = 20.sp),
+            modifier = Modifier.padding(start = 8.dp),
+            onClick = {
+                onEditClick()
+            }
+        )
+    }
+    Row(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.Notifications,
+            contentDescription = "Notifications",
+            modifier = Modifier
+                .clickable { /* Handle icon click */ }
+                .size(40.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        ClickableText(
+            text = AnnotatedString("Értesítések"),
+            style = TextStyle(fontSize = 20.sp),
+            modifier = Modifier.padding(start = 8.dp),
+            onClick = {
+                onNotificationClick()
+            }
+        )
+    }
+    Row(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.ExitToApp,
+            contentDescription = "Log out",
+            modifier = Modifier
+                .clickable {
+                    onLogoutClick()
+                }
+                .size(40.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        ClickableText(
+            text = AnnotatedString("Kijelentkezés"),
+            style = TextStyle(fontSize = 20.sp),
+            modifier = Modifier.padding(start = 8.dp),
+            onClick = {
+                onLogoutClick()
+            }
+        )
+    }
+
+    Row(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.Delete,
+            contentDescription = "Delete",
+            modifier = Modifier
+                .clickable { /* Handle icon click */ }
+                .size(40.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        ClickableText(
+            text = AnnotatedString("Profil törlése"),
+            style = TextStyle(fontSize = 20.sp),
+            modifier = Modifier.padding(start = 8.dp),
+            onClick = {
+                onDeleteClick()
+            }
+        )
+    }
 
 }
 
