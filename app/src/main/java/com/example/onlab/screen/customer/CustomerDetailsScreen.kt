@@ -1,5 +1,6 @@
 package com.example.onlab.screen.customer
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,7 +66,7 @@ fun CustomerDetailsScreen(
     }
     when(viewModel.customerResponse){
         is ValueOrException.Loading -> CircularProgressIndicator()
-        is ValueOrException.Failure -> CircularProgressIndicator()
+        is ValueOrException.Failure ->  Unit
         is ValueOrException.Success -> {
             Scaffold(
                 topBar = {

@@ -34,11 +34,6 @@ object FirebaseModule {
 
     @Provides fun firestorage(): FirebaseStorage = FirebaseStorage.getInstance()
 
-//    @Provides
-//    fun provideFirebaseStorage(): FirebaseStorage {
-//        return FirebaseStorage.getInstance()
-//    }
-
     @Singleton
     @Provides
     fun provideFireCustomerRepository()= FireRepository(queryCustomer = FirebaseFirestore.getInstance().collection("customers"))

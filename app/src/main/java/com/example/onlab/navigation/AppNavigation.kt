@@ -2,6 +2,7 @@
 
 package com.example.onlab.navigation
 
+import EditProfileScreen
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -59,6 +60,15 @@ fun AppNavigation() {
 
             composable(DestinationLogin){
                 LoginScreen(
+                    navigateFromTo = { from , to ->
+                        navController.navigate(to) {
+                            popUpTo(from) { inclusive = true }
+                        }},
+                )
+            }
+
+            composable(DestinationEditProfile){
+                EditProfileScreen(
                     navigateFromTo = { from , to ->
                         navController.navigate(to) {
                             popUpTo(from) { inclusive = true }

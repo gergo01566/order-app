@@ -45,6 +45,7 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.createTopBar
 import com.example.onlab.components.items
 import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.navigation.DestinationEditProfile
 import com.example.onlab.navigation.DestinationLogin
 import com.example.onlab.navigation.DestinationProfile
 import com.google.firebase.FirebaseApp
@@ -99,7 +100,7 @@ fun ProfileScreen(
                 )
                 ActionList(
                     onEditClick = {
-                        //TODO
+                        navigateFromTo(DestinationProfile, DestinationEditProfile)
                     },
                     onNotificationClick = {
                         //TODO
@@ -175,7 +176,7 @@ fun ActionList(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            Icons.Outlined.Notifications,
+            Icons.Outlined.Edit,
             contentDescription = "Notifications",
             modifier = Modifier
                 .clickable {
