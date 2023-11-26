@@ -21,7 +21,7 @@ import coil.compose.rememberImagePainter
 import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
+import com.example.onlab.model.Customer
 import com.example.onlab.navigation.DestinationCustomerDetails
 import com.example.onlab.navigation.DestinationCustomerList
 import com.example.onlab.screen.product.BasicField
@@ -36,7 +36,7 @@ fun CustomerScreen(
     navigateFromTo:(String, String)->Unit,
 ) {
     val contextForToast = LocalContext.current.applicationContext
-    var selectedCustomer by remember { mutableStateOf<MCustomer?>(null) }
+    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
     val showDialog = remember { mutableStateOf(false) }
 
     Scaffold(
@@ -139,8 +139,8 @@ fun LoadingScreen(){
 
 @Composable
 fun CustomerList(
-    data: List<MCustomer>,
-    onDelete: (MCustomer)-> Unit,
+    data: List<Customer>,
+    onDelete: (Customer)-> Unit,
     onEditCustomerDetails: (String)-> Unit,
     onClickOnOpenNewOrderIcon: (String, String) -> Unit,
 ){

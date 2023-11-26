@@ -31,4 +31,7 @@ abstract class AppModule {
     @Binds
     abstract fun bindProductRepository(imp: MemoryOrderItemRepository): OrderItemsRepository
 
+    @Binds
+    abstract fun bindUserStorageService(imp: UserStorageServiceImp): UserStorageService
+
 }

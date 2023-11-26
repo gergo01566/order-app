@@ -1,6 +1,5 @@
 package com.example.onlab.screen.customer
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +17,7 @@ import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
+import com.example.onlab.model.Customer
 import com.example.onlab.navigation.DestinationCustomerDetails
 import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
@@ -129,7 +128,7 @@ fun CustomerDetailsScreen(
                         text = "Ügyfél mentése",
                         enabled = uiState.firstName.isNotEmpty() && uiState.lastName.isNotEmpty() && uiState.address.isNotEmpty(),
                         onClick = {
-                            viewModel.onDoneClick(MCustomer(uiState), navigateFromTo)
+                            viewModel.onDoneClick(Customer(uiState), navigateFromTo)
                         }
                     )
 

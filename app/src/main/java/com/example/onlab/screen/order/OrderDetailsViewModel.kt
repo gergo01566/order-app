@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MOrder
-import com.example.onlab.model.MOrderItem
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.Order
+import com.example.onlab.model.OrderItem
+import com.example.onlab.model.Product
 import com.example.onlab.navigation.DestinationOneArg
 import com.example.onlab.navigation.DestinationTwoArg
 import com.example.onlab.repository.OrderItemsRepository
@@ -36,7 +36,7 @@ class OrderDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ): OrderAppViewModel() {
 
-    var orderItemsResponse by mutableStateOf<ValueOrException<List<MOrderItem>>>(ValueOrException.Loading)
+    var orderItemsResponse by mutableStateOf<ValueOrException<List<OrderItem>>>(ValueOrException.Loading)
         private set
 
     var saveOrderItemResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
@@ -45,13 +45,13 @@ class OrderDetailsViewModel @Inject constructor(
     var saveOrderToFirebase by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
 
-    var productsResponse by mutableStateOf<ValueOrException<List<MProduct>>>(ValueOrException.Loading)
+    var productsResponse by mutableStateOf<ValueOrException<List<Product>>>(ValueOrException.Loading)
         private set
 
     var deleteOrderItemResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
 
-    private val _state = MutableStateFlow<ValueOrException<List<MOrderItem>>>(ValueOrException.Loading)
+    private val _state = MutableStateFlow<ValueOrException<List<OrderItem>>>(ValueOrException.Loading)
     val state = _state.asStateFlow()
 
     val customerId = savedStateHandle.get<String>(DestinationOneArg)
@@ -70,7 +70,7 @@ class OrderDetailsViewModel @Inject constructor(
                 orderItemStorageService.getOrderItemsByOrderId(orderId!!).collect{ response->
                     orderItemsResponse = response
                     when (response) {
-                        is ValueOrException.Success<List<MOrderItem>> -> {
+                        is ValueOrException.Success<List<OrderItem>> -> {
                             memoryOrderItemsRepository.getOrderItemsFromNetwork(response.data)
                             val list = memoryOrderItemsRepository.getOrderItems()
                             _state.value = ValueOrException.Success(list)
@@ -92,7 +92,7 @@ class OrderDetailsViewModel @Inject constructor(
             orderItemStorageService.getOrderItemsByOrderId(orderId!!).collect{ response->
                 orderItemsResponse = response
                 when (response) {
-                    is ValueOrException.Success<List<MOrderItem>> -> {
+                    is ValueOrException.Success<List<OrderItem>> -> {
                         memoryOrderItemsRepository.getOrderItemsFromNetwork(response.data)
                         val list = memoryOrderItemsRepository.getOrderItems()
                         _state.value = ValueOrException.Success(list)
@@ -104,7 +104,7 @@ class OrderDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onSaveOrderItem(orderItem: MOrderItem){
+    fun onSaveOrderItem(orderItem: OrderItem){
         saveOrderItemResponse = ValueOrException.Loading
         launchCatching {
             saveOrderItemResponse = try {
@@ -115,7 +115,7 @@ class OrderDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onSaveOrderToFirebae(order: MOrder, onComplete:() -> Unit){
+    fun onSaveOrderToFirebae(order: Order, onComplete:() -> Unit){
         launchCatching {
             if(orderStorageService.getOrder(order.id.toString()) is ValueOrException.Failure){
                 orderStorageService.addOrder(order)
@@ -146,7 +146,7 @@ class OrderDetailsViewModel @Inject constructor(
         }
     }
 
-    fun updateOrderItemLocally(orderItem: MOrderItem){
+    fun updateOrderItemLocally(orderItem: OrderItem){
         Log.d("log", "VM memory: ${memoryOrderItemsRepository.getOrderItems().size}")
         Log.d("log", "VM state: ${state.value}")
         launchCatching {
@@ -158,7 +158,7 @@ class OrderDetailsViewModel @Inject constructor(
 
     }
 
-    fun onDeleteOrderItemFromDb(orderItem: MOrderItem){
+    fun onDeleteOrderItemFromDb(orderItem: OrderItem){
         launchCatching {
             deleteOrderItemResponse = ValueOrException.Loading
             //delay(1000)
@@ -182,7 +182,7 @@ class OrderDetailsViewModel @Inject constructor(
                     if (orderResultInDb is ValueOrException.Failure) {
                         Log.d("log", "fail")
                         val newOrderId = UUID.randomUUID().toString()
-                        val newOrder = MOrder(
+                        val newOrder = Order(
                             orderId = newOrderId,
                             date = LocalDate.now().toString(),
                             customerID = customerId.toString(),

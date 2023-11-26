@@ -45,6 +45,7 @@ import com.example.onlab.components.BottomNavBar
 import com.example.onlab.components.createTopBar
 import com.example.onlab.components.items
 import com.example.onlab.components.showConfirmationDialog
+import com.example.onlab.data.ValueOrException
 import com.example.onlab.navigation.DestinationEditProfile
 import com.example.onlab.navigation.DestinationLogin
 import com.example.onlab.navigation.DestinationProfile
@@ -74,48 +75,56 @@ fun ProfileScreen(
         }
     )
 
-    Scaffold(
-        topBar = { },
-        bottomBar = {
-            BottomNavBar(
-                selectedItem = items[3],
-                navigateTo = {
-                    navigateFromTo("ProfileScreen", it)
-                }
-            )
-        },
-        floatingActionButton = {}
-        ,
-        isFloatingActionButtonDocked = true,
-        floatingActionButtonPosition = FabPosition.End,
-        content = {
-            it.calculateBottomPadding()
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)) {
-                ProfileInfo(uiState.image,uiState.name, uiState.email, uiState.address)
-                Divider(
-                    color = Color.Gray,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp)
-                )
-                ActionList(
-                    onEditClick = {
-                        navigateFromTo(DestinationProfile, DestinationEditProfile)
-                    },
-                    onNotificationClick = {
-                        //TODO
-                    },
-                    onLogoutClick = {
-                        //TODO
-                        viewModel.onLogout()
-                        navigateFromTo(DestinationProfile, DestinationLogin)
-                    },
-                    onDeleteClick = {
-                        showDialog.value = true
+    when(viewModel.userResponse){
+        is ValueOrException.Loading -> CircularProgressIndicator()
+        is ValueOrException.Failure ->  Unit
+        is ValueOrException.Success -> {
+            Scaffold(
+                topBar = { },
+                bottomBar = {
+                    BottomNavBar(
+                        selectedItem = items[3],
+                        navigateTo = {
+                            navigateFromTo("ProfileScreen", it)
+                        }
+                    )
+                },
+                floatingActionButton = {}
+                ,
+                isFloatingActionButtonDocked = true,
+                floatingActionButtonPosition = FabPosition.End,
+                content = {
+                    it.calculateBottomPadding()
+                    Column(modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)) {
+                        ProfileInfo(uiState.image,uiState.name, uiState.email, uiState.address)
+                        Divider(
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp)
+                        )
+                        ActionList(
+                            onEditClick = {
+                                navigateFromTo(DestinationProfile, DestinationEditProfile)
+                            },
+                            onNotificationClick = {
+                                //TODO
+                            },
+                            onLogoutClick = {
+                                //TODO
+                                viewModel.onLogout()
+                                navigateFromTo(DestinationProfile, DestinationLogin)
+                            },
+                            onDeleteClick = {
+                                showDialog.value = true
+                            }
+                        )
                     }
-                )
-            }
-        })
+                })
+        }
+    }
+
+
 }
 
 @Composable

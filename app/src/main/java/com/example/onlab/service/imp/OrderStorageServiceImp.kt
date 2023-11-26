@@ -2,7 +2,7 @@ package com.example.onlab.service.imp
 
 import androidx.compose.runtime.MutableState
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MOrder
+import com.example.onlab.model.Order
 import com.example.onlab.service.OrderStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -27,7 +27,7 @@ constructor(private val firestore: FirebaseFirestore) :
                 }
             }
             val response = if (snapshot != null && !snapshot.isEmpty) {
-                val orders = snapshot.toObjects(MOrder::class.java)
+                val orders = snapshot.toObjects(Order::class.java)
                     .filter { order ->
                         order.status == status.value
                     }
@@ -42,13 +42,13 @@ constructor(private val firestore: FirebaseFirestore) :
         }
     }
 
-    override suspend fun getOrder(orderId: String): ValueOrException<MOrder> {
+    override suspend fun getOrder(orderId: String): ValueOrException<Order> {
         return try {
             val querySnapshot = firestore.collection("orders")
                 .whereEqualTo("order_id", orderId)
                 .get().await()
             if (!querySnapshot.isEmpty) {
-                val order = querySnapshot.documents[0].toObject<MOrder>()
+                val order = querySnapshot.documents[0].toObject<Order>()
                 ValueOrException.Success(order!!)
             } else {
                 ValueOrException.Failure(Exception("Order not found"))
@@ -58,7 +58,7 @@ constructor(private val firestore: FirebaseFirestore) :
         }
     }
 
-    override suspend fun addOrder(order: MOrder): ValueOrException<Boolean> {
+    override suspend fun addOrder(order: Order): ValueOrException<Boolean> {
         return try {
             firestore.collection("orders").add(order).addOnSuccessListener { documentRef ->
                 //val docId = documentRef.id
@@ -86,15 +86,13 @@ constructor(private val firestore: FirebaseFirestore) :
         }
     }
 
-    override suspend fun updateOrder(order: MOrder):ValueOrException<Boolean> {
+    override suspend fun updateOrder(order: Order):ValueOrException<Boolean> {
         var status = 0
         if (order.status == 0){
             status = 1
         }
         return try {
             val orderToUpdate = mapOf(
-                //"id" to order.id,
-                //"order_id" to order.orderId,
                 "order_status" to status
             )
             FirebaseFirestore.getInstance().collection("orders").document(order.id!!).update(orderToUpdate).await()

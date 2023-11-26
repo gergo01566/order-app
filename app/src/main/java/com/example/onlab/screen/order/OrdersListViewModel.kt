@@ -1,15 +1,12 @@
 package com.example.onlab.screen.order
 
-import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
-import com.example.onlab.model.MOrder
-import com.example.onlab.model.MOrderItem
+import com.example.onlab.model.Customer
+import com.example.onlab.model.Order
 import com.example.onlab.service.CustomerStorageService
 import com.example.onlab.service.OrderStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
@@ -23,7 +20,7 @@ class OrdersListViewModel @Inject constructor(
     private val customerStorageService: CustomerStorageService
 ): OrderAppViewModel(){
 
-    var ordersResponse by mutableStateOf<ValueOrException<List<MOrder>>>(ValueOrException.Loading)
+    var ordersResponse by mutableStateOf<ValueOrException<List<Order>>>(ValueOrException.Loading)
         private set
 
     var deleteOrderResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
@@ -32,7 +29,7 @@ class OrdersListViewModel @Inject constructor(
     var updateOrderResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
 
-    var customersResponse by mutableStateOf<ValueOrException<List<MCustomer>>>(ValueOrException.Loading)
+    var customersResponse by mutableStateOf<ValueOrException<List<Customer>>>(ValueOrException.Loading)
         private set
 
     var status = mutableStateOf(0)
@@ -65,7 +62,7 @@ class OrdersListViewModel @Inject constructor(
         }
     }
 
-    fun onUpdateOrder(order: MOrder, ){
+    fun onUpdateOrder(order: Order, ){
         updateOrderResponse = ValueOrException.Loading
         launchCatching {
             try {

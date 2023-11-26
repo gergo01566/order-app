@@ -1,12 +1,12 @@
 package com.example.onlab.repository
 
-import com.example.onlab.model.MOrderItem
+import com.example.onlab.model.OrderItem
 
 interface OrderItemsRepository {
-    suspend fun getOrderItemsFromNetwork(orders: List<MOrderItem>)
+    suspend fun getOrderItemsFromNetwork(orders: List<OrderItem>)
     suspend fun initOrderItems()
-    suspend fun insertOrderItem(orderItem: MOrderItem)
-    suspend fun deleteOrderItem(orderItem: MOrderItem)
-    fun getOrderItems(): List<MOrderItem>
-    suspend fun updateOrderItem(updatedOrderItem: MOrderItem)
+    suspend fun insertOrderItem(orderItem: OrderItem)
+    suspend fun deleteOrderItem(orderItem: OrderItem)
+    fun getOrderItems(): List<OrderItem>
+    suspend fun updateOrderItem(updatedOrderItem: OrderItem)
 }

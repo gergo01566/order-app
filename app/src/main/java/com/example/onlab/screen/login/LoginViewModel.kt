@@ -1,19 +1,19 @@
 package com.example.onlab.viewModels
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
+import com.example.onlab.model.User
 import com.example.onlab.navigation.DestinationLogin
 import com.example.onlab.navigation.DestinationOrderList
 import com.example.onlab.screen.login.LoginUiState
 import com.example.onlab.service.AuthService
+import com.example.onlab.service.UserStorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val userStorageService: UserStorageService
 ): OrderAppViewModel() {
     var uiState = mutableStateOf(LoginUiState())
         private set
@@ -45,6 +45,7 @@ class LoginViewModel @Inject constructor(
         }
     }
     fun onSignUpClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit) {
+        var user = User()
         if (email.isBlank()) {
             return
         }
@@ -55,8 +56,10 @@ class LoginViewModel @Inject constructor(
 
         launchCatching {
             authService.createUser(email, password, onFailure) {
+                user = it
                 navigateFromTo(DestinationLogin, DestinationOrderList)
             }
+            userStorageService.addUser(user)
         }
     }
 

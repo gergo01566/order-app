@@ -28,10 +28,6 @@ import com.example.onlab.model.*
 import com.example.onlab.navigation.DestinationCustomerList
 import com.example.onlab.navigation.DestinationNewOrder
 import com.example.onlab.viewModels.*
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -51,7 +47,7 @@ fun NewOrderScreen(
 
     val showEditDialog = remember { mutableStateOf(false) }
 
-    var selectedOrderItem by remember { mutableStateOf<MOrderItem?>(null) }
+    var selectedOrderItem by remember { mutableStateOf<OrderItem?>(null) }
 
     val scaffoldState: ScaffoldState = rememberScaffoldState()
 
@@ -101,7 +97,7 @@ fun NewOrderScreen(
                     onAdd = { state: Boolean, quantity: String ->
                         selectedOrderItem?.let { orderItem ->
                             if (quantity.isDigitsOnly() && quantity.isNotEmpty()) {
-                                val updatedOrderItem = MOrderItem(
+                                val updatedOrderItem = OrderItem(
                                     id = orderItem.id, // Make sure to set the ID of the orderItem
                                     amount = quantity.toInt(),
                                     orderID = orderItem.orderID,
@@ -140,7 +136,7 @@ fun NewOrderScreen(
         message = "Biztos törölni szeretnéd a következő terméket?",
         onConfirm = {
             selectedOrderItem?.let {
-                val updatedOrderItem = MOrderItem(
+                val updatedOrderItem = OrderItem(
                     id = it.id, // Make sure to set the ID of the orderItem
                     amount = 0,
                     orderID = it.orderID,

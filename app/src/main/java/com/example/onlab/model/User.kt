@@ -1,6 +1,6 @@
 package com.example.onlab.model
 
-data class MUser(
+data class User(
     val id: String?,
     val userId: String,
     val displayName: String,

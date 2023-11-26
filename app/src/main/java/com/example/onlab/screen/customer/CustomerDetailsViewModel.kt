@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
+import com.example.onlab.model.Customer
 import com.example.onlab.navigation.*
 import com.example.onlab.service.CustomerStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
@@ -20,7 +20,7 @@ class CustomerDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : OrderAppViewModel() {
 
-    var customerResponse by mutableStateOf<ValueOrException<MCustomer>>(ValueOrException.Loading)
+    var customerResponse by mutableStateOf<ValueOrException<Customer>>(ValueOrException.Loading)
         private set
 
     var deleteCustomerResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
@@ -41,8 +41,8 @@ class CustomerDetailsViewModel @Inject constructor(
             if(!customerId.isNullOrEmpty()){
                 customerResponse = storageService.getCustomer(customerId)
                 when (customerResponse) {
-                    is ValueOrException.Success<MCustomer> ->  {
-                        val data = (customerResponse as ValueOrException.Success<MCustomer>).data
+                    is ValueOrException.Success<Customer> ->  {
+                        val data = (customerResponse as ValueOrException.Success<Customer>).data
                         if (!data.id.isNullOrEmpty()){
                             uiState.value = uiState.value.copy(
                                 id = data.id,
@@ -57,7 +57,7 @@ class CustomerDetailsViewModel @Inject constructor(
                     else -> {}
                 }
             } else {
-                customerResponse = ValueOrException.Success(MCustomer())
+                customerResponse = ValueOrException.Success(Customer())
             }
         }
     }
@@ -105,7 +105,7 @@ class CustomerDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun onUpdateCustomer(customer: MCustomer, navigateFromTo: (String, String) -> Unit) {
+    private fun onUpdateCustomer(customer: Customer, navigateFromTo: (String, String) -> Unit) {
         launchCatching {
             updateCustomerResponse = ValueOrException.Loading
             updateCustomerResponse = storageService.updateCustomer(customer)
@@ -128,7 +128,7 @@ class CustomerDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun onAddCustomer(customer: MCustomer, navigateFromTo: (String, String) -> Unit){
+    private fun onAddCustomer(customer: Customer, navigateFromTo: (String, String) -> Unit){
         launchCatching {
             addCustomerResponse = ValueOrException.Loading
             delay(500)
@@ -152,7 +152,7 @@ class CustomerDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onDoneClick(customer: MCustomer, navigateFromTo: (String, String) -> Unit){
+    fun onDoneClick(customer: Customer, navigateFromTo: (String, String) -> Unit){
         if (customer.id!!.isBlank()){
             onAddCustomer(customer, navigateFromTo)
         } else {

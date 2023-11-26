@@ -3,7 +3,7 @@ package com.example.onlab.service.imp
 import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Category
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.Product
 import com.example.onlab.service.ProductStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -38,7 +38,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
                 }
             }
             val response = if (snapshot != null && !snapshot.isEmpty) {
-                val products = snapshot.toObjects(MProduct::class.java)
+                val products = snapshot.toObjects(Product::class.java)
                     .filter { product ->
                         searchQuery.isBlank() || product.title.startsWith(searchQuery, ignoreCase = true)
                     }
@@ -67,7 +67,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
             val response = if (snapshot != null) {
-                val products = snapshot.toObjects(MProduct::class.java)
+                val products = snapshot.toObjects(Product::class.java)
                     .filter { product ->
                         val matchesSearch = text!!.isEmpty() || product.doesMatchSearchQuery(text)
                         val matchesCategory = category == null || category == Category.Összes || product.category == category.toString()
@@ -86,12 +86,12 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
         }
     }
 
-    override suspend fun getProduct(productId: String): ValueOrException<MProduct> {
+    override suspend fun getProduct(productId: String): ValueOrException<Product> {
         return try {
             val documentSnapshot =
                 firestore.collection("products").document(productId).get().await()
             if (documentSnapshot.exists()) {
-                val product = documentSnapshot.toObject<MProduct>()
+                val product = documentSnapshot.toObject<Product>()
                 ValueOrException.Success(product!!)
             } else {
                 ValueOrException.Failure(Exception("Product not found"))
@@ -103,7 +103,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
 
 
     override suspend fun saveProduct(
-        product: MProduct,
+        product: Product,
     ): ValueOrException<Boolean> {
         return try {
             firestore.collection("products").add(product).addOnSuccessListener { documentRef ->
@@ -151,7 +151,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
     }
 
     override suspend fun updateProduct(
-        product: MProduct,
+        product: Product,
     ): ValueOrException<Boolean> {
         try {
             val productToUpdate = mapOf(

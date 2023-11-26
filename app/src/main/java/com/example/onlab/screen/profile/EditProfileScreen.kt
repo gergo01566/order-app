@@ -1,6 +1,8 @@
+import android.net.Uri
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,7 +10,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.material3.Text
@@ -17,23 +18,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.onlab.R
-import com.example.onlab.navigation.DestinationCustomerDetails
-import com.example.onlab.screen.product.BasicField
+import coil.compose.AsyncImage
 import com.example.onlab.screen.profile.EditProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     viewModel: EditProfileViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit,
     navigateFromTo:(String, String) -> Unit = { it1, it2 -> Log.d("log", "EditProfileScreen: $")},
 ) {
 
@@ -41,17 +40,23 @@ fun EditProfileScreen(
 
     val scaffoldState = rememberScaffoldState()
 
+    val singlePhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> viewModel.onImageChange(uri.toString())
+        }
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Profil szerkesztése") },
                 navigationIcon = {
-                    IconButton(onClick = { /* Handle navigation back */ }) {
+                    IconButton(onClick = { onNavigateBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Handle save action */ }) {
+                    IconButton(onClick = { viewModel.onUpdateUser(navigateFromTo = navigateFromTo) }) {
                         Icon(Icons.Default.Done, contentDescription = "Save")
                     }
                 }
@@ -66,23 +71,27 @@ fun EditProfileScreen(
             verticalArrangement = Arrangement.Top
         ) {
             Spacer(modifier = Modifier.height(it.calculateTopPadding()))
-            ProfileImage({})
+            ProfileImage(uiState.image.toUri()) {
+                singlePhotoPicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
             Spacer(modifier = Modifier.height(it.calculateStartPadding(LayoutDirection.Ltr)))
-            EditTextField(value = uiState.name, label = "Név") {  }
-            EditTextField(value = uiState.address, label = "Cím") {  }
-            EditTextField(value = uiState.email, label = "Email") {  }
+            EditTextField(value = uiState.name, label = "Név") { viewModel.onNameChange(it) }
+            EditTextField(value = uiState.address, label = "Cím") { viewModel.onAddressChange(it)  }
+            EditTextField(value = uiState.email, label = "Email", readOnly = true) { }
         }
     }
 }
 
 @Composable
-fun ProfileImage(onClick:() -> Unit) {
+fun ProfileImage(imageUri: Uri,onClick:() -> Unit) {
     Column (
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_round),
+        AsyncImage(
+            model = imageUri,
             contentDescription = "avatar",
             contentScale = ContentScale.Crop,            // crop the image if it's not a square
             modifier = Modifier
@@ -104,9 +113,10 @@ fun ProfileImage(onClick:() -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTextField(value: String, label: String, onValueChange: (String) -> Unit) {
+fun EditTextField(value: String, label: String, readOnly: Boolean = false, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
+        readOnly = readOnly,
         onValueChange = { onValueChange(it) },
         label = { Text(label) },
         modifier = Modifier
@@ -115,6 +125,7 @@ fun EditTextField(value: String, label: String, onValueChange: (String) -> Unit)
             .height(56.dp)
     )
 }
+
 
 
 @OptIn(ExperimentalComposeUiApi::class)

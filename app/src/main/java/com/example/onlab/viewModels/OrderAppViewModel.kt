@@ -1,22 +1,17 @@
 package com.example.onlab.viewModels
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import com.example.onlab.model.LoadingState
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-open class OrderAppViewModel(): ViewModel() {
-    fun launchCatching(snackbar: Boolean = true, block: suspend CoroutineScope.() -> Unit) =
+open class OrderAppViewModel: ViewModel() {
+    fun launchCatching(block: suspend CoroutineScope.() -> Unit) =
         viewModelScope.launch(
             CoroutineExceptionHandler { _, throwable ->
-                if (snackbar) {
-                }
+                Log.d("Error", throwable.message.orEmpty())
             },
             block = block
         )

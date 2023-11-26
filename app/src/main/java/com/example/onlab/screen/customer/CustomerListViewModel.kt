@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
+import com.example.onlab.model.Customer
 import com.example.onlab.service.CustomerStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,7 @@ class CustomerListViewModel @Inject constructor(
 
     private var searchText by mutableStateOf("")
 
-    var customerResponse by mutableStateOf<ValueOrException<List<MCustomer>>>(ValueOrException.Loading)
+    var customerResponse by mutableStateOf<ValueOrException<List<Customer>>>(ValueOrException.Loading)
         private set
 
     var deleteCustomerResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))

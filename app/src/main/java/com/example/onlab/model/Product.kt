@@ -1,32 +1,46 @@
 package com.example.onlab.model
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import com.example.onlab.screen.product.ProductUiState
+import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.PropertyName
+import java.util.*
 
-@Entity(tableName = "product_tbl")
 data class Product(
-    @PrimaryKey
-    val id: UUID = UUID.randomUUID(),
+    @Exclude
+    val id: String? = null,
 
-    @ColumnInfo(name = "product_title")
+    @get:PropertyName("product_title")
+    @set:PropertyName("product_title")
     var title: String,
 
-    @ColumnInfo(name = "product_category")
-    val category: Category,
+    @get:PropertyName("product_category")
+    @set:PropertyName("product_category")
+    var category: String,
 
-    @ColumnInfo(name = "product_piece_price")
+    @get:PropertyName("price_piece")
+    @set:PropertyName("price_piece")
     var pricePerPiece: Int,
 
-    @ColumnInfo(name = "product_karton_price")
+    @get:PropertyName("price_carton")
+    @set:PropertyName("price_carton")
     var pricePerKarton: Int,
 
-    @ColumnInfo(name = "product_image")
-    val image: String,
+    @get:PropertyName("product_image")
+    @set:PropertyName("product_image")
+    var image: String,
 ){
+    constructor(productUiState: ProductUiState) : this(
+        productUiState.id,
+        productUiState.title,
+        productUiState.category,
+        productUiState.pricePerPiece.toInt(),
+        productUiState.pricePerCarton.toInt(),
+        productUiState.image
+    )
+    constructor() : this("", "", "", 0, 0, "")
+
     fun doesMatchSearchQuery(query: String): Boolean{
-        val matchingCombinations = listOf("$title", "${title.first()}")
+        val matchingCombinations = listOf(title, "${title.first()}")
         return matchingCombinations.any{
             it.contains(query, ignoreCase = true)
         }

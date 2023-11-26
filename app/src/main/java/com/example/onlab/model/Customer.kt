@@ -1,37 +1,49 @@
 package com.example.onlab.model
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.example.onlab.screen.customer.CustomerUiState
+import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.PropertyName
 import java.util.*
 
-@Entity(tableName = "customer_tbl")
 data class Customer(
-    @PrimaryKey
-    val id: UUID = UUID.randomUUID(),
+    @Exclude
+    val id: String? = null,
 
-    @ColumnInfo(name = "firstname")
+    @get:PropertyName("first_name")
+    @set:PropertyName("first_name")
     var firstName: String,
 
-    @ColumnInfo(name = "lastname")
+    @get:PropertyName("last_name")
+    @set:PropertyName("last_name")
     var lastName: String,
 
-    @ColumnInfo(name = "address")
-    val address: String,
+    @get:PropertyName("customer_address")
+    @set:PropertyName("customer_address")
+    var address: String,
 
-    @ColumnInfo(name = "phone_number")
-    val phoneNumber: String,
+    @get:PropertyName("phone_number")
+    @set:PropertyName("phone_number")
+    var phoneNumber: String,
 
-    @ColumnInfo(name = "customer_image")
-    val image: String,
-){
+    @get:PropertyName("customer_image")
+    @set:PropertyName("customer_image")
+    var image: String,
+)
+{
+    constructor(customerUiState: CustomerUiState) : this(
+        customerUiState.id,
+        customerUiState.firstName,
+        customerUiState.lastName,
+        customerUiState.address,
+        customerUiState.phoneNumber,
+        customerUiState.image
+    )
 
-
+    constructor() : this("", "", "", "", "", "")
     fun doesMatchSearchQuery(query: String): Boolean{
-        val matchingCombinations = listOf("$firstName", "${firstName.first()}", "$lastName", "${lastName.first()}" )
+        val matchingCombinations = listOf(firstName, "${firstName.first()}", lastName, "${lastName.first()}" )
         return matchingCombinations.any{
             it.contains(query, ignoreCase = true)
         }
     }
 }
-

@@ -1,30 +1,36 @@
 package com.example.onlab.model
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.PropertyName
 import java.util.*
 
-@Entity(tableName = "order_item_tbl")
 data class OrderItem(
-    @PrimaryKey
-    val id: UUID = UUID.randomUUID(),
+    @Exclude
+    val id: String? = null,
 
-    @ColumnInfo(name = "amount")
+    @get:PropertyName("item_amount")
+    @set:PropertyName("item_amount")
     var amount: Int,
 
-    @ColumnInfo(name = "orderID")
-    var orderID: UUID,
+    @get:PropertyName("order_id")
+    @set:PropertyName("order_id")
+    var orderID: String,
 
-    @ColumnInfo(name = "productID")
-    var productID: UUID,
+    @get:PropertyName("product_id")
+    @set:PropertyName("product_id")
+    var productID: String,
 
-    @ColumnInfo(name = "statusID")
+    @get:PropertyName("status_id")
+    @set:PropertyName("status_id")
     var statusID: Int,
 
-    @ColumnInfo(name = "karton")
-    val karton: Boolean,
+    @get:PropertyName("is_karton")
+    @set:PropertyName("is_karton")
+    var carton: Boolean,
 
-    @ColumnInfo(name = "db")
-    var db: Boolean,
-)
+    @get:PropertyName("is_piece")
+    @set:PropertyName("is_piece")
+    var piece: Boolean,
+){
+    constructor() : this("", 0, "", "", 0, false, false)
+}

@@ -80,6 +80,6 @@ class MainActivity : ComponentActivity() {
 fun DefaultPreview() {
     OnlabTheme {
         AppNavigation()
-        }
+    }
 }
 

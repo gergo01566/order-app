@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -26,7 +25,6 @@ import androidx.compose.material.OutlinedButton
 import androidx.compose.material.RadioButton
 import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.TextButton
-import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Delete
@@ -56,18 +54,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.net.toUri
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.R
 import com.example.onlab.model.Category
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
 import com.example.onlab.navigation.*
-import com.example.onlab.screen.product.BasicField
 import com.example.onlab.screen.product.ProductButton
 import java.io.File
 import java.io.FileOutputStream
@@ -231,6 +226,7 @@ fun CategoryDropDownMenu(
     }
 }
 
+
 @Composable
 fun ImagePickerButton(permissionRequester: PermissionRequester, onImageSelected: (Uri) -> Unit) {
     val context = LocalContext.current
@@ -382,7 +378,7 @@ fun DismissChangesDialog(
 @Composable
 fun FullScreenDialog(
     showDialog: MutableState<Boolean>,
-    selectedProduct: MProduct,
+    selectedProduct: Product,
     currentQuantity: Int?,
     isKarton: Boolean?,
     onAdd: (state: Boolean, quantity: String) -> Unit,
@@ -545,7 +541,7 @@ fun FullScreenDialog(
 @Composable
 fun FullScreenDidalog(
     showDialog: MutableState<Boolean>,
-    selectedProduct: MProduct,
+    selectedProduct: Product,
     currentQuantity: Int?,
     isKarton: Boolean?,
     onAdd: (state: Boolean, quantity: String) -> Unit,

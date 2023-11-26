@@ -26,7 +26,7 @@ import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.Product
 import com.example.onlab.navigation.DestinationProductDetails
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -175,7 +175,7 @@ fun ProductDetailsScreen(
                             text = "Termék mentése",
                             enabled = uiState.title.isNotEmpty() && uiState.pricePerPiece.isNotEmpty() && uiState.pricePerCarton.isNotEmpty(),
                             onClick = {
-                                    viewModel.onDoneClick(MProduct(uiState), navigateFromTo)
+                                    viewModel.onDoneClick(Product(uiState), navigateFromTo)
 
                             }
                         )

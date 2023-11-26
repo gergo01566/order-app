@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MProduct
+import com.example.onlab.model.Product
 import com.example.onlab.navigation.DestinationOneArg
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
@@ -22,7 +22,7 @@ class ProductDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : OrderAppViewModel() {
 
-    var productResponse by mutableStateOf<ValueOrException<MProduct>>(ValueOrException.Loading)
+    var productResponse by mutableStateOf<ValueOrException<Product>>(ValueOrException.Loading)
         private set
 
     var deleteProductResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
@@ -43,8 +43,8 @@ class ProductDetailsViewModel @Inject constructor(
             if(!productId.isNullOrEmpty()){
                 productResponse = storageService.getProduct(productId)
                 when (productResponse) {
-                    is ValueOrException.Success<MProduct> ->  {
-                        val data = (productResponse as ValueOrException.Success<MProduct>).data
+                    is ValueOrException.Success<Product> ->  {
+                        val data = (productResponse as ValueOrException.Success<Product>).data
                         if (!data.id.isNullOrEmpty()){
                             state.value = state.value.copy(
                                 id = data.id,
@@ -59,7 +59,7 @@ class ProductDetailsViewModel @Inject constructor(
                     else -> {}
             }
             } else {
-                productResponse = ValueOrException.Success(MProduct())
+                productResponse = ValueOrException.Success(Product())
             }
         }
     }
@@ -106,7 +106,7 @@ class ProductDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun onUpdateProduct(product: MProduct, navigateFromTo: (String, String) -> Unit) {
+    private fun onUpdateProduct(product: Product, navigateFromTo: (String, String) -> Unit) {
         launchCatching {
             updateProductResponse = ValueOrException.Loading
             updateProductResponse = storageService.updateProduct(product)
@@ -129,7 +129,7 @@ class ProductDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun onSaveProduct(product: MProduct, navigateFromTo: (String, String) -> Unit){
+    private fun onSaveProduct(product: Product, navigateFromTo: (String, String) -> Unit){
         launchCatching {
             saveProductResponse = ValueOrException.Loading
             delay(500)
@@ -153,7 +153,7 @@ class ProductDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onDoneClick(product: MProduct, navigateFromTo: (String, String) -> Unit){
+    fun onDoneClick(product: Product, navigateFromTo: (String, String) -> Unit){
         if (product.id!!.isBlank()){
             onSaveProduct(product, navigateFromTo)
         } else {

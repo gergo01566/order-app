@@ -1,35 +1,32 @@
 package com.example.onlab.repository
 
-import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MOrderItem
-import com.example.onlab.service.OrderItemStorageService
-import kotlinx.coroutines.flow.collect
+import com.example.onlab.model.OrderItem
 
 class MemoryOrderItemRepository : OrderItemsRepository {
-    private var orderItems = mutableListOf<MOrderItem>()
+    private var orderItems = mutableListOf<OrderItem>()
 
-    override suspend fun getOrderItemsFromNetwork(orders: List<MOrderItem>) {
+    override suspend fun getOrderItemsFromNetwork(orders: List<OrderItem>) {
         initOrderItems()
-        orderItems = orders as MutableList<MOrderItem>
+        orderItems = orders as MutableList<OrderItem>
     }
 
     override suspend fun initOrderItems() {
         orderItems.clear()
     }
 
-    override suspend fun insertOrderItem(orderItem: MOrderItem) {
+    override suspend fun insertOrderItem(orderItem: OrderItem) {
         orderItems.add(orderItem)
     }
 
-    override suspend fun deleteOrderItem(orderItem: MOrderItem) {
+    override suspend fun deleteOrderItem(orderItem: OrderItem) {
         orderItems.remove(orderItem)
     }
 
-    override fun getOrderItems(): List<MOrderItem> {
+    override fun getOrderItems(): List<OrderItem> {
         return orderItems
     }
 
-    override suspend fun updateOrderItem(updatedOrderItem: MOrderItem) {
+    override suspend fun updateOrderItem(updatedOrderItem: OrderItem) {
         val index = orderItems.indexOfFirst { it.id == updatedOrderItem.id }
         if (index != -1) {
             orderItems[index] = updatedOrderItem

@@ -1,6 +1,5 @@
 package com.example.onlab.screen.order
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -14,12 +13,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MOrder
+import com.example.onlab.model.Order
 import com.example.onlab.navigation.DestinationOrderList
-import com.example.onlab.viewModels.*
 
 @Composable
 fun OrdersScreen(
@@ -30,7 +27,7 @@ fun OrdersScreen(
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
-    var selectedOrder by remember { mutableStateOf<MOrder?>(null) }
+    var selectedOrder by remember { mutableStateOf<Order?>(null) }
     var kivalasztva = false
     val showDialog = remember { mutableStateOf(false) }
 

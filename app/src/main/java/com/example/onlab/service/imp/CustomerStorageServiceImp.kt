@@ -2,7 +2,7 @@ package com.example.onlab.service.imp
 
 import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MCustomer
+import com.example.onlab.model.Customer
 import com.example.onlab.service.CustomerStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -30,7 +30,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
                 }
             }
             val response = if (snapshot != null && !snapshot.isEmpty) {
-                val customers = snapshot.toObjects(MCustomer::class.java)
+                val customers = snapshot.toObjects(Customer::class.java)
                     .filter { customer ->
                         searchQuery.isBlank() || customer.firstName.startsWith(searchQuery, ignoreCase = true)
                     }
@@ -53,7 +53,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
             val response = if (snapshot != null) {
-                val customers = snapshot.toObjects(MCustomer::class.java)
+                val customers = snapshot.toObjects(Customer::class.java)
                     .filter { customer ->
                         text!!.isEmpty() || customer.doesMatchSearchQuery(text)
                     }
@@ -68,12 +68,12 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
         }
     }
 
-    override suspend fun getCustomer(customerId: String): ValueOrException<MCustomer> {
+    override suspend fun getCustomer(customerId: String): ValueOrException<Customer> {
         return try {
             val documentSnapshot =
                 firestore.collection("customers").document(customerId).get().await()
             if (documentSnapshot.exists()) {
-                val customer = documentSnapshot.toObject<MCustomer>()
+                val customer = documentSnapshot.toObject<Customer>()
                 ValueOrException.Success(customer!!)
             } else {
                 ValueOrException.Failure(Exception("Customer not found"))
@@ -85,7 +85,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
 
 
     override suspend fun addCustomer(
-        customer: MCustomer,
+        customer: Customer,
     ): ValueOrException<Boolean> {
         return try {
             firestore.collection("customers").add(customer).addOnSuccessListener { documentRef ->
@@ -133,7 +133,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
     }
 
     override suspend fun updateCustomer(
-        customer: MCustomer,
+        customer: Customer,
     ): ValueOrException<Boolean> {
         try {
             val customerToUpdate = mapOf(

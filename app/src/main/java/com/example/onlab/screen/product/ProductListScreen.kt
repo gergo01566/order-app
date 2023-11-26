@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -31,7 +29,6 @@ import com.example.onlab.navigation.DestinationProductList
 import com.example.onlab.screen.customer.AddButton
 import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.screen.customer.SearchBar
-import com.example.onlab.screen.order.OrderDetailsViewModel
 
 
 @Composable
@@ -41,13 +38,11 @@ fun ProductListScreen(
     navigateBack: () -> Unit,
     navigateBackToOrder: (String, String) ->Unit,
     productListViewModel: ProductListViewModel = hiltViewModel(),
-    state: List<MOrderItem>
 ) {
-    Log.d("update", "productlist: $state") // Log the value
 
     val showDialog = remember { mutableStateOf(false) }
     val showFullScreenDialog = remember { mutableStateOf(false) }
-    var selectedProduct by remember { mutableStateOf<MProduct?>(null) }
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val context = LocalContext.current
     var selectedCategory by remember { mutableStateOf<Categ?>(com.example.onlab.model.Category.Összes) }
 
@@ -149,7 +144,7 @@ fun ProductListScreen(
             currentQuantity = null,
             onAdd = { state: Boolean, quantity: String ->
                 if (quantity.isDigitsOnly() && quantity!=""){
-                    val orderItem = MOrderItem(
+                    val orderItem = OrderItem(
                         id = UUID.randomUUID().toString(),
                         amount = quantity.toInt(),
                         orderID = productListViewModel.orderId,
@@ -193,7 +188,7 @@ fun MenuBar(
 }
 
 @Composable
-fun ProductList(data: List<MProduct>, onDelete: (MProduct) -> Unit, onEdit: (MProduct) -> Unit, onAddToOrder: (MProduct) -> Unit, iconClickEnabled: Boolean){
+fun ProductList(data: List<Product>, onDelete: (Product) -> Unit, onEdit: (Product) -> Unit, onAddToOrder: (Product) -> Unit, iconClickEnabled: Boolean){
     CreateList(
         data = data.sortedBy { it.title },
         onDelete = {

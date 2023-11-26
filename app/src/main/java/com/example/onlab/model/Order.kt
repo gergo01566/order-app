@@ -1,41 +1,32 @@
 package com.example.onlab.model
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
-import java.time.LocalDate
+import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.PropertyName
 import java.util.*
 
-@Entity(tableName = "order_tbl")
 data class Order(
-    @PrimaryKey
-    val id: UUID = UUID.randomUUID(),
+    @Exclude
+    val id: String? = null,
 
-    @ColumnInfo(name = "order_date")
-    var date: LocalDate,
+    @get:PropertyName("order_id")
+    @set:PropertyName("order_id")
+    var orderId: String? = null,
 
-    @ColumnInfo(name = "customer_id")
-    val customerID: UUID,
+    @get:PropertyName("order_date")
+    @set:PropertyName("order_date")
+    var date: String,
 
-    @ColumnInfo(name = "status")
+    @get:PropertyName("customer_id")
+    @set:PropertyName("customer_id")
+    var customerID: String,
+
+    @get:PropertyName("order_status")
+    @set:PropertyName("order_status")
     var status: Int,
-)
 
-class LocalDateConverter {
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun fromLocalDate(localDate: LocalDate?): Long? {
-        return localDate?.toEpochDay()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun toLocalDate(epochDay: Long?): LocalDate? {
-        return epochDay?.let { LocalDate.ofEpochDay(epochDay) }
-    }
+    @get:PropertyName("made_by")
+    @set:PropertyName("made_by")
+    var madeby: String,
+){
+    constructor() : this("", "", "", "", 0, "")
 }
-
-

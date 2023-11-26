@@ -2,13 +2,12 @@ package com.example.onlab.service.imp
 
 import android.util.Log
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.model.MOrderItem
+import com.example.onlab.model.OrderItem
 import com.example.onlab.service.OrderItemStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class OrderItemStorageServiceImp
@@ -17,19 +16,11 @@ constructor(private val firestore: FirebaseFirestore):
     OrderItemStorageService{
 
     override fun getOrderItemsByOrderId(orderId: String) = callbackFlow {
-        val query = firestore.collection("order_items")
+        val query = firestore.collection("order_items").whereEqualTo("order_id", orderId)
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                if (e.equals(FirebaseFirestoreException.Code.UNAVAILABLE)){
-                    ValueOrException.Failure(e)
-                }
-            }
             val response = if (snapshot != null && !snapshot.isEmpty) {
-                val orderItems = snapshot.toObjects(MOrderItem::class.java)
-                    .filter { orderItem ->
-                        orderItem.orderID == orderId
-                    }
+                val orderItems = snapshot.toObjects(OrderItem::class.java)
                 ValueOrException.Success(orderItems)
             } else {
                 ValueOrException.Failure(e)
@@ -43,7 +34,7 @@ constructor(private val firestore: FirebaseFirestore):
     }
 
     override suspend fun addOrderItem(
-        orderItem: MOrderItem,
+        orderItem: OrderItem,
     ): ValueOrException<Boolean> {
         return try {
             firestore.collection("order_items").add(orderItem).addOnSuccessListener { documentRef ->
@@ -84,7 +75,7 @@ constructor(private val firestore: FirebaseFirestore):
     }
 
     override suspend fun updateOrderItem(
-        orderItem: MOrderItem,
+        orderItem: OrderItem,
     ): ValueOrException<Boolean> {
         return try {
             val orderItemToUpdate = hashMapOf(
