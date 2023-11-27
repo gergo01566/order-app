@@ -62,11 +62,7 @@ fun CustomerScreen(
                 is ValueOrException.Loading -> {
                     LoadingScreen()
                 }
-                is ValueOrException.Failure -> {
-                    Snackbar {
-                        Text(text = "Nem sikerült betölteni")
-                    }
-                }
+                is ValueOrException.Failure -> Unit
                 is ValueOrException.Success -> {
                     Column(
                         modifier = Modifier

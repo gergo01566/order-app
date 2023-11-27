@@ -4,6 +4,4 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class OnlabApplication: Application() {
-
-}
+class OnlabApplication: Application() { }

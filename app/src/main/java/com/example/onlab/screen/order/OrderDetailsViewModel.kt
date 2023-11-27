@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Order
 import com.example.onlab.model.OrderItem
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
+import com.example.onlab.R.string as AppText
 
 @HiltViewModel
 class OrderDetailsViewModel @Inject constructor(
@@ -75,6 +78,7 @@ class OrderDetailsViewModel @Inject constructor(
                             val list = memoryOrderItemsRepository.getOrderItems()
                             _state.value = ValueOrException.Success(list)
                         }
+                        is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.data_loading_error)
                         else -> {}
                     }
                 }
@@ -83,27 +87,6 @@ class OrderDetailsViewModel @Inject constructor(
             }
         }
     }
-
-
-    private fun getOrderItems(){
-        launchCatching {
-            orderItemsResponse = ValueOrException.Loading
-            _state.value = ValueOrException.Loading
-            orderItemStorageService.getOrderItemsByOrderId(orderId!!).collect{ response->
-                orderItemsResponse = response
-                when (response) {
-                    is ValueOrException.Success<List<OrderItem>> -> {
-                        memoryOrderItemsRepository.getOrderItemsFromNetwork(response.data)
-                        val list = memoryOrderItemsRepository.getOrderItems()
-                        _state.value = ValueOrException.Success(list)
-                    }
-                    else -> {}
-                }
-
-            }
-        }
-    }
-
     fun onSaveOrderItem(orderItem: OrderItem){
         saveOrderItemResponse = ValueOrException.Loading
         launchCatching {
@@ -143,19 +126,21 @@ class OrderDetailsViewModel @Inject constructor(
             productStorageService.getAllProducts().collect { response ->
                 productsResponse = response
             }
+            when(productsResponse){
+                is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.data_loading_error)
+                else -> Unit
+            }
         }
     }
 
     fun updateOrderItemLocally(orderItem: OrderItem){
-        Log.d("log", "VM memory: ${memoryOrderItemsRepository.getOrderItems().size}")
-        Log.d("log", "VM state: ${state.value}")
         launchCatching {
             _state.value = ValueOrException.Loading
             delay(500)
             memoryOrderItemsRepository.updateOrderItem(orderItem)
             _state.value = ValueOrException.Success(memoryOrderItemsRepository.getOrderItems())
+            SnackbarManager.displayMessage(R.string.save_success)
         }
-
     }
 
     fun onDeleteOrderItemFromDb(orderItem: OrderItem){
@@ -217,8 +202,10 @@ class OrderDetailsViewModel @Inject constructor(
                         }
                         Log.d("log", "onSaveClick: $updatedItems}")
                     }
+                    SnackbarManager.displayMessage(R.string.save_success)
                 }
-                else -> {}
+                is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.delete_error)
+                else -> Unit
             }
         }
     }

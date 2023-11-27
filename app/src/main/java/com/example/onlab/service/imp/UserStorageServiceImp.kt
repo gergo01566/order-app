@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 
 class UserStorageServiceImp
-@Inject constructor(private val firestore: FirebaseFirestore, private val storage: FirebaseStorage): UserStorageService{
+@Inject constructor(private val firestore: FirebaseFirestore, private val storage: FirebaseStorage, private val firebaseStorage: com.example.onlab.service.imp.FirebaseStorage): UserStorageService{
     override suspend fun getUser(userId: String): ValueOrException<User> {
         return try {
             val querySnapshot = firestore.collection("users")
@@ -55,29 +55,12 @@ class UserStorageServiceImp
                 "address" to user.address,
                 "display_name" to user.displayName,
                 "email" to user.email,
-                "user_id" to user.userId,
-                "image" to if (user.image.startsWith("https")) {
-                    user.image.toUri()
-                } else {
-                    //TODO
-
-                    val fileName =
-                        "${System.currentTimeMillis()}_${user.image.toUri().lastPathSegment}"
-                    val imageRef = storage.reference.child("images/${fileName}")
-
-                    val uploadTask: UploadTask = imageRef.putFile(user.image.toUri())
-
-                    var downloadUrl = ""
-
-                    uploadTask.addOnSuccessListener { taskSnapshot ->
-                        storage.reference.child("images/${fileName}").downloadUrl.addOnSuccessListener { uri ->
-                            downloadUrl = uri.toString()
-                            firestore.collection("users").document(user.userId).update(hashMapOf("image" to downloadUrl) as Map<String, Any>)
-                        }
-                    }
-                }
+                "user_id" to user.userId
             )
             firestore.collection("users").document(user.userId).update(userToUpdate).await()
+            if (!user.image.startsWith("https")) {
+                firebaseStorage.uploadAndGetDownloadUrl("users", user.userId, "image", user.image)
+            }
             return ValueOrException.Success(true)
         } catch (e: Exception) {
             return ValueOrException.Failure(e)

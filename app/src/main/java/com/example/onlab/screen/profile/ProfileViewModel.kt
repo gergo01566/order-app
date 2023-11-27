@@ -25,6 +25,7 @@ class ProfileViewModel @Inject constructor(
         private set
 
     init {
+        Log.d("log", "ProfileViewModel")
         launchCatching {
             userResponse = ValueOrException.Loading
                 userResponse = userStorageService.getUser(AuthService.currentUserId)

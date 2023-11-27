@@ -26,6 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.onlab.data.ValueOrException
+import com.example.onlab.navigation.DestinationEditProfile
+import com.example.onlab.navigation.DestinationProfile
+import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.screen.profile.EditProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +50,8 @@ fun EditProfileScreen(
         }
     )
 
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -63,24 +69,44 @@ fun EditProfileScreen(
             )
         }
     ) {
-        it.calculateBottomPadding()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-            Spacer(modifier = Modifier.height(it.calculateTopPadding()))
-            ProfileImage(uiState.image.toUri()) {
-                singlePhotoPicker.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
+        when(val updateUserResponse = viewModel.updateUserResponse) {
+            is ValueOrException.Loading -> {
+                LoadingScreen()
             }
-            Spacer(modifier = Modifier.height(it.calculateStartPadding(LayoutDirection.Ltr)))
-            EditTextField(value = uiState.name, label = "Név") { viewModel.onNameChange(it) }
-            EditTextField(value = uiState.address, label = "Cím") { viewModel.onAddressChange(it)  }
-            EditTextField(value = uiState.email, label = "Email", readOnly = true) { }
+            is ValueOrException.Failure -> Unit
+            is ValueOrException.Success -> Unit
+
         }
+
+        when(viewModel.userResponse){
+            is ValueOrException.Loading -> {
+                LoadingScreen()
+            }
+            is ValueOrException.Failure -> Unit
+            is ValueOrException.Success -> {
+
+
+                it.calculateBottomPadding()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Spacer(modifier = Modifier.height(it.calculateTopPadding()))
+                    ProfileImage(uiState.image.toUri()) {
+                        singlePhotoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(it.calculateStartPadding(LayoutDirection.Ltr)))
+                    EditTextField(value = uiState.name, label = "Név") { viewModel.onNameChange(it) }
+                    EditTextField(value = uiState.address, label = "Cím") { viewModel.onAddressChange(it)  }
+                    EditTextField(value = uiState.email, label = "Email", readOnly = true) { }
+                }
+            }
+        }
+
     }
 }
 

@@ -2,6 +2,8 @@ package com.example.onlab.screen.product
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.SavedStateHandle
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Category
 import com.example.onlab.model.OrderItem
@@ -49,16 +51,23 @@ class ProductListViewModel @Inject constructor(
                 productsResponse = response
             }
         }
+        when (productsResponse){
+            is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.data_loading_error)
+            else -> Unit
+        }
     }
 
     fun onDeleteProduct(productId: String, onComplete: () -> Unit){
         deleteProductResponse = ValueOrException.Loading
         launchCatching {
-            try {
-                deleteProductResponse = storageService.deleteProduct(productId)
-                onComplete()
-            } catch (_: Exception){
-
+            deleteProductResponse = storageService.deleteProduct(productId)
+            when(deleteProductResponse){
+                is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.delete_error)
+                is ValueOrException.Success -> {
+                    SnackbarManager.displayMessage(R.string.save_success)
+                    onComplete()
+                }
+                else -> Unit
             }
         }
     }

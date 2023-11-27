@@ -1,15 +1,12 @@
 package com.example.onlab.screen.order
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,6 +14,7 @@ import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Order
 import com.example.onlab.navigation.DestinationOrderList
+import com.example.onlab.screen.customer.LoadingScreen
 
 @Composable
 fun OrdersScreen(
@@ -25,7 +23,6 @@ fun OrdersScreen(
     viewModel: OrdersListViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit,
 ) {
-    val contextForToast = LocalContext.current.applicationContext
     var selectedIndex by remember { mutableStateOf(0) }
     var selectedOrder by remember { mutableStateOf<Order?>(null) }
     var kivalasztva = false
@@ -36,20 +33,8 @@ fun OrdersScreen(
         showDialog = showDialog,
         message = "\"Biztos törölni szeretnéd a rendelést?\"",
         onConfirm = {
-//            Log.d("TAG", "OrdersScreen: ${orderItemViewModel.getOrderItemsByOrder(selectedOrder?.id.toString())}")
-//            showDialog.value = false
-//            orderItemViewModel.getOrderItemsByOrder(selectedOrder?.orderId.toString()).forEach{
-//                orderItemViewModel.deleteOrderItem(it.id!!) {}
-//            }
-            viewModel.onDeleteOrder(selectedOrder?.id.toString()){
-                Toast.makeText(
-                    contextForToast,
-                    "Rendelés törölve",
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
+            viewModel.onDeleteOrder(selectedOrder?.id.toString()){}
         }) {
-
     }
 
     Scaffold(
@@ -92,18 +77,9 @@ fun OrdersScreen(
 
             when (val ordersResponse = viewModel.ordersResponse){
                 is ValueOrException.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        CircularProgressIndicator()
-                    }
+                    LoadingScreen()
                 }
-                is ValueOrException.Failure -> {
-                    Snackbar {
-                        androidx.compose.material.Text(text = "Nem sikerült törölni a terméket")
-                    }
-                }
+                is ValueOrException.Failure -> Unit
                 is ValueOrException.Success -> {
                     CreateList(
                         data = ordersResponse.data.sortedBy { it.date },
@@ -114,11 +90,6 @@ fun OrdersScreen(
                         onEdit = {
                             onNavigate(it.orderId.toString(), it.customerID)
                             //navController.navigate(route = "NewOrderScreen" + "/${customerViewModel.getCustomerById(it.customerID)!!.id}" + "/${it.orderId}")
-                            Toast.makeText(
-                                contextForToast,
-                                "Ez a funkció nem érhető el",
-                                Toast.LENGTH_SHORT,
-                            ).show()
 //                        kivalasztva = true
 //                         selectedOrder = it
                         },
@@ -174,19 +145,8 @@ fun OrdersScreen(
                                     //viewModel.getCustomerById(order.customerID)
 
                                     when(val customerData = viewModel.customersResponse){
-                                        is ValueOrException.Loading -> {
-                                            Box(
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentAlignment = Alignment.Center
-                                            ){
-                                                CircularProgressIndicator()
-                                            }
-                                        }
-                                        is ValueOrException.Failure -> {
-                                            Snackbar {
-                                                androidx.compose.material.Text(text = "Nem sikerült betölteni a rendelést")
-                                            }
-                                        }
+                                        is ValueOrException.Loading -> LoadingScreen()
+                                        is ValueOrException.Failure -> Unit
                                         is ValueOrException.Success -> {
                                             val customer = customerData.data.first{ customer ->
                                                 customer.id == order.customerID

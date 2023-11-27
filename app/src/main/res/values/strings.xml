@@ -3,4 +3,12 @@
     <string name="product_screen_name">Termékek</string>
     <string name="help_text"> Kérlek adj meg egy érvényes e-mail címet és jelszót. A jelszónak legalább 6 karakternek kell lennie! </string>
     <string name="default_notification_channel_id">123</string>
+    <string name="data_loading_error">Nem sikerült betölteni az adatokat.</string>
+    <string name="save_error">Sikertelen mentés.</string>
+    <string name="save_success">Sikertelen mentés.</string>
+    <string name="delete_error">A törlés nem sikerült.</string>
+    <string name="delete_success">Sikeres törlés.</string>
+    <string name="invalid_email_error">Helytelen e-mail cím</string>
+    <string name="email_sent_to_recover_pwd">E-mailt küldtünk jelszavad helyreállításához.</string>
+    <string name="invalid_quantity">A tétel mennyisége nem megfelelő formátumban van!</string>
 </resources>

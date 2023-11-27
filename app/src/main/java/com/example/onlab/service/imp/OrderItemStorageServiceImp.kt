@@ -63,13 +63,10 @@ constructor(private val firestore: FirebaseFirestore):
     override suspend fun deleteOrderItem(
         orderItemId: String,
     ): ValueOrException<Boolean> {
-        Log.d("log", "deleteOrderItem: $")
-
         return try {
             firestore.collection("order_items").document(orderItemId).delete()
             ValueOrException.Success(true)
         } catch (e: Exception) {
-            Log.d("log", "deleteOrderItem: $e")
             ValueOrException.Failure(e)
         }
     }
@@ -87,20 +84,12 @@ constructor(private val firestore: FirebaseFirestore):
                 "is_piece" to orderItem.piece,
                 "status_id" to 3
             ).toMap()
-            Log.d("log", "updateOrderItem: Updating order item with ID ${orderItem.id} to status 3")
-            Log.d("log", "updateOrderItem: OrderItemToUpdate: $orderItemToUpdate")
-
-            firestore.collection("order_items").document(orderItem.id!!).update(orderItemToUpdate)
-
-            Log.d("log", "updateOrderItem: Order item updated successfully")
-
+            firestore.collection("order_items").document(orderItem.id.toString()).update(orderItemToUpdate)
             ValueOrException.Success(true)
         } catch (e: Exception) {
-            Log.d("log", "updateOrderItem: exception $e")
             ValueOrException.Failure(e)
         }
     }
-
 
     fun orderItemExist(orderItemId: String): Boolean {
         var exist = false

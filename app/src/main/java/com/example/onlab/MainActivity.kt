@@ -5,21 +5,13 @@ package com.example.onlab
 import com.example.onlab.components.*
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.app.ActivityCompat
-import com.example.onlab.navigation.AppNavigation
 import com.example.onlab.ui.theme.OnlabTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,7 +71,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     OnlabTheme {
-        AppNavigation()
+        OrderApp()
     }
 }
 

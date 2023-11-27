@@ -13,6 +13,7 @@ import com.example.onlab.service.UserStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,11 +24,16 @@ class EditProfileViewModel @Inject constructor(
     var updateUserResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
 
+    var userResponse by mutableStateOf<ValueOrException<User>>(ValueOrException.Loading)
+        private set
+
     var uiState = mutableStateOf(ProfileUiState())
         private set
 
     init {
+        userResponse = ValueOrException.Loading
         launchCatching {
+            userResponse = userStorageService.getUser(authService.currentUserId)
             authService.currentUser.collect { user ->
                 uiState.value = uiState.value.copy(
                     name = user.displayName,
@@ -57,6 +63,7 @@ class EditProfileViewModel @Inject constructor(
             updateUserResponse = ValueOrException.Loading
             delay(1000)
             updateUserResponse = userStorageService.updateUser(User(authService.currentUserId, authService.currentUserId, uiState.value.name, uiState.value.address, uiState.value.email, uiState.value.image))
+            delay(500)
             when(updateUserResponse) {
                 is ValueOrException.Success<Boolean> -> {
                     if ((updateUserResponse as ValueOrException.Success<Boolean>).data) {

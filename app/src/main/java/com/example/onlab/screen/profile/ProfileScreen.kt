@@ -1,5 +1,6 @@
 package com.example.onlab.screen.profile
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -61,6 +62,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit
 ) {
+    Log.d("log", "ProfileScreen: ${viewModel.uiState.value.image}")
     val uiState by viewModel.uiState
     val showDialog = remember { mutableStateOf(false) }
 

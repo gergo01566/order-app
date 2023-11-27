@@ -69,7 +69,7 @@ fun ProductListScreen(
         content = { it ->
             when(val productsResponse = productListViewModel.productsResponse){
                 is ValueOrException.Loading -> LoadingScreen()
-                is ValueOrException.Failure -> Snackbar { Text(text = "Nem sikerült törölni a terméket") }
+                is ValueOrException.Failure -> Unit
                 is ValueOrException.Success -> {
                     it.calculateBottomPadding()
                     Column(
@@ -117,8 +117,7 @@ fun ProductListScreen(
 
     when(productListViewModel.deleteProductResponse){
         is ValueOrException.Loading -> LoadingScreen()
-        is ValueOrException.Success -> Unit
-        is ValueOrException.Failure -> Snackbar { Text(text = "Nem sikerült törölni a terméket") }
+        else -> Unit
     }
 
     showConfirmationDialog(
@@ -127,7 +126,6 @@ fun ProductListScreen(
         onConfirm = {
             selectedProduct?.let {
                 productListViewModel.onDeleteProduct(it.id.toString()){
-                    Toast.makeText(context, "Termék törölve!", Toast.LENGTH_SHORT).show()
                     showDialog.value = false
                 }
             }

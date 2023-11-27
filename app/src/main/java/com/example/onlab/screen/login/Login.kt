@@ -50,13 +50,9 @@ fun LoginScreen(
     val showDialog = remember { mutableStateOf(false) }
     val passwordReset = remember { mutableStateOf(false) }
 
-    val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
-
     val uiState by viewModel.uiState
 
     Scaffold(
-        scaffoldState = scaffoldState,
         content = { it ->
             it.calculateBottomPadding()
             Column(
@@ -151,11 +147,9 @@ fun LoginScreen(
                     email = it,
                     onFailure = {
                         passwordReset.value = false
-                        scope.launch { scaffoldState.snackbarHostState.showSnackbar("Helytelen e-mail cím") }
                     },
                     onComplete = {
                         passwordReset.value = false
-                        scope.launch { scaffoldState.snackbarHostState.showSnackbar("E-mailt küldtünk jelszavad helyreállításához") }
                     }
                 )
             }

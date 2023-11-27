@@ -1,5 +1,6 @@
 package com.example.onlab.screen.order
 
+import AppState
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -22,11 +24,13 @@ import androidx.core.text.isDigitsOnly
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.*
 import com.example.onlab.navigation.DestinationCustomerList
 import com.example.onlab.navigation.DestinationNewOrder
+import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.viewModels.*
 import java.util.*
 
@@ -39,7 +43,6 @@ fun NewOrderScreen(
     navigateFromTo: (String, String) -> Unit,
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    Log.d("log", "screen State: ${viewModel.orderItemsResponse}" )
 
     val currentContext = LocalContext.current.applicationContext
 
@@ -83,11 +86,7 @@ fun NewOrderScreen(
                     CircularProgressIndicator()
                 }
             }
-            is ValueOrException.Failure -> {
-                Snackbar {
-                    Text(text = "Nem sikerült betölteni")
-                }
-            }
+            is ValueOrException.Failure -> Unit
             is ValueOrException.Success -> {
                 FullScreenDialog(
                     showDialog = showEditDialog,
@@ -107,18 +106,9 @@ fun NewOrderScreen(
                                     piece = state
                                 )
                                 viewModel.updateOrderItemLocally(updatedOrderItem)
-                                Toast.makeText(
-                                    currentContext,
-                                    "Rendelési tétel módosítva",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                                 showEditDialog.value = false
                             } else {
-                                Toast.makeText(
-                                    currentContext,
-                                    "A tétel mennyisége nem megfelelő formátumban van!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                SnackbarManager.displayMessage(R.string.invalid_quantity)
                             }
                         }
                     }
@@ -342,22 +332,11 @@ fun NewOrderScreen(
                 .padding(bottom = it.calculateBottomPadding())
         ) {
 
-            //copyOfOrderItems?.let {
-
             when (state){
                 is ValueOrException.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        CircularProgressIndicator()
-                    }
+                    LoadingScreen()
                 }
-                is ValueOrException.Failure -> {
-                    Snackbar {
-                        Text(text = "Nem sikerült törölni a terméket")
-                    }
-                }
+                is ValueOrException.Failure -> Unit
                 is ValueOrException.Success -> {
                     CreateList(
                         data = state.data.filter { it.amount != 0  },
@@ -367,9 +346,7 @@ fun NewOrderScreen(
                             selectedOrderItem = it
                         },
                         onEdit = {
-                            Log.d("TAG", "edit it NewOrderScreen: ${it.id}")
                             selectedOrderItem = it
-                            Log.d("TAG", "edit selected NewOrderScreen: ${selectedOrderItem?.id}")
                             showEditDialog.value = true
                             Toast.makeText(
                                 currentContext,
@@ -396,11 +373,7 @@ fun NewOrderScreen(
                                         CircularProgressIndicator()
                                     }
                                 }
-                                is ValueOrException.Failure -> {
-                                    Snackbar {
-                                        Text(text = "Nem sikerült betölteni")
-                                    }
-                                }
+                                is ValueOrException.Failure -> Unit
                                 is ValueOrException.Success -> {
                                     Row(modifier = Modifier.fillMaxWidth()) {
                                         Column(

@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Customer
 import com.example.onlab.service.CustomerStorageService
@@ -11,6 +12,7 @@ import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.onlab.R.string as AppText
 
 @HiltViewModel
 class CustomerListViewModel @Inject constructor(
@@ -35,6 +37,10 @@ class CustomerListViewModel @Inject constructor(
             storageService.getAllCustomers().collect { response ->
                 customerResponse = response
             }
+        }
+        when(customerResponse){
+            is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.data_loading_error)
+            else -> Unit
         }
     }
 

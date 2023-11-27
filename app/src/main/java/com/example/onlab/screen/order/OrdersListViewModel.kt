@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Customer
 import com.example.onlab.model.Order
@@ -46,6 +48,10 @@ class OrdersListViewModel @Inject constructor(
             orderStorageService.getOrdersByStatus(status).collect{ response ->
                 ordersResponse = response
             }
+            when (ordersResponse){
+                is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.data_loading_error)
+                else -> Unit
+            }
         }
     }
 
@@ -57,6 +63,11 @@ class OrdersListViewModel @Inject constructor(
                 onComplete()
             } catch (e: java.lang.Exception){
                 deleteOrderResponse = ValueOrException.Failure(e)
+            }
+            when(deleteOrderResponse){
+                is ValueOrException.Success -> SnackbarManager.displayMessage(R.string.save_success)
+                is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.delete_error)
+                else -> {}
             }
 
         }
@@ -71,6 +82,11 @@ class OrdersListViewModel @Inject constructor(
                 updateOrderResponse = ValueOrException.Failure(e)
             }
         }
+        when(updateOrderResponse){
+            is ValueOrException.Success -> SnackbarManager.displayMessage(R.string.save_success)
+            is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.save_error)
+            else -> {}
+        }
     }
 
     fun switchToCompletedOrIncompleteOrders(_status: Int){
@@ -84,6 +100,10 @@ class OrdersListViewModel @Inject constructor(
             customerStorageService.getAllCustomers().collect { response ->
                 customersResponse = response
             }
+        }
+        when (customersResponse){
+            is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.data_loading_error)
+            else -> Unit
         }
     }
 }

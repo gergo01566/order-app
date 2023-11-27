@@ -2,6 +2,7 @@
 
 package com.example.onlab.navigation
 
+import AppState
 import EditProfileScreen
 import android.os.Build
 import android.util.Log
@@ -38,41 +39,40 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalMaterialApi
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalPermissionsApi::class)
-@Composable
-fun AppNavigation() {
-    val navController = rememberNavController()
-    val permissionRequester = PermissionRequester()
 
-    val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-        DestinationLogin
-    } else {
-        DestinationCustomerList
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = "orderAppRoute"
-    ) {
-        navigation(
-            startDestination = startDestination,
-            route = "orderAppRoute"
-        ) {
+fun NavGraphBuilder.appNavigation(appState: AppState) {
+//    val permissionRequester = PermissionRequester()
+//
+//    val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
+//        DestinationLogin
+//    } else {
+//        DestinationCustomerList
+//    }
+//
+//    NavHost(
+//        navController = appState.navController,
+//        startDestination = "orderAppRoute"
+//    ) {
+//        navigation(
+//            startDestination = startDestination,
+//            route = "orderAppRoute"
+//        ) {
 
             composable(DestinationLogin){
                 LoginScreen(
                     navigateFromTo = { from , to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
                         }},
                 )
             }
 
             composable(DestinationEditProfile){
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 EditProfileScreen(
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { appState.navController.popBackStack() },
                     navigateFromTo = { from , to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
                         }},
                 )
@@ -81,21 +81,21 @@ fun AppNavigation() {
             composable(DestinationOrderList){
                 OrdersScreen(
                     onNavigate = { orderId, customerId ->
-                        navController.navigate(buildNewOrderRoute(customerId = customerId, orderId = orderId))
+                        appState.navController.navigate(buildNewOrderRoute(customerId = customerId, orderId = orderId))
                     },
-                    navigateBack = { navController.popBackStack()}
+                    navigateBack = { appState.navController.popBackStack()}
                 ){ from, to ->
-                    navController.navigate(to) {
+                    appState.navController.navigate(to) {
                         popUpTo(from) { inclusive = true }
                     }
                 }
             }
 
             composable(DestinationOrderDetailsRoute) {
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 NewOrderScreen(
                     onNavigateTo = { orderId, isOrdering, customerId ->
-                        navController.navigate(
+                        appState.navController.navigate(
                             buildProductListRoute(
                                 orderId,
                                 isOrdering,
@@ -104,9 +104,9 @@ fun AppNavigation() {
                         ) {
                         }
                     },
-                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateBack = { appState.navController.popBackStack() },
                 ) { from, to ->
-                    navController.navigate(to) {
+                    appState.navController.navigate(to) {
                         popUpTo("orderAppRoute") {
                             inclusive = true
                         }
@@ -115,22 +115,22 @@ fun AppNavigation() {
             }
 
             composable(DestinationCustomerList) {
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 CustomerScreen(
                     navigateBack = {
-                        navController.popBackStack()
+                        appState.navController.popBackStack()
                     },
                     onNavigateToOrder = { customerId, orderId ->
-                        navController.navigate(
+                        appState.navController.navigate(
                             buildNewOrderRoute(customerId, orderId)
                         )
                     },
                     onNavigateToCustomer = {
                         Log.d("TAG", "AppNavigation: $it")
-                        navController.navigate(buildCustomerDetailsRoute(it))
+                        appState.navController.navigate(buildCustomerDetailsRoute(it))
                     },
                 ) { from, to ->
-                    navController.navigate(to) {
+                    appState.navController.navigate(to) {
                         popUpTo(from) {
                             inclusive = true
                         }
@@ -142,13 +142,13 @@ fun AppNavigation() {
             composable(route = DestinationCustomerDetails) {
                 CustomerDetailsScreen(
                     navigateFromTo = { from, to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
                         }
                     },
-                    permissionRequester = permissionRequester,
+                    permissionRequester = appState.permissionRequester,
                     onNavigateBack = {
-                        navController.popBackStack()
+                        appState.navController.popBackStack()
                     }
                 )
             }
@@ -157,32 +157,32 @@ fun AppNavigation() {
             composable(DestinationCustomerDetailsRoute){
                 CustomerDetailsScreen(
                     navigateFromTo = { from , to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) {
                                 inclusive = true
                             }
                         }
                     },
-                    onNavigateBack = { navController.popBackStack() },
-                    permissionRequester = permissionRequester
+                    onNavigateBack = { appState.navController.popBackStack() },
+                    permissionRequester = appState.permissionRequester
                 )
             }
 
             composable(DestinationProductList){
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 ProductListScreen(
                     onNavigate = {
                         Log.d("Nav", "productId: $it") // Log the value
-                        navController.navigate(buildProductDetailsRoute(it))
+                        appState.navController.navigate(buildProductDetailsRoute(it))
                     },
                     navigateFromTo = { from, to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(DestinationProductList) { inclusive = true }
                         }
                     },
-                    navigateBack = { navController.popBackStack()},
+                    navigateBack = { appState.navController.popBackStack()},
                     navigateBackToOrder = { orderId, customerId ->
-                        navController.navigate(buildNewOrderRoute(customerId, orderId)){
+                        appState.navController.navigate(buildNewOrderRoute(customerId, orderId)){
                             popUpTo(buildNewOrderRoute(customerId, orderId)) {
                                 inclusive = true
                             }
@@ -193,19 +193,19 @@ fun AppNavigation() {
             }
 
             composable(DestinationProductListRoute) {
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 ProductListScreen(
                     onNavigate = {
                         Log.d("Nav", "productId: $it") // Log the value
                     },
                     navigateFromTo = { from, to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(DestinationProductListRoute) { inclusive = true }
                         }
                     },
-                    navigateBack = { navController.popBackStack() },
+                    navigateBack = { appState.navController.popBackStack() },
                     navigateBackToOrder = { orderId, customerId ->
-                        navController.popBackStack()
+                        appState.navController.popBackStack()
                     }
 
                 )
@@ -215,13 +215,13 @@ fun AppNavigation() {
             composable(route = DestinationProductDetails) {
                 ProductDetailsScreen(
                     navigateFromTo = { from, to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
                         }
                     },
-                    permissionRequester = permissionRequester,
+                    permissionRequester = appState.permissionRequester,
                     navigateBack = {
-                        navController.popBackStack()
+                        appState.navController.popBackStack()
                     }
                 )
             }
@@ -230,28 +230,28 @@ fun AppNavigation() {
             composable(DestinationProductDetailsRoute){
                 ProductDetailsScreen(
                     navigateFromTo = { from , to ->
-                        navController.navigate(to) {
+                        appState.navController.navigate(to) {
                             popUpTo(from) {
                                 inclusive = true
                             }
                         }
                     },
-                    navigateBack = { navController.popBackStack() },
-                    permissionRequester = permissionRequester
+                    navigateBack = { appState.navController.popBackStack() },
+                    permissionRequester = appState.permissionRequester
                 )
             }
 
             composable(DestinationProfile){
-                logBackStack(it, navController)
+                logBackStack(it, appState.navController)
                 ProfileScreen(
                     navigateFromTo = { from , to ->
-                        navController.navigate(to)
+                        appState.navController.navigate(to)
                     }
                 )
             }
 
-        }
-    }
+
+
 }
 
 fun buildProductDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"

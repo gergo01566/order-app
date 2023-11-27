@@ -1,6 +1,8 @@
 package com.example.onlab.viewModels
 
 import androidx.compose.runtime.mutableStateOf
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.model.User
 import com.example.onlab.navigation.DestinationLogin
 import com.example.onlab.navigation.DestinationOrderList
@@ -9,6 +11,8 @@ import com.example.onlab.service.AuthService
 import com.example.onlab.service.UserStorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import com.example.onlab.R.string as AppText
+
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -69,7 +73,17 @@ class LoginViewModel @Inject constructor(
         }
 
         launchCatching {
-            authService.resetPassword(email, onFailure, onComplete)
+            authService.resetPassword(
+                email = email,
+                onFailure = {
+                    SnackbarManager.displayMessage(AppText.invalid_email_error)
+                    onFailure()
+                },
+                onComplete = {
+                    SnackbarManager.displayMessage(AppText.email_sent_to_recover_pwd)
+                    onComplete()
+                }
+            )
         }
     }
 
