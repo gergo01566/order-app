@@ -1,4 +1,5 @@
 import android.content.Context
+import android.content.res.Resources
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -15,12 +16,14 @@ class AppState(
     val permissionRequester: PermissionRequester,
     val scaffoldState: ScaffoldState,
     private val snackbarManager: SnackbarManager,
+    private val resources: Resources,
     coroutineScope: CoroutineScope
 ) {
     init {
         coroutineScope.launch {
             snackbarManager.snackbarMessage.filterNotNull().collect { message ->
-                scaffoldState.snackbarHostState.showSnackbar(message)
+                val text = resources.getString(message)
+                scaffoldState.snackbarHostState.showSnackbar(text)
                 snackbarManager.clearSnackbarState()
             }
         }

@@ -204,7 +204,7 @@ fun PasswordResetDialog(
                         onDismissRequest()
                     }
                 ) {
-                    Text("Mégsem")
+                    Text("MégRsem")
                 }
             })
     }

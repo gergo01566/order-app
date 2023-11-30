@@ -1,6 +1,7 @@
 package com.example.onlab
 
 import AppState
+import android.content.res.Resources
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
@@ -74,8 +75,9 @@ fun rememberAppState(): AppState {
     val scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val coroutineScope = rememberCoroutineScope()
     val snackbarManager = SnackbarManager
+    val resources = LocalContext.current.resources
 
     return remember {
-        AppState(navController = navController, permissionRequester = permissionRequester, scaffoldState = scaffoldState, snackbarManager = snackbarManager, coroutineScope = coroutineScope)
+        AppState(navController = navController, permissionRequester = permissionRequester, scaffoldState = scaffoldState, snackbarManager = snackbarManager, coroutineScope = coroutineScope, resources = resources)
     }
 }

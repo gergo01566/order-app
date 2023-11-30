@@ -3,7 +3,7 @@ package com.example.onlab.screen.order
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -83,67 +83,23 @@ fun OrdersScreen(
                 is ValueOrException.Success -> {
                     CreateList(
                         data = ordersResponse.data.sortedBy { it.date },
-                        onDelete = {
-                            selectedOrder = it
-                            showDialog.value = true
-                        },
-                        onEdit = {
-                            onNavigate(it.orderId.toString(), it.customerID)
-                            //navController.navigate(route = "NewOrderScreen" + "/${customerViewModel.getCustomerById(it.customerID)!!.id}" + "/${it.orderId}")
-//                        kivalasztva = true
-//                         selectedOrder = it
-                        },
                         onClick = {
-                            viewModel.onUpdateOrder(it)
-//                            var updatedOrder = it.copy()
-//                            if (it.status == 1) {
-//                                updatedOrder = it.copy(status = 0)
-//                                val OrderToUpdate = hashMapOf(
-//                                    "order_status" to 0
-//                                ).toMap()
-//                                updatedOrder?.let { it1 -> orderViewModel.updateorder(OrderToUpdate, it.id.toString(),{
-//                                    Toast.makeText(
-//                                        contextForToast,
-//                                        "Rendelés áthelyezve a függőben levő rendelésekhez",
-//                                        Toast.LENGTH_SHORT,
-//                                    ).show()
-//                                }){} }
-//                            } else {
-//                                updatedOrder = it.copy(status = 1)
-//                                val OrderToUpdate = hashMapOf(
-//                                    "order_status" to 1
-//                                ).toMap()
-//                                updatedOrder?.let { it1 -> orderViewModel.updateorder(OrderToUpdate, it.id.toString(),{
-//                                    Toast.makeText(
-//                                        contextForToast,
-//                                        "Rendelés áthelyezve a teljesített rendelésekhez",
-//                                        Toast.LENGTH_SHORT,
-//                                    ).show()
-//                                }){} }
-//                            }
-
-                        }, iconContent = {
-                            CreateIcon(icons = Icons.Default.Info) {
-                                kivalasztva = true
+                            onNavigate(it.orderId.toString(), it.customerID)
+                        },
+                        icons = listOf(
+                            Icons.Default.Delete to {
                                 selectedOrder = it
-                            }
-                        }, itemContent = { order ->
+                                showDialog.value = true
+                            },
+                            Icons.Default.Check to { item -> viewModel.onUpdateOrder(item) },
+                        ),
+                        itemContent = { order ->
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(10.dp)
                                 ) {
-
-//                                    if (customerViewModel.getCustomerById(customerId = order.customerID) == null){
-//                                        orderItemViewModel.getOrderItemsByOrder(orderId = order.orderId!!).forEach {
-//                                            orderItemViewModel.deleteOrderItem(it.id!!){}
-//                                        }
-//                                        order.id?.let { it1 -> orderViewModel.deleteOrder(it1){} }
-//                                    }
-
-                                    //viewModel.getCustomerById(order.customerID)
-
                                     when(val customerData = viewModel.customersResponse){
                                         is ValueOrException.Loading -> LoadingScreen()
                                         is ValueOrException.Failure -> Unit
@@ -160,25 +116,12 @@ fun OrdersScreen(
                                                 fontWeight = FontWeight.Normal
                                             )
                                             if (selectedOrder != null && kivalasztva){
-//                                                orderViewModel.generatePDF(
-//                                                    contextForToast,
-//                                                    orderId = selectedOrder!!.orderId.toString(),
-//                                                    customerViewModel = customerViewModel,
-//                                                    mOrderItemViewModel = orderItemViewModel,
-//                                                    mProductViewModel = mProductViewModel
-//                                                )
                                                 kivalasztva = false
                                             }
                                         }
-
                                     }
-
                                 }
-
-
-
                             }
-
 
                         })
                 }

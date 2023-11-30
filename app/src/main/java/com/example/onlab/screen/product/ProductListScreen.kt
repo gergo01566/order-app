@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,7 +107,7 @@ fun ProductListScreen(
                                     showFullScreenDialog.value = true
                                 }
                                 else{
-                                    Log.d("TAG", "ProductListScreen: ez nem jott ossze")
+                                    onNavigate(it.id.toString())
                                 }
                             },
                             iconClickEnabled = !productListViewModel.isOrdering,
@@ -189,15 +192,12 @@ fun MenuBar(
 fun ProductList(data: List<Product>, onDelete: (Product) -> Unit, onEdit: (Product) -> Unit, onAddToOrder: (Product) -> Unit, iconClickEnabled: Boolean){
     CreateList(
         data = data.sortedBy { it.title },
-        onDelete = {
-            onDelete(it)
-       },
-        onEdit = {
-            onEdit(it)
-        },
         onClick = {
             onAddToOrder(it)
         },
+        icons = listOf(
+            Icons.Default.Delete to { product -> onDelete(product) },
+        ),
         iconClickEnabled = iconClickEnabled,
         itemContent = { product ->
             Row(modifier = Modifier.fillMaxWidth()) {

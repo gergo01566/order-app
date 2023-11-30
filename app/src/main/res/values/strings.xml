@@ -5,7 +5,7 @@
     <string name="default_notification_channel_id">123</string>
     <string name="data_loading_error">Nem sikerült betölteni az adatokat.</string>
     <string name="save_error">Sikertelen mentés.</string>
-    <string name="save_success">Sikertelen mentés.</string>
+    <string name="save_success">Sikeres mentés.</string>
     <string name="delete_error">A törlés nem sikerült.</string>
     <string name="delete_success">Sikeres törlés.</string>
     <string name="invalid_email_error">Helytelen e-mail cím</string>

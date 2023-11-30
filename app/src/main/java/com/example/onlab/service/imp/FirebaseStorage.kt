@@ -17,12 +17,9 @@ open class FirebaseStorage @Inject constructor(private val storage: FirebaseStor
 
         val uploadTask: UploadTask = imageRef.putFile(image.toUri())
 
-        var downloadUrl = ""
-
         uploadTask.addOnSuccessListener { taskSnapshot ->
-            storage.reference.child("images/${fileName}").downloadUrl.addOnSuccessListener { uri ->
-                downloadUrl = uri.toString()
-                firestore.collection(collectionName).document(id).update(hashMapOf(fieldName to downloadUrl) as Map<String, Any>)
+            storage.reference.child("images/${fileName}").downloadUrl.addOnSuccessListener { downloadUrl ->
+                firestore.collection(collectionName).document(id).update(hashMapOf(fieldName to downloadUrl.toString()) as Map<String, Any>)
             }
         }.await()
     }

@@ -65,19 +65,10 @@ class AuthServiceImp @Inject constructor(
         Log.d("log", "signInWithEmailAndPassowrd: ${Firebase.auth.currentUser}")
     }
 
-    override suspend fun createUser(email: String, password: String, onFailure: () -> Unit, onComplete: (user: User) -> Unit) {
+    override suspend fun createUser(email: String, password: String, onFailure: () -> Unit, onComplete: () -> Unit) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                val userId = auth.currentUser?.uid
-                val user = User(
-                    userId = userId.toString(),
-                    email = email,
-                    displayName = "Not defined",
-                    address = "Not defined",
-                    id = null,
-                    image = "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684754679358_image_cfbae3a8-86b8-4416-a0ac-c312b0305c75.jpg?alt=media&token=80b73308-3b08-4513-b91b-3d87960045b3"
-                )
-                onComplete(user)
+                onComplete()
             } else {
                 onFailure()
             }

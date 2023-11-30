@@ -60,7 +60,6 @@ class LoginViewModel @Inject constructor(
 
         launchCatching {
             authService.createUser(email, password, onFailure) {
-                user = it
                 navigateFromTo(DestinationLogin, DestinationOrderList)
             }
             userStorageService.addUser(user)

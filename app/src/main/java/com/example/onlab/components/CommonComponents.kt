@@ -705,11 +705,9 @@ fun FullScreenDidalog(
         @Composable
         fun <T> CreateList(
             data: List<T>,
-            onDelete: (T) -> Unit,
-            onEdit: (T) -> Unit,
             onClick: (T) -> Unit = {},
             iconClickEnabled: Boolean = true,
-            iconContent: @Composable (item: T) -> Unit = {},
+            icons: List<Pair<ImageVector, (T) -> Unit>> = emptyList(),
             itemContent: @Composable (item: T) -> Unit
         ) {
             LazyColumn {
@@ -741,12 +739,10 @@ fun FullScreenDidalog(
                                     .padding(10.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp) // Add spacing between icons
                             ) {
-                                iconContent(item)
-                                CreateIcon(Icons.Rounded.Edit, clickEnabled = iconClickEnabled) {
-                                    onEdit(item)
-                                }
-                                CreateIcon(Icons.Rounded.Delete, clickEnabled = iconClickEnabled) {
-                                    onDelete(item)
+                                icons.forEach { (icon, clickAction) ->
+                                    CreateIcon(icon, clickEnabled = iconClickEnabled) {
+                                        clickAction(item)
+                                    }
                                 }
                             }
                         }
@@ -756,7 +752,8 @@ fun FullScreenDidalog(
         }
 
 
-        @Composable
+
+@Composable
         fun ToggleButtons(
             items: List<String>,
             selectedIndex: Int,

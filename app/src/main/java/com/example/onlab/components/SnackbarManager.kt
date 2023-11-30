@@ -1,20 +1,22 @@
 package com.example.onlab.components
 
+import androidx.annotation.StringRes
 import io.grpc.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object SnackbarManager {
-    private val messages: MutableStateFlow<String?> = MutableStateFlow(null)
-    val snackbarMessage: StateFlow<String?>
+    private val messages: MutableStateFlow<Int?> = MutableStateFlow(null)
+    val snackbarMessage: StateFlow<Int?>
         get() = messages.asStateFlow()
 
-    fun displayMessage(message: Int){
-        messages.value = message.toString()
+    fun displayMessage(@StringRes message: Int){
+        messages.value = message
     }
 
     fun clearSnackbarState(){
         messages.value = null
     }
 }
+

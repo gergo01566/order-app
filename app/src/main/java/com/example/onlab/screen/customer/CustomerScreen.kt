@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -142,20 +145,18 @@ fun CustomerList(
 ){
     CreateList(
         data = data.sortedBy { it.firstName },
-        onDelete = {customer ->
-            onDelete(customer)
-        },
-        onEdit = { customer ->
-            onEditCustomerDetails(customer.id.toString())
-        },
-        iconContent = { customer ->
-            CreateIcon(Icons.Rounded.ShoppingCart){
-                val orderID: String = UUID.randomUUID().toString()
-                customer.id?.let {
-                        _customer -> onClickOnOpenNewOrderIcon(_customer, orderID)
-                }
+        onClick = { customer ->
+            val orderID: String = UUID.randomUUID().toString()
+            customer.id?.let {
+                    _customer -> onClickOnOpenNewOrderIcon(_customer, orderID)
             }
-        }
+        },
+        icons = listOf(
+            Icons.Default.Edit to { customer ->
+                onEditCustomerDetails(customer.id.toString())
+            },
+            Icons.Default.Delete to { customer -> onDelete(customer) },
+        ),
     ) { customer ->
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(

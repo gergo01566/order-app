@@ -8,20 +8,13 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.onlab.PermissionRequester
 import com.example.onlab.screen.customer.CustomerDetailsScreen
 
 import com.example.onlab.screen.product.ProductListScreen
@@ -33,7 +26,6 @@ import com.example.onlab.screen.profile.ProfileScreen
 import com.example.onlab.screens.login.LoginScreen
 import com.example.onlab.viewModels.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.firebase.auth.FirebaseAuth
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -70,7 +62,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             composable(DestinationEditProfile){
                 logBackStack(it, appState.navController)
                 EditProfileScreen(
-                    onNavigateBack = { appState.navController.popBackStack() },
+                    onNavigateBack = { appState.navigateBack() },
                     navigateFromTo = { from , to ->
                         appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
@@ -83,7 +75,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                     onNavigate = { orderId, customerId ->
                         appState.navController.navigate(buildNewOrderRoute(customerId = customerId, orderId = orderId))
                     },
-                    navigateBack = { appState.navController.popBackStack()}
+                    navigateBack = { appState.navigateBack()}
                 ){ from, to ->
                     appState.navController.navigate(to) {
                         popUpTo(from) { inclusive = true }
@@ -104,7 +96,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                         ) {
                         }
                     },
-                    onNavigateBack = { appState.navController.popBackStack() },
+                    onNavigateBack = { appState.navigateBack() },
                 ) { from, to ->
                     appState.navController.navigate(to) {
                         popUpTo("orderAppRoute") {
@@ -118,7 +110,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                 logBackStack(it, appState.navController)
                 CustomerScreen(
                     navigateBack = {
-                        appState.navController.popBackStack()
+                        appState.navigateBack()
                     },
                     onNavigateToOrder = { customerId, orderId ->
                         appState.navController.navigate(
@@ -148,7 +140,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                     },
                     permissionRequester = appState.permissionRequester,
                     onNavigateBack = {
-                        appState.navController.popBackStack()
+                        appState.navigateBack()
                     }
                 )
             }
@@ -163,7 +155,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             }
                         }
                     },
-                    onNavigateBack = { appState.navController.popBackStack() },
+                    onNavigateBack = { appState.navigateBack() },
                     permissionRequester = appState.permissionRequester
                 )
             }
@@ -180,7 +172,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(DestinationProductList) { inclusive = true }
                         }
                     },
-                    navigateBack = { appState.navController.popBackStack()},
+                    navigateBack = { appState.navigateBack() },
                     navigateBackToOrder = { orderId, customerId ->
                         appState.navController.navigate(buildNewOrderRoute(customerId, orderId)){
                             popUpTo(buildNewOrderRoute(customerId, orderId)) {
@@ -203,7 +195,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(DestinationProductListRoute) { inclusive = true }
                         }
                     },
-                    navigateBack = { appState.navController.popBackStack() },
+                    navigateBack = { appState.navigateBack() },
                     navigateBackToOrder = { orderId, customerId ->
                         appState.navController.popBackStack()
                     }
@@ -221,7 +213,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                     },
                     permissionRequester = appState.permissionRequester,
                     navigateBack = {
-                        appState.navController.popBackStack()
+                        appState.navigateBack()
                     }
                 )
             }
@@ -236,7 +228,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             }
                         }
                     },
-                    navigateBack = { appState.navController.popBackStack() },
+                    navigateBack = { appState.navigateBack() },
                     permissionRequester = appState.permissionRequester
                 )
             }
@@ -280,12 +272,10 @@ inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(
 }
 
     fun logBackStack(backStackEntry: NavBackStackEntry, navController: NavController) {
-        if (backStackEntry != null) {
-            val backStackNames = navController
-                .backQueue
-                .map { it.destination.route }
-                .joinToString(", ")
+        val backStackNames = navController
+            .backQueue
+            .map { it.destination.route }
+            .joinToString(", ")
 
-            Log.d("BackStackLog", "Back stack: $backStackNames")
-        }
+        Log.d("BackStackLog", "Back stack: $backStackNames")
     }
