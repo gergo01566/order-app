@@ -4,16 +4,18 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.User
 import com.example.onlab.navigation.DestinationEditProfile
 import com.example.onlab.navigation.DestinationProfile
+import com.example.onlab.screen.customer.ValidationUtils
 import com.example.onlab.service.AuthService
 import com.example.onlab.service.UserStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,15 +35,19 @@ class EditProfileViewModel @Inject constructor(
     init {
         userResponse = ValueOrException.Loading
         launchCatching {
+            delay(1000)
             userResponse = userStorageService.getUser(authService.currentUserId)
-            authService.currentUser.collect { user ->
-                uiState.value = uiState.value.copy(
-                    name = user.displayName,
-                    address = user.address,
-                    email = user.email,
-                    image = user.image
-                )
-                Log.d("loggg", ": $user")
+            when(userResponse){
+                is ValueOrException.Success -> {
+                    val data = (userResponse as ValueOrException.Success<User>).data
+                    uiState.value = uiState.value.copy(
+                        name = data.displayName,
+                        address = data.address,
+                        email = data.email,
+                        image = data.image
+                    )
+                }
+                else -> {}
             }
         }
     }
@@ -59,27 +65,60 @@ class EditProfileViewModel @Inject constructor(
     }
 
     fun onUpdateUser(navigateFromTo: (String, String) -> Unit){
-        launchCatching {
-            updateUserResponse = ValueOrException.Loading
-            delay(1000)
-            updateUserResponse = userStorageService.updateUser(User(authService.currentUserId, authService.currentUserId, uiState.value.name, uiState.value.address, uiState.value.email, uiState.value.image))
-            delay(500)
-            when(updateUserResponse) {
-                is ValueOrException.Success<Boolean> -> {
-                    if ((updateUserResponse as ValueOrException.Success<Boolean>).data) {
-                        navigateFromTo(DestinationEditProfile, DestinationProfile)
-                    } else {
-                        Log.d("TAG", "onUpdate: hiba")
+        if (isValidProfileInputs()){
+            launchCatching {
+                updateUserResponse = ValueOrException.Loading
+                delay(1000)
+                updateUserResponse = userStorageService.updateUser(User(authService.currentUserId, authService.currentUserId, uiState.value.name, uiState.value.address, uiState.value.email, uiState.value.image))
+                delay(500)
+                when(updateUserResponse) {
+                    is ValueOrException.Success<Boolean> -> {
+                        if ((updateUserResponse as ValueOrException.Success<Boolean>).data) {
+                            SnackbarManager.displayMessage(R.string.save_success)
+                            navigateFromTo(DestinationEditProfile, DestinationProfile)
+                        } else {
+                            Log.d("TAG", "onUpdate: hiba")
+                        }
+                    }
+                    is ValueOrException.Failure -> {
+                        val exception = (updateUserResponse as ValueOrException.Failure).e
+                        Log.d("TAG", "onUpdate: $exception")
+                    }
+                    else -> {
+                        Log.d("TAG", "onUpdate: $updateUserResponse")
                     }
                 }
-                is ValueOrException.Failure -> {
-                    val exception = (updateUserResponse as ValueOrException.Failure).e
-                    Log.d("TAG", "onUpdate: $exception")
+            }
+        } else {
+            SnackbarManager.displayMessage(R.string.invalid_customer_inputs)
+        }
+    }
+
+    fun onNavigateBack(onChangesMade:()->Unit, onNoChanges:()->Unit){
+        when(val userApiResponse = userResponse){
+            is ValueOrException.Success -> {
+                if (userApiResponse.data.image != uiState.value.image ||
+                    userApiResponse.data.address != uiState.value.address ||
+                    userApiResponse.data.displayName != uiState.value.name
+                ){
+                    onChangesMade()
                 }
-                else -> {
-                    Log.d("TAG", "onUpdate: $updateUserResponse")
-                }
+                else onNoChanges()
+            }
+            else -> Unit
+        }
+    }
+
+    fun isValidProfileInputs(): Boolean {
+        return when (userResponse) {
+            is ValueOrException.Success -> {
+                ValidationUtils.inputIsNotEmpty(uiState.value.name) &&
+                        ValidationUtils.inputIsNotEmpty(uiState.value.address)
+            }
+            else -> {
+                false
             }
         }
     }
+
 }

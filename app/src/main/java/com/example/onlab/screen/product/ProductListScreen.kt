@@ -1,7 +1,7 @@
 package com.example.onlab.screen.product
 
-import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -9,7 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,11 +35,11 @@ import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.screen.customer.SearchBar
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(
     onNavigate: (String) -> Unit,
     navigateFromTo: (String, String) -> Unit,
-    navigateBack: () -> Unit,
     navigateBackToOrder: (String, String) ->Unit,
     productListViewModel: ProductListViewModel = hiltViewModel(),
 ) {
@@ -52,10 +53,19 @@ fun ProductListScreen(
     Scaffold(
         topBar = {
             if (productListViewModel.isOrdering)
-                createTopBar( text = "Új rendelés", withIcon = true, onBack = { navigateBack() })
-            else {
-                createTopBar(text = "Termékek", withIcon = false){ navigateBack() }
-            }
+                androidx.compose.material3.TopAppBar(
+                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                    title = {
+                        androidx.compose.material3.Text("Rendelések", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                    },
+                )
+            else
+                androidx.compose.material3.TopAppBar(
+                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                    title = {
+                        androidx.compose.material3.Text("Termékek", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                    },
+                )
         },
         bottomBar = {
             if (!productListViewModel.isOrdering) BottomNavBar(selectedItem = items[2]){ navigateFromTo(DestinationProductList, it) }
@@ -77,6 +87,7 @@ fun ProductListScreen(
                     it.calculateBottomPadding()
                     Column(
                         modifier = Modifier
+                            .background(color = androidx.compose.material3.MaterialTheme.colorScheme.surface)
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .padding(bottom = it.calculateBottomPadding())
@@ -97,9 +108,6 @@ fun ProductListScreen(
                             onDelete = {
                                 showDialog.value = true
                                 selectedProduct = it
-                            },
-                            onEdit = {
-                                onNavigate(it.id.toString())
                             },
                             onAddToOrder = {
                                 if(productListViewModel.isOrdering) {
@@ -189,7 +197,7 @@ fun MenuBar(
 }
 
 @Composable
-fun ProductList(data: List<Product>, onDelete: (Product) -> Unit, onEdit: (Product) -> Unit, onAddToOrder: (Product) -> Unit, iconClickEnabled: Boolean){
+fun ProductList(data: List<Product>, onDelete: (Product) -> Unit, onAddToOrder: (Product) -> Unit, iconClickEnabled: Boolean){
     CreateList(
         data = data.sortedBy { it.title },
         onClick = {

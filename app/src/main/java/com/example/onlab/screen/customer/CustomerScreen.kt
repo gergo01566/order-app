@@ -2,6 +2,7 @@ package com.example.onlab.screen.customer
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -10,9 +11,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -30,13 +35,14 @@ import com.example.onlab.navigation.DestinationCustomerList
 import com.example.onlab.screen.product.BasicField
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerScreen(
     viewModel: CustomerListViewModel = hiltViewModel(),
     onNavigateToCustomer: (String) -> Unit,
     onNavigateToOrder: (String, String) -> Unit,
-    navigateBack: () -> Unit,
-    navigateFromTo:(String, String)->Unit,
+    navigateInBottomBar: (String)->Unit,
+    navigateFromTo:(String, String)->Unit
 ) {
     val contextForToast = LocalContext.current.applicationContext
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
@@ -44,13 +50,16 @@ fun CustomerScreen(
 
     Scaffold(
         topBar = {
-            createTopBar(text = "Ügyfelek", withIcon = false){
-                navigateBack()
-            }
+            androidx.compose.material3.TopAppBar(
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                title = {
+                    androidx.compose.material3.Text("Ügyfelek", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                },
+            )
         },
         bottomBar = {
             BottomNavBar(selectedItem = items[1]){
-                navigateFromTo(DestinationCustomerList, it)
+                navigateInBottomBar(it)
             }
         },
         floatingActionButton = {
@@ -69,6 +78,7 @@ fun CustomerScreen(
                 is ValueOrException.Success -> {
                     Column(
                         modifier = Modifier
+                            .background(color = androidx.compose.material3.MaterialTheme.colorScheme.surface)
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .padding(bottom = it.calculateBottomPadding())
@@ -115,15 +125,16 @@ fun CustomerScreen(
 
 @Composable
 fun AddButton(onClick: () -> Unit){
-    ExtendedFloatingActionButton(
+    androidx.compose.material3.ExtendedFloatingActionButton(
         modifier =  Modifier.padding(bottom = 60.dp),
-        text = { Text(text = "Hozzáadás") },
         onClick = {
             onClick()
         },
         shape = RoundedCornerShape(20.dp),
-        backgroundColor = MaterialTheme.colors.primary,
-    )
+        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+    ){
+        Text(text = "Hozzáadás", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+    }
 }
 
 @Composable

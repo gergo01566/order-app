@@ -1,228 +1,177 @@
 package com.example.onlab.screen.product
 
-import android.Manifest
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.util.Log
+import com.example.onlab.screen.profile.ProfileImage
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import com.example.onlab.PermissionRequester
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Product
-import com.example.onlab.navigation.DestinationProductDetails
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import java.io.IOException
+import com.example.onlab.screen.customer.LoadingScreen
+import com.example.onlab.screen.customer.ValidationUtils
 import java.util.*
 
 @ExperimentalMaterialApi
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
 fun ProductDetailsScreen(
     navigateFromTo: (String, String) -> Unit,
-    navigateBack:()-> Unit,
-    permissionRequester: PermissionRequester,
+    navigateBack:() -> Unit,
     viewModel: ProductDetailsViewModel= hiltViewModel()
 ) {
-
     val uiState by viewModel.state
-
-    var changesMade by remember { mutableStateOf(false) }
-
     var showAlertDialog by remember { mutableStateOf(false) }
-
     val showDialog = remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-
-    var loadedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    val permissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-    )
-
-
-    LaunchedEffect(permissionsState) {
-        if (!permissionsState.allPermissionsGranted) {
-            permissionsState.launchMultiplePermissionRequest()
-            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "image/*"
-            }
-            Log.d("not granted", "ProductDetailsScreen: NOT ALL PERMISSION GRANTED")
-        } else {
-            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "image/*"
-            }
-            Log.d("granted", "ProductDetailsScreen: ALL PERMISSION GRANTED")
-            try {
-                when(val productsResponse = viewModel.productResponse){
-                    is ValueOrException.Success -> {
-                        val inputStream = context.contentResolver.openInputStream(Uri.parse(
-                            productsResponse.data.image))
-                        loadedBitmap = BitmapFactory.decodeStream(inputStream)
-                    }
-                    else -> {}
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    showConfirmationDialog(
-        showDialog = showDialog,
-        message = "Biztos törölni szeretnéd a következő terméket?",
-        onConfirm = {
-            viewModel.onDeleteProduct(uiState.id, navigateFromTo = navigateFromTo)
-        },
-        onDismiss = {
-            showDialog.value = false
+    val singlePhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> viewModel.onImageChange(uri.toString())
         }
     )
 
-    when(viewModel.productResponse) {
-        is ValueOrException.Loading -> CircularProgressIndicator()
-        is ValueOrException.Failure -> CircularProgressIndicator()
-        is ValueOrException.Success ->
-            Scaffold(
-                topBar = {
-                    createTopBar(text = uiState.title , withIcon = true){
-                        if(changesMade){
-                            showAlertDialog = true
-                        } else {
-                            navigateBack()
-                        }
-                    }
-                },
-                bottomBar = {
-                    BottomNavBar(selectedItem = items[2], navigateTo = {
-                        navigateFromTo(DestinationProductDetails, it)
-                    })
-                },
-                isFloatingActionButtonDocked = true,
-                floatingActionButtonPosition = FabPosition.End,
-                content = { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .statusBarsPadding()
-                            .padding(bottom = padding.calculateBottomPadding() / 2),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        BasicField(label = "Add meg a termék nevét", text = "Termék neve", value = uiState.title, onNewValue = { viewModel.onTitleChange(it) })
-                        BasicField(label = "Add meg a termék árát'", text = "Termék ára (darab)", value = uiState.pricePerPiece, onNewValue = { viewModel.onPricePieceChange(it) }, keyboardType = KeyboardType.Number)
-                        BasicField(label = "Add meg a termék árát'", text = "Termék ára (karton)", value = uiState.pricePerCarton, onNewValue = { viewModel.onPriceCartonChange(it) }, keyboardType = KeyboardType.Number)
-                        CategoryDropDownMenu(
-                            selectedCategory = uiState.category,
-                            onCategorySelected = { category ->
-                                viewModel.onCategoryChange(category.toString())
-                                changesMade = true
-                            }
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-                                .height(150.dp)
-                        ) {
-                            ImagePickerButton(onImageSelected = {
-                                viewModel.onImageChange(it.toString())
-                            }, permissionRequester = permissionRequester)
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                shape = RoundedCornerShape(15.dp)
-                            ) {
-                                AsyncImage(
-                                    model = uiState.image.toUri(),
-                                    contentDescription = "profile image",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-
-                        ProductButton(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding((10.dp))
-                            .height(40.dp),
-                            text = "Termék mentése",
-                            enabled = uiState.title.isNotEmpty() && uiState.pricePerPiece.isNotEmpty() && uiState.pricePerCarton.isNotEmpty(),
-                            onClick = {
-                                    viewModel.onDoneClick(Product(uiState), navigateFromTo)
-
-                            }
-                        )
-
-                        ProductButton(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding((10.dp))
-                            .height(40.dp),
-                            text = "Termék törlése",
-                            onClick = { showDialog.value = true},
-                            color = Color.Red,
-                        )
-
-                        BackHandler{
-                            if (changesMade){
+    Scaffold(
+        topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = { androidx.compose.material3.Text("Termék szerkesztése") },
+                navigationIcon = {
+                    androidx.compose.material3.IconButton(
+                        onClick = {
+                            viewModel.onNavigateBack({
                                 showAlertDialog = true
-                            } else {
+                            }){
                                 navigateBack()
                             }
                         }
-
-                        if(showAlertDialog){
-                            DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
-                                showAlertDialog = false
-                                navigateBack()
-                            }
+                    ) {
+                        androidx.compose.material3.Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    androidx.compose.material3.IconButton(
+                        enabled = viewModel.isValidProductInputs(),
+                        onClick = {
+                            viewModel.onDoneClick(Product(uiState), navigateFromTo)
                         }
+                    ) {
+                        androidx.compose.material3.Icon(
+                            Icons.Default.Done,
+                            contentDescription = "Save"
+                        )
+                    }
+                    androidx.compose.material3.IconButton(
+                        onClick = {
+                            showDialog.value = true
+                        }
+                    ) {
+                        androidx.compose.material3.Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete"
+                        )
                     }
                 }
-
             )
+        }
+    ) { paddingValue ->
+        Column(
+            modifier = Modifier
+                .background(color = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .statusBarsPadding()
+                .padding(bottom = paddingValue.calculateBottomPadding() / 2),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Spacer(modifier = Modifier.height(paddingValue.calculateTopPadding()))
+            ProfileImage(uiState.image.toUri()) {
+                singlePhotoPicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+            ProductData(
+                productResponse = viewModel.productResponse,
+                uiState = uiState,
+                onTitleChange = { viewModel.onTitleChange(it) },
+                onPricePieceChange = { viewModel.onPricePieceChange(it) },
+                onPriceCartonChange = { viewModel.onPriceCartonChange(it) },
+                onCategoryChange = { viewModel.onCategoryChange(it) }
+            )
+            UpdateProduct(apiResponse = viewModel.updateProductResponse)
+            SaveProduct(apiResponse = viewModel.saveProductResponse)
+        }
 
+        showConfirmationDialog(
+            showDialog = showDialog,
+            message = "Biztos törölni szeretnéd a következő terméket?",
+            onConfirm = {
+                viewModel.onDeleteProduct(uiState.id, navigateFromTo = navigateFromTo)
+            },
+            onDismiss = {
+                showDialog.value = false
+            }
+        )
 
+        BackHandler {
+            viewModel.onNavigateBack({
+                showAlertDialog = true
+            }){
+                navigateBack()
+            }
+        }
+
+        if (showAlertDialog) {
+            DismissChangesDialog(onDismiss = { showAlertDialog = false }) {
+                showAlertDialog = false
+                navigateBack()
+            }
+        }
     }
 
-    when(val saveProductResponse = viewModel.saveProductResponse) {
-        is ValueOrException.Loading -> CircularProgressIndicator()
+}
+
+@Composable
+fun SaveProduct(
+    apiResponse: ValueOrException<Boolean>
+){
+    when (apiResponse) {
+        is ValueOrException.Loading -> LoadingScreen()
         is ValueOrException.Success -> Unit
-        is ValueOrException.Failure -> print(saveProductResponse.e)
+        is ValueOrException.Failure -> print(apiResponse.e)
     }
+}
 
-    when(val updateProductResponse = viewModel.updateProductResponse) {
-        is ValueOrException.Loading -> CircularProgressIndicator()
+@Composable
+fun UpdateProduct(
+    apiResponse: ValueOrException<Boolean>
+){
+    when (apiResponse) {
+        is ValueOrException.Loading -> LoadingScreen()
         is ValueOrException.Success -> Unit
-        is ValueOrException.Failure -> print(updateProductResponse.e)
+        is ValueOrException.Failure -> print(apiResponse.e)
     }
-
 }
 
 @Composable
@@ -232,7 +181,7 @@ fun ProductButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     color: Color = MaterialTheme.colors.primary,
-){
+) {
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(15.dp),
@@ -245,6 +194,54 @@ fun ProductButton(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ProductData(
+    productResponse: ValueOrException<Product>,
+    uiState: ProductUiState,
+    onTitleChange:(String) -> Unit,
+    onPricePieceChange:(String) -> Unit,
+    onPriceCartonChange:(String) -> Unit,
+    onCategoryChange:(String) -> Unit,
+){
+    when (productResponse) {
+        is ValueOrException.Loading -> LoadingScreen()
+        is ValueOrException.Failure -> LoadingScreen()
+        is ValueOrException.Success -> {
+            BasicField(
+                label = "Add meg a termék nevét!",
+                text = "Termék neve",
+                value = uiState.title,
+                isError = !ValidationUtils.inputIsNotEmpty(uiState.title),
+                onNewValue = { onTitleChange(it) })
+
+            BasicField(
+                label = "Add meg a termék árát!",
+                text = "Termék ára (darab)",
+                value = uiState.pricePerPiece,
+                isError = !ValidationUtils.inputContaintsOnlyNumbers(uiState.pricePerPiece) || !ValidationUtils.inputIsNotEmpty(uiState.pricePerPiece),
+                onNewValue = { onPricePieceChange(it) },
+                keyboardType = KeyboardType.Number
+            )
+            BasicField(
+                label = "Add meg a termék árát!",
+                text = "Termék ára (karton)",
+                value = uiState.pricePerCarton,
+                isError = !ValidationUtils.inputContaintsOnlyNumbers(uiState.pricePerCarton) || !ValidationUtils.inputIsNotEmpty(uiState.pricePerCarton),
+                onNewValue = { onPriceCartonChange(it) },
+                keyboardType = KeyboardType.Number
+            )
+            CategoryDropDownMenu(
+                selectedCategory = uiState.category,
+                onCategorySelected = { category ->
+                    onCategoryChange(category.toString())
+                }
+            )
+        }
+    }
+
+}
+
 @Composable
 fun BasicField(
     text: String,
@@ -252,21 +249,24 @@ fun BasicField(
     value: String,
     onNewValue: (String) -> Unit,
     modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false
 ) {
     OutlinedTextField(
+        isError = isError,
         singleLine = true,
         maxLines = 1,
         modifier = modifier
             .fillMaxWidth()
             .padding(10.dp),
-        value = if (value=="0") "" else value,
+        value = if (value == "0") "" else value,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         label = { Text(label) },
         onValueChange = { onNewValue(it) },
         placeholder = { Text(text) }
     )
 }
+
 
 
 

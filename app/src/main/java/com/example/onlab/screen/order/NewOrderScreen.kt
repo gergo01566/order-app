@@ -42,18 +42,6 @@ fun NewOrderScreen(
     val state = viewModel.orderItemListState.collectAsStateWithLifecycle().value
     val dismissChangesDialog = remember { mutableStateOf(viewModel.changeMade) }
 
-    when(viewModel.deleteOrderItemResponse){
-        is ValueOrException.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator()
-            }
-        }
-        else -> Unit
-    }
-
     OrderDetailsScreenContent(
         productResponse = viewModel.productsResponse,
         state = state,
@@ -64,10 +52,10 @@ fun NewOrderScreen(
         onFloatingButtonClick = { onNavigateTo(viewModel.orderId.toString(), "true", viewModel.customerId.toString()) },
         onGeneratePDFClick = { viewModel.generatePDF(context = currentContext) },
         onNavigateBack = {
-            if (viewModel.changeMade){
+            viewModel.onNavigateBack(
+                { onNavigateBack() }
+            ){
                 dismissChangesDialog.value = true
-            } else {
-                onNavigateBack()
             }
         },
         onDeleteOrderItem = {
@@ -76,14 +64,24 @@ fun NewOrderScreen(
         onEditOrderItem = {
             viewModel.updateOrderItemLocally(it)
         },
-        onOrderItemClick = {it}
     )
+    DeleteOrder(apiResponse = viewModel.deleteOrderItemResponse)
 
     if (dismissChangesDialog.value) {
         DismissChangesDialog(onDismiss = { dismissChangesDialog.value = false }) {
             dismissChangesDialog.value = false
             navigateFromTo(DestinationNewOrder, DestinationCustomerList)
         }
+    }
+}
+
+@Composable
+fun DeleteOrder(apiResponse: ValueOrException<Boolean>){
+    when(apiResponse){
+        is ValueOrException.Loading -> {
+            LoadingScreen()
+        }
+        else -> Unit
     }
 }
 
@@ -98,7 +96,6 @@ fun OrderDetailsScreenContent(
     onNavigateBack:() -> Unit,
     onDeleteOrderItem: (OrderItem) -> Unit,
     onEditOrderItem: (OrderItem) -> Unit,
-    onOrderItemClick: (OrderItem) -> Unit
 ){
     Scaffold(
         topBar = {
@@ -137,7 +134,7 @@ fun OrderDetailsScreenContent(
                     onClick = {
                         onFloatingButtonClick()
                     },
-                    containerColor = MaterialTheme.colors.primary,
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                     elevation = androidx.compose.material3.FloatingActionButtonDefaults.bottomAppBarFabElevation(),
                 ) {
                     androidx.compose.material3.Icon(
@@ -153,7 +150,6 @@ fun OrderDetailsScreenContent(
             orderItemsResponse = state,
             onDeleteOrderItem = { onDeleteOrderItem(it) },
             onEditOrderItem = { onEditOrderItem(it) },
-            onOrderItemClick = { onOrderItemClick(it) }
         )
         paddingValues.calculateBottomPadding()
     }
@@ -165,9 +161,8 @@ fun OrderItemList(
     productResponse: ValueOrException<List<Product>>,
     onDeleteOrderItem: (OrderItem) -> Unit,
     onEditOrderItem: (OrderItem) -> Unit,
-    onOrderItemClick: (OrderItem) -> Unit
 ){
-    var showEditDialog = remember { mutableStateOf(false) }
+    val showEditDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     var selectedOrderItem by remember { mutableStateOf<OrderItem?>(null) }
 
@@ -190,7 +185,7 @@ fun OrderItemList(
                         selectedOrderItem = it
                   },
                 ),
-                onClick = { onOrderItemClick(it) }
+                onClick = { }
             ) { orderItem ->
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(

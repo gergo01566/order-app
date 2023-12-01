@@ -13,7 +13,7 @@ const val DestinationNewOrder = "NewOrderScreen"
 
 const val DestinationLogin = "LoginScreen"
 const val DestinationProfile = "ProfileScreen"
-const val DestinationEditProfile = "EditProfileScreen"
+const val DestinationEditProfile = "com.example.onlab.screen.profile.EditProfileScreen"
 
 
 const val DestinationOneArg = "arg1"

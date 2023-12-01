@@ -1,6 +1,5 @@
 package com.example.onlab.screen.profile
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,14 +24,12 @@ class ProfileViewModel @Inject constructor(
         private set
 
     init {
-        Log.d("log", "ProfileViewModel")
         launchCatching {
             userResponse = ValueOrException.Loading
                 userResponse = userStorageService.getUser(AuthService.currentUserId)
                 when(userResponse){
                     is ValueOrException.Success<User> -> {
                         val data = (userResponse as ValueOrException.Success<User>).data
-                        Log.d("loggg", ": $data")
 
                         uiState.value = uiState.value.copy(
                             name = data.displayName,
@@ -42,7 +39,6 @@ class ProfileViewModel @Inject constructor(
                         )
                     }
                     else -> {
-                        Log.d("loggg", ": nope")
                     }
                 }
 

@@ -3,6 +3,7 @@ package com.example.onlab.screen.profile
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.R
@@ -98,6 +99,7 @@ fun ProfileScreen(
                 content = {
                     it.calculateBottomPadding()
                     Column(modifier = Modifier
+                        .background(color = androidx.compose.material3.MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
                         .padding(16.dp)) {
                         ProfileInfo(uiState.image,uiState.name, uiState.email, uiState.address)

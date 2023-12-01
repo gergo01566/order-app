@@ -3,7 +3,7 @@
 package com.example.onlab.navigation
 
 import AppState
-import EditProfileScreen
+import com.example.onlab.screen.profile.EditProfileScreen
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -75,7 +75,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                     onNavigate = { orderId, customerId ->
                         appState.navController.navigate(buildNewOrderRoute(customerId = customerId, orderId = orderId))
                     },
-                    navigateBack = { appState.navigateBack()}
                 ){ from, to ->
                     appState.navController.navigate(to) {
                         popUpTo(from) { inclusive = true }
@@ -97,7 +96,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                         }
                     },
                     onNavigateBack = { appState.navigateBack() },
-                ) { from, to ->
+                ) { _, to ->
                     appState.navController.navigate(to) {
                         popUpTo("orderAppRoute") {
                             inclusive = true
@@ -109,13 +108,15 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             composable(DestinationCustomerList) {
                 logBackStack(it, appState.navController)
                 CustomerScreen(
-                    navigateBack = {
-                        appState.navigateBack()
-                    },
                     onNavigateToOrder = { customerId, orderId ->
                         appState.navController.navigate(
                             buildNewOrderRoute(customerId, orderId)
                         )
+                    },
+                    navigateInBottomBar = {
+                        appState.navController.navigate(it) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     },
                     onNavigateToCustomer = {
                         Log.d("TAG", "AppNavigation: $it")
@@ -123,9 +124,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                     },
                 ) { from, to ->
                     appState.navController.navigate(to) {
-                        popUpTo(from) {
-                            inclusive = true
-                        }
+
                     }
                 }
             }
@@ -138,7 +137,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(from) { inclusive = true }
                         }
                     },
-                    permissionRequester = appState.permissionRequester,
                     onNavigateBack = {
                         appState.navigateBack()
                     }
@@ -156,7 +154,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                         }
                     },
                     onNavigateBack = { appState.navigateBack() },
-                    permissionRequester = appState.permissionRequester
                 )
             }
 
@@ -168,18 +165,14 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                         appState.navController.navigate(buildProductDetailsRoute(it))
                     },
                     navigateFromTo = { from, to ->
-                        appState.navController.navigate(to) {
-                            popUpTo(DestinationProductList) { inclusive = true }
-                        }
+                        appState.navController.navigate(to)
                     },
-                    navigateBack = { appState.navigateBack() },
                     navigateBackToOrder = { orderId, customerId ->
                         appState.navController.navigate(buildNewOrderRoute(customerId, orderId)){
                             popUpTo(buildNewOrderRoute(customerId, orderId)) {
                                 inclusive = true
                             }
                         }
-                        //navController.navigate(buildNewOrderRoute(customerId = customerId, orderId = orderId))
                     }
                 )
             }
@@ -195,7 +188,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(DestinationProductListRoute) { inclusive = true }
                         }
                     },
-                    navigateBack = { appState.navigateBack() },
                     navigateBackToOrder = { orderId, customerId ->
                         appState.navController.popBackStack()
                     }
@@ -211,7 +203,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(from) { inclusive = true }
                         }
                     },
-                    permissionRequester = appState.permissionRequester,
                     navigateBack = {
                         appState.navigateBack()
                     }
@@ -229,7 +220,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                         }
                     },
                     navigateBack = { appState.navigateBack() },
-                    permissionRequester = appState.permissionRequester
                 )
             }
 

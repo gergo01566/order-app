@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Customer
 import com.example.onlab.navigation.*
@@ -35,8 +37,10 @@ class CustomerDetailsViewModel @Inject constructor(
     var uiState = mutableStateOf(CustomerUiState())
         private set
 
+    val customerId = savedStateHandle.get<String>(DestinationOneArg)
+
+
     init {
-        val customerId = savedStateHandle.get<String>(DestinationOneArg)
         launchCatching {
             if(!customerId.isNullOrEmpty()){
                 customerResponse = storageService.getCustomer(customerId)
@@ -153,10 +157,96 @@ class CustomerDetailsViewModel @Inject constructor(
     }
 
     fun onDoneClick(customer: Customer, navigateFromTo: (String, String) -> Unit){
-        if (customer.id!!.isBlank()){
-            onAddCustomer(customer, navigateFromTo)
+        if (isValidCustomerInputs()){
+            if (customer.id!!.isBlank()){
+                onAddCustomer(customer, navigateFromTo)
+            } else {
+                onUpdateCustomer(customer, navigateFromTo)
+            }
         } else {
-            onUpdateCustomer(customer, navigateFromTo)
+            SnackbarManager.displayMessage(R.string.invalid_customer_inputs)
         }
+    }
+
+    fun onNavigateBack(onChangesMade:()->Unit, onNoChanges:()->Unit){
+        Log.d("log", "onNavigateBack: $customerResponse")
+        when(val customerApiResponse = customerResponse){
+            is ValueOrException.Success -> {
+                if (customerApiResponse.data.image != uiState.value.image ||
+                    customerApiResponse.data.firstName != uiState.value.firstName ||
+                    customerApiResponse.data.lastName != uiState.value.lastName ||
+                    customerApiResponse.data.phoneNumber != uiState.value.phoneNumber ||
+                    customerApiResponse.data.address != uiState.value.address
+                ){
+                    Log.d("log", "true: $customerResponse")
+                    onChangesMade()
+                }
+                else onNoChanges()
+            }
+            else -> if (isValidCustomerInputs()){
+                onChangesMade()
+            } else {
+                onNoChanges()
+            }
+        }
+    }
+
+    private fun isValidCustomerInputs(): Boolean{
+        if (
+            ValidationUtils.inputContainsOnlyLetter(uiState.value.firstName) &&
+            ValidationUtils.inputContainsOnlyLetter(uiState.value.lastName) &&
+            ValidationUtils.inputIsNotEmpty(uiState.value.address) &&
+            ValidationUtils.inputContaintsOnlyNumbers(uiState.value.phoneNumber)
+        )
+            return true
+        return false
+    }
+}
+
+// ValidationUtils.kt
+object ValidationUtils {
+
+    fun inputContainsOnlyLetter(input: String):Boolean {
+        if (!input.all { it.isLetter() } || input.isBlank()) {
+            return false
+        }
+        return true
+    }
+
+    fun inputContaintsOnlyNumbers(input: String):Boolean {
+        if (!input.all { it.isDigit() } || input.isBlank()) {
+            return false
+        }
+        return true
+    }
+
+    fun inputIsNotEmpty(input: String):Boolean {
+        if (input.isBlank()) {
+            return false
+        }
+        return true
+    }
+
+    fun inputIsValidEmailFormat(input: String):Boolean {
+        val emailRegex = Regex("[A-Za-z\\d._%+-]+@[A-Za-z\\d.-]+\\.[A-Z|a-z]{2,}")
+        if (!emailRegex.matches(input) && input.isBlank()) {
+            return false
+        }
+        return true
+    }
+
+    fun inputIsValidPrice(input: String):Boolean {
+        if (input == "0" || input.isBlank()) {
+            return false
+        }
+        return true
+    }
+
+    fun inputIsValidPassword(input: String):Boolean {
+        val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d).{6,}\$")
+        if (!passwordRegex.matches(input) || input.isBlank()) {
+            return false
+        }
+        return true
     }
 }

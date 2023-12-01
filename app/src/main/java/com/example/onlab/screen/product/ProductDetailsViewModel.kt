@@ -5,11 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
+import com.example.onlab.R
+import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Product
 import com.example.onlab.navigation.DestinationOneArg
 import com.example.onlab.navigation.DestinationProductDetails
 import com.example.onlab.navigation.DestinationProductList
+import com.example.onlab.screen.customer.ValidationUtils
 import com.example.onlab.service.ProductStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +28,7 @@ class ProductDetailsViewModel @Inject constructor(
     var productResponse by mutableStateOf<ValueOrException<Product>>(ValueOrException.Loading)
         private set
 
-    var deleteProductResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
-        private set
+    private var deleteProductResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
 
     var updateProductResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
@@ -39,6 +41,7 @@ class ProductDetailsViewModel @Inject constructor(
 
     init {
         val productId = savedStateHandle.get<String>(DestinationOneArg)
+        productResponse = ValueOrException.Loading
         launchCatching {
             if(!productId.isNullOrEmpty()){
                 productResponse = storageService.getProduct(productId)
@@ -154,10 +157,50 @@ class ProductDetailsViewModel @Inject constructor(
     }
 
     fun onDoneClick(product: Product, navigateFromTo: (String, String) -> Unit){
-        if (product.id!!.isBlank()){
-            onSaveProduct(product, navigateFromTo)
+        if(isValidProductInputs()){
+            if (product.id!!.isBlank()){
+                onSaveProduct(product, navigateFromTo)
+            } else {
+                onUpdateProduct(product, navigateFromTo)
+            }
         } else {
-            onUpdateProduct(product, navigateFromTo)
+            SnackbarManager.displayMessage(
+                R.string.invalid_product_input
+            )
+        }
+
+    }
+
+    fun onNavigateBack(onChangesMade:()->Unit, onNoChanges:()->Unit){
+        when(val productApiResponse = productResponse){
+            is ValueOrException.Success -> {
+                if (productApiResponse.data.image != state.value.image ||
+                    productApiResponse.data.title != state.value.title ||
+                    productApiResponse.data.pricePerPiece.toString() != state.value.pricePerPiece ||
+                    productApiResponse.data.pricePerKarton.toString() != state.value.pricePerCarton ||
+                    productApiResponse.data.category != state.value.category
+                ){
+                    onChangesMade()
+                }
+                else onNoChanges()
+            }
+            else -> Unit
+        }
+    }
+
+    fun isValidProductInputs(): Boolean {
+        when (productResponse) {
+            is ValueOrException.Success -> {
+                if (
+                    ValidationUtils.inputIsNotEmpty(state.value.title) &&
+                    ValidationUtils.inputContaintsOnlyNumbers(state.value.pricePerCarton) &&
+                    ValidationUtils.inputContaintsOnlyNumbers(state.value.pricePerPiece) &&
+                    ValidationUtils.inputIsNotEmpty(state.value.pricePerPiece) &&
+                    ValidationUtils.inputIsNotEmpty(state.value.pricePerCarton)
+                ) return true
+                return false
+            }
+            else -> { return false}
         }
     }
 }

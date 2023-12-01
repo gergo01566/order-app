@@ -1,8 +1,10 @@
+package com.example.onlab.screen.profile
+
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,39 +12,33 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.onlab.components.DismissChangesDialog
 import com.example.onlab.data.ValueOrException
-import com.example.onlab.navigation.DestinationEditProfile
-import com.example.onlab.navigation.DestinationProfile
 import com.example.onlab.screen.customer.LoadingScreen
-import com.example.onlab.screen.profile.EditProfileViewModel
+import com.example.onlab.screen.customer.ValidationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     viewModel: EditProfileViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
-    navigateFromTo:(String, String) -> Unit = { it1, it2 -> Log.d("log", "EditProfileScreen: $")},
+    navigateFromTo:(String, String) -> Unit,
 ) {
-
+    val showNavigationDialog = remember { mutableStateOf(false) }
     val uiState by viewModel.uiState
-
-    val scaffoldState = rememberScaffoldState()
 
     val singlePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -50,63 +46,114 @@ fun EditProfileScreen(
         }
     )
 
-
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profil szerkesztése") },
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
+                title = {
+                    Text("Profil szerkesztése", color = MaterialTheme.colorScheme.onPrimary)
+                },
                 navigationIcon = {
-                    IconButton(onClick = { onNavigateBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = {
+                            viewModel.onNavigateBack({
+                                showNavigationDialog.value = true
+                            }){
+                                onNavigateBack()
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.onUpdateUser(navigateFromTo = navigateFromTo) }) {
-                        Icon(Icons.Default.Done, contentDescription = "Save")
+                    IconButton(
+                        enabled = viewModel.isValidProfileInputs(),
+                        onClick = { viewModel.onUpdateUser(navigateFromTo = navigateFromTo) }) {
+                        Icon(Icons.Default.Done, contentDescription = "Save", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             )
         }
     ) {
-        when(val updateUserResponse = viewModel.updateUserResponse) {
-            is ValueOrException.Loading -> {
-                LoadingScreen()
-            }
-            is ValueOrException.Failure -> Unit
-            is ValueOrException.Success -> Unit
-
+        it.calculateBottomPadding()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top
+        ) {
+            Spacer(modifier = Modifier.height(it.calculateTopPadding()))
+            UserDataList(
+                userResponse = viewModel.userResponse,
+                onClick = {
+                    singlePhotoPicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                uiState =  uiState,
+                onNameChange = { name -> viewModel.onNameChange(name)},
+                onAddressChange = { address -> viewModel.onAddressChange(address)},
+                paddingValue = it
+            )
+            UpdateUser(updateUserResponse = viewModel.updateUserResponse)
         }
-
-        when(viewModel.userResponse){
-            is ValueOrException.Loading -> {
-                LoadingScreen()
-            }
-            is ValueOrException.Failure -> Unit
-            is ValueOrException.Success -> {
-
-
-                it.calculateBottomPadding()
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    Spacer(modifier = Modifier.height(it.calculateTopPadding()))
-                    ProfileImage(uiState.image.toUri()) {
-                        singlePhotoPicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(it.calculateStartPadding(LayoutDirection.Ltr)))
-                    EditTextField(value = uiState.name, label = "Név") { viewModel.onNameChange(it) }
-                    EditTextField(value = uiState.address, label = "Cím") { viewModel.onAddressChange(it)  }
-                    EditTextField(value = uiState.email, label = "Email", readOnly = true) { }
-                }
+    }
+        if(showNavigationDialog.value){
+            DismissChangesDialog(onDismiss = {
+                showNavigationDialog.value = false
+            }) {
+                onNavigateBack()
+                showNavigationDialog.value = false
             }
         }
+    }
 
+@Composable
+fun UpdateUser(
+    updateUserResponse: ValueOrException<Boolean>
+){
+    when(updateUserResponse) {
+        is ValueOrException.Loading -> {
+            LoadingScreen()
+        }
+        is ValueOrException.Failure -> Unit
+        is ValueOrException.Success -> Unit
+    }
+}
+
+@Composable
+fun UserDataList(
+    userResponse: ValueOrException<com.example.onlab.model.User>,
+    uiState: ProfileUiState,
+    onNameChange:(String)->Unit,
+    onAddressChange:(String)->Unit,
+    onClick: () -> Unit,
+    paddingValue: PaddingValues
+){
+    when(userResponse) {
+        is ValueOrException.Loading -> {
+            LoadingScreen()
+        }
+        is ValueOrException.Failure -> Unit
+        is ValueOrException.Success -> {
+            ProfileImage(imageUri = uiState.image.toUri()) {
+                onClick()
+            }
+            Spacer(modifier = Modifier.height(paddingValue.calculateStartPadding(LayoutDirection.Ltr)))
+            EditTextField(
+                value = uiState.name,
+                isError = !ValidationUtils.inputIsNotEmpty(uiState.name),
+                label = "Név"
+            ) { onNameChange(it) }
+            EditTextField(
+                value = uiState.address,
+                isError = !ValidationUtils.inputIsNotEmpty(uiState.address),
+                label = "Cím"
+            ) { onAddressChange(it) }
+            EditTextField(value = uiState.email, label = "Email", readOnly = true) { }
+        }
     }
 }
 
@@ -135,12 +182,11 @@ fun ProfileImage(imageUri: Uri,onClick:() -> Unit) {
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTextField(value: String, label: String, readOnly: Boolean = false, onValueChange: (String) -> Unit) {
+fun EditTextField(value: String, label: String, readOnly: Boolean = false, isError: Boolean = false, onValueChange: (String) -> Unit) {
     OutlinedTextField(
+        isError = isError,
         value = value,
         readOnly = readOnly,
         onValueChange = { onValueChange(it) },
@@ -150,13 +196,4 @@ fun EditTextField(value: String, label: String, readOnly: Boolean = false, onVal
             .fillMaxWidth()
             .height(56.dp)
     )
-}
-
-
-
-@OptIn(ExperimentalComposeUiApi::class)
-@Preview(showBackground = true)
-@Composable
-fun PreviewEditProfileScreen() {
-    //EditProfileScreen()
 }

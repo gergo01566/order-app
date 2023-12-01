@@ -74,13 +74,10 @@ class OrderDetailsViewModel @Inject constructor(
     private val _orderItemListstate = MutableStateFlow<ValueOrException<List<OrderItem>>>(ValueOrException.Loading)
     val orderItemListState = _orderItemListstate.asStateFlow()
 
-    var customerData by mutableStateOf(Customer())
-        private set
-
     val customerId = savedStateHandle.get<String>(DestinationOneArg)
     val orderId = savedStateHandle.get<String>(DestinationTwoArg)
 
-    var changeMade by mutableStateOf<Boolean>(false)
+    var changeMade by mutableStateOf(false)
         private set
 
     init {
@@ -102,10 +99,10 @@ class OrderDetailsViewModel @Inject constructor(
     fun getCustomer(){
         launchCatching {
             customerResponse = ValueOrException.Loading
-            customerStorageService.getCustomer(customerId = customerId.toString())
+            customerResponse = customerStorageService.getCustomer(customerId = customerId.toString())
             when(val response = customerResponse){
                 is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.data_loading_error)
-                is ValueOrException.Success -> customerData = response.data
+                is ValueOrException.Success -> Unit
                 else -> {}
             }
         }
@@ -134,38 +131,6 @@ class OrderDetailsViewModel @Inject constructor(
             }
         }
     }
-    fun onSaveOrderItem(orderItem: OrderItem){
-        saveOrderItemResponse = ValueOrException.Loading
-        launchCatching {
-            saveOrderItemResponse = try {
-                orderItemStorageService.addOrderItem(orderItem)
-            } catch (e: Exception){
-                ValueOrException.Failure(e)
-            }
-        }
-    }
-
-    fun onSaveOrderToFirebae(order: Order, onComplete:() -> Unit){
-        launchCatching {
-            if(orderStorageService.getOrder(order.id.toString()) is ValueOrException.Failure){
-                orderStorageService.addOrder(order)
-            } else {
-
-            }
-        }
-
-        saveOrderToFirebase = ValueOrException.Loading
-        launchCatching {
-            saveOrderToFirebase = try {
-                orderStorageService.addOrder(order)
-            } catch (e: Exception){
-                ValueOrException.Failure(e)
-            }
-        }
-        if (saveOrderItemResponse is ValueOrException.Success){
-            onComplete()
-        }
-    }
 
     private fun getProducts() {
         launchCatching {
@@ -191,28 +156,44 @@ class OrderDetailsViewModel @Inject constructor(
         changeMade = true
     }
 
-    fun deleteOrderItemLocally(orderItem: OrderItem){
-        orderItem.statusID = 0
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun addNewOrder(){
+        saveOrderItemResponse = ValueOrException.Loading
         launchCatching {
-            _orderItemListstate.value = ValueOrException.Loading
-            delay(500)
-            memoryOrderItemsRepository.updateOrderItem(orderItem)
-            _orderItemListstate.value = ValueOrException.Success(memoryOrderItemsRepository.getOrderItems())
-            SnackbarManager.displayMessage(R.string.save_success)
+            val newOrderId = UUID.randomUUID().toString()
+            val newOrder = Order(
+                orderId = newOrderId,
+                date = LocalDate.now().toString(),
+                customerID = customerId.toString(),
+                status = 0,
+                madeby = FirebaseAuth.getInstance().currentUser!!.email!!
+            )
+            saveOrderItemResponse = orderStorageService.addOrder(newOrder)
+            memoryOrderItemsRepository.getOrderItems().forEach { orderItem ->
+                orderItem.orderID = newOrderId
+                orderItem.statusID = 3
+                saveOrderItemResponse = orderItemStorageService.addOrderItem(orderItem)
+            }
         }
     }
 
-    fun onDeleteOrderItemFromDb(orderItem: OrderItem){
+    fun updateExistingOrder() {
+        saveOrderItemResponse = ValueOrException.Loading
         launchCatching {
-            deleteOrderItemResponse = ValueOrException.Loading
-            //delay(1000)
-            try {
-                Log.d("log", "siker $orderItem")
-                deleteOrderItemResponse = orderItemStorageService.deleteOrderItem(orderItem.id.toString())
-                Log.d("log", "siker $deleteOrderItemResponse")
-
-            } catch (e: Exception){
-                Log.d("log", "onDeleteOrderItemFromDb: nem sikerult torolni $e")
+            memoryOrderItemsRepository.getOrderItems().forEach {
+                if (it.statusID == 0) {
+                    try {
+                        saveOrderItemResponse = orderItemStorageService.updateOrderItem(it)
+                    } catch (e: Exception) {
+                    }
+                }
+                if (it.statusID == -1){
+                    it.statusID = 3
+                    saveOrderItemResponse = orderItemStorageService.addOrderItem(it)
+                }
+                if (it.amount == 0){
+                    saveOrderItemResponse = orderItemStorageService.deleteOrderItem(it.id.toString())
+                }
             }
         }
     }
@@ -220,52 +201,18 @@ class OrderDetailsViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSaveClick() {
         launchCatching {
-            when (orderItemsResponse) {
-                is ValueOrException.Success -> {
-                    val orderResultInDb = orderStorageService.getOrder(orderId.toString())
-                    if (orderResultInDb is ValueOrException.Failure) {
-                        val newOrderId = UUID.randomUUID().toString()
-                        val newOrder = Order(
-                            orderId = newOrderId,
-                            date = LocalDate.now().toString(),
-                            customerID = customerId.toString(),
-                            status = 0,
-                            madeby = FirebaseAuth.getInstance().currentUser!!.email!!
-                        )
-                        orderStorageService.addOrder(newOrder)
-                        memoryOrderItemsRepository.getOrderItems().forEach { orderItem ->
-                            orderItem.orderID = newOrderId
-                            orderItem.statusID = 3
-                            orderItemStorageService.addOrderItem(orderItem)
-                        }
-                    } else {
-                        val updatedItems = memoryOrderItemsRepository.getOrderItems().forEach{
-                            Log.d("log", "onSaveClick: ${it.amount}")
-
-                            if (it.statusID == 0) {
-                                try {
-                                    orderItemStorageService.updateOrderItem(it)
-                                    Log.d("log", "onSaveClick: Status updated successfully")
-                                } catch (e: Exception) {
-                                    Log.e("log", "onSaveClick: Error updating status", e)
-                                }
-                            }
-                            if (it.statusID == -1){
-                                it.statusID = 3
-                                orderItemStorageService.addOrderItem(it)
-                            }
-                            if (it.amount == 0){
-                                orderItemStorageService.deleteOrderItem(it.id.toString())
-                            }
-                        }
-                        Log.d("log", "onSaveClick: $updatedItems}")
-                    }
-                    SnackbarManager.displayMessage(R.string.save_success)
-                }
-                is ValueOrException.Failure -> SnackbarManager.displayMessage(R.string.delete_error)
-                else -> Unit
+            when(orderStorageService.getOrder(orderId.toString())){
+                is ValueOrException.Failure -> addNewOrder()
+                else -> updateExistingOrder()
             }
         }
+    }
+
+    fun onNavigateBack(onNoChange:()->Unit, onChange:()->Unit){
+        if(changeMade){
+            onChange()
+        }
+        else onNoChange()
     }
 
     fun generatePDF(
@@ -294,81 +241,86 @@ class OrderDetailsViewModel @Inject constructor(
             else -> {}
         }
 
-        val pageHeight = 1120
-        val pageWidth = 792
-        lateinit var scaledbmp: Bitmap
-        val pdfDocument: PdfDocument = PdfDocument()
-        val paint: Paint = Paint()
-        val title: Paint = Paint()
+        when(val customerApiResponse = customerResponse){
+            is ValueOrException.Success -> {
+                val pageHeight = 1120
+                val pageWidth = 792
+                lateinit var scaledbmp: Bitmap
+                val pdfDocument = PdfDocument()
+                val paint = Paint()
+                val title = Paint()
 
-        val directoryPath = "/storage/emulated/0/Documents"
-        val directory = File(directoryPath)
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
-        val fileName = "order_${orderItems[0].orderID}.pdf"
-        val file = File(directory, fileName)
+                val directoryPath = "/storage/emulated/0/Documents"
+                val directory = File(directoryPath)
+                if (!directory.exists()) {
+                    directory.mkdirs()
+                }
+                val fileName = "order_${orderItems[0].orderID}.pdf"
+                val file = File(directory, fileName)
 
-        var bmp: Bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
-        scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
-        val myPageInfo: PdfDocument.PageInfo? =
-            PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
-        val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
-        val canvas: Canvas = myPage.canvas
-        canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
-        title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        title.textSize = 20F
-        title.color = ContextCompat.getColor(context, R.color.black)
-        canvas.drawText("Ügyfél neve: ${customerData?.lastName} ${customerData?.firstName}", 209F, 40F, title)
-        canvas.drawText("Ügyfél címe: ${customerData?.address} ", 209F, 75F, title)
-        canvas.drawText("Ügyfél telefonszáma: ${customerData?.phoneNumber} ", 209F, 110F, title)
-        title.textSize = 15F
-        canvas.drawText("Rendelési azonosító: ${orderItems[0].orderID}", 209F, 145F, title)
-        canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
-        title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-        title.color = ContextCompat.getColor(context, R.color.black)
-        title.textSize = 15F
-        title.textAlign = Paint.Align.CENTER
+                val bmp = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
+                scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
+                val myPageInfo: PdfDocument.PageInfo? =
+                    PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+                val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
+                val canvas: Canvas = myPage.canvas
+                canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
+                title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                title.textSize = 20F
+                title.color = ContextCompat.getColor(context, R.color.black)
+                canvas.drawText("Ügyfél neve: ${customerApiResponse.data.firstName} ${customerApiResponse.data.lastName}", 209F, 40F, title)
+                canvas.drawText("Ügyfél címe: ${customerApiResponse.data.address} ", 209F, 75F, title)
+                canvas.drawText("Ügyfél telefonszáma: ${customerApiResponse.data.phoneNumber} ", 209F, 110F, title)
+                title.textSize = 15F
+                canvas.drawText("Rendelési azonosító: ${orderItems[0].orderID}", 209F, 145F, title)
+                canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
+                title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+                title.color = ContextCompat.getColor(context, R.color.black)
+                title.textSize = 15F
+                title.textAlign = Paint.Align.CENTER
 
-        canvas.drawText("Termék neve ", 170F, 270F, title)
-        canvas.drawText("Mennyiség ", 340F, 270F, title)
-        canvas.drawText("Darab", 510F, 270F, title)
-        canvas.drawText("Karton", 680F, 270f, title)
-        title.typeface = Typeface.defaultFromStyle(Typeface.NORMAL)
-        var yPosition = 300f
-        for (orderItem in orderItems) {
-            val product = productsList.find { it!!.id.toString() == orderItem.productID }
-            canvas.drawText(product!!.title, 170F, yPosition, title)
-            canvas.drawText("${orderItem.amount}", 340F, yPosition , title)
-            canvas.drawText((if (orderItem.piece){"igen"} else {
-                "nem"
-            }).toString(), 510F, yPosition , title)
-            canvas.drawText((if (orderItem.carton){"igen"} else {
-                "nem"
-            }).toString(), 680F, yPosition , title)
-            canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
-            yPosition += 60F
-        }
-        var sikerult = false
+                canvas.drawText("Termék neve ", 170F, 270F, title)
+                canvas.drawText("Mennyiség ", 340F, 270F, title)
+                canvas.drawText("Darab", 510F, 270F, title)
+                canvas.drawText("Karton", 680F, 270f, title)
+                title.typeface = Typeface.defaultFromStyle(Typeface.NORMAL)
+                var yPosition = 300f
+                for (orderItem in orderItems) {
+                    val product = productsList.find { it.id.toString() == orderItem.productID }
+                    canvas.drawText(product!!.title, 170F, yPosition, title)
+                    canvas.drawText("${orderItem.amount}", 340F, yPosition , title)
+                    canvas.drawText((if (orderItem.piece){"igen"} else {
+                        "nem"
+                    }).toString(), 510F, yPosition , title)
+                    canvas.drawText((if (orderItem.carton){"igen"} else {
+                        "nem"
+                    }).toString(), 680F, yPosition , title)
+                    canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
+                    yPosition += 60F
+                }
+                var sikerult = false
 
-        pdfDocument.finishPage(myPage)
+                pdfDocument.finishPage(myPage)
 
-        // Save the PDF file
-        try {
-            FileOutputStream(file).use { outputStream ->
-                pdfDocument.writeTo(outputStream)
+                // Save the PDF file
+                try {
+                    FileOutputStream(file).use { outputStream ->
+                        pdfDocument.writeTo(outputStream)
+                    }
+                    sikerult = true
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+                }
+
+                // Close the PDF document
+                pdfDocument.close()
+                if(sikerult){
+                    Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()
+                }
             }
-            sikerult = true
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+            else -> {}
         }
 
-        // Close the PDF document
-        pdfDocument.close()
-        if(sikerult){
-            Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()
-            sikerult = false
-        }
     }
 }

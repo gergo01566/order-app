@@ -9,6 +9,13 @@
     <string name="delete_error">A törlés nem sikerült.</string>
     <string name="delete_success">Sikeres törlés.</string>
     <string name="invalid_email_error">Helytelen e-mail cím</string>
+    <string name="invalid_price_input">A termék ára nem lehet nulla.</string>
     <string name="email_sent_to_recover_pwd">E-mailt küldtünk jelszavad helyreállításához.</string>
     <string name="invalid_quantity">A tétel mennyisége nem megfelelő formátumban van!</string>
+    <string name="input_is_empty">A mező nem lehet üres</string>
+    <string name="invalid_number_input">A mező csak számokat tartalmazhat.</string>
+    <string name="invalid_letters_input">A mező csak betűket tartalmazhat.</string>
+    <string name="invalid_password">Helytelen jelszó formátum.</string>
+    <string name="invalid_customer_inputs">Kérlek ellenőrízd az ügyfél adatait.</string>
+    <string name="invalid_product_input">Kérjük ellenőrízd a termék adatait!</string>
 </resources>

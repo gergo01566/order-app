@@ -109,9 +109,9 @@ fun BottomNavBar(
     selectedItem: BottomNavItem,
     navigateTo: (String) -> Unit
 ) {
-    BottomNavigation(
-        modifier = Modifier.height(70.dp),
-        backgroundColor = MaterialTheme.colors.primary
+    androidx.compose.material3.BottomAppBar(
+        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary
     ) {
         items.forEach { item ->
             BottomNavigationItem(
@@ -180,6 +180,7 @@ fun createTopBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun CategoryDropDownMenu(
@@ -710,7 +711,7 @@ fun FullScreenDidalog(
             icons: List<Pair<ImageVector, (T) -> Unit>> = emptyList(),
             itemContent: @Composable (item: T) -> Unit
         ) {
-            LazyColumn {
+            LazyColumn(modifier = Modifier.background(color = androidx.compose.material3.MaterialTheme.colorScheme.surface)) {
                 items(data) { item ->
                     Card(
                         modifier = Modifier
