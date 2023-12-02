@@ -31,6 +31,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.onlab.components.NotificationPermissionRationaleDialog
 import kotlin.math.log
 
 class PermissionRequester {
@@ -68,111 +69,24 @@ class PermissionRequester {
         }
 
         when {
-            showDialog.value -> {
-                Log.d("show", "requestPermission: showDialog")
-                NotificationPermissionRationaleDialog(
-                    icon = painterResource(id = R.drawable.active),
-                    headline = "Értesülj!",
-                    strapline = "Küldj és fogadj értesítéseket az új rendelésekről.",
-                    image = painterResource(id = R.drawable.get_notified),
-                    onSkip = { showDialog.value = false },
-                    onConfirm = {
-                        ActivityCompat.requestPermissions(this@PermissionRequester as Activity, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
-                    }
-                )
-            }
+//            showDialog.value -> {
+//                Log.d("show", "requestPermission: showDialog")
+//                NotificationPermissionRationaleDialog(
+//                    icon = painterResource(id = R.drawable.active),
+//                    headline = "Értesülj!",
+//                    strapline = "Küldj és fogadj értesítéseket az új rendelésekről.",
+//                    image = painterResource(id = R.drawable.get_notified),
+//                    onSkip = { showDialog.value = false },
+//                    isPermanentlyDeclined = true,
+//                    onClick = {},
+//                    onConfirm = {
+//                        ActivityCompat.requestPermissions(this@PermissionRequester as Activity, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
+//                    }
+//                )
+//            }
         }
     }
 
-    @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
-    @Composable
-    fun NotificationPermissionRationaleDialog(
-        icon: Painter,
-        headline: String,
-        strapline: String,
-        image: Painter,
-        onSkip: () -> Unit = {},
-        onConfirm: () -> Unit = {}
-    ){
-
-        Dialog(
-            onDismissRequest = { onSkip() },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
-            Log.d("show", "NotificationPermissionRationaleDialog: show")
-            Column(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Small icon-sized image
-                    Image(
-                        painter = icon,
-                        contentDescription = "Get notified!",
-                        modifier = Modifier.size(50.dp) // Adjust the size as needed
-                    )
-
-                    androidx.compose.material3.Text(
-                        modifier = Modifier.padding(bottom = 20.dp, top = 20.dp),
-                        text = headline,
-                        textAlign = TextAlign.Start,
-                        letterSpacing = 2.sp,
-                        style = MaterialTheme.typography.displayMedium,
-                    )
-
-                    androidx.compose.material3.Text(
-                        text = strapline,
-                        textAlign = TextAlign.Center,
-                        letterSpacing = 2.sp,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-
-                    Spacer(modifier = Modifier.height(15.dp)) // Add space between the big image and buttons
-
-                    // Big image (filling available height)
-                    Image(
-                        painter = image,
-                        contentScale = ContentScale.Fit,
-                        contentDescription = "Get notified",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .weight(15f)// Adjust the fraction to control height
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp)) // Add space between the big image and buttons
-
-                    // Buttons
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(2f)
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        TextButton(
-                            onClick = { onSkip() },
-                            modifier = Modifier.weight(1f) // Makes the button take half the available width
-                        ) {
-                            androidx.compose.material3.Text("Kihagyom", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-
-                        TextButton(
-                            onClick = { onConfirm() },
-                            modifier = Modifier.weight(1f) // Makes the button take half the available width
-                        ) {
-                            androidx.compose.material3.Text("Lássuk", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                    }
-                }
-            }
-        }
-    }
 
 }
 

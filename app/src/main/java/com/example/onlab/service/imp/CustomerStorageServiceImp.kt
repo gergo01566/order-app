@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 class CustomerStorageServiceImp
 @Inject
-constructor(private val firestore: FirebaseFirestore, private val storage: FirebaseStorage) :
+constructor(private val firestore: FirebaseFirestore, private val storage: com.example.onlab.service.imp.FirebaseStorage) :
     CustomerStorageService {
 
     override var searchQuery: String = ""
@@ -88,32 +88,18 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
         customer: Customer,
     ): ValueOrException<Boolean> {
         return try {
+            var docId = ""
             firestore.collection("customers").add(customer).addOnSuccessListener { documentRef ->
+                docId = documentRef.id.toString()
                 firestore.collection("customers").document(documentRef.id).update(
-                    (if (customer.image == "") {
-                        hashMapOf(
-                            "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
-                        )
-                    } else {
-                        val fileName =
-                            "${System.currentTimeMillis()}_${customer.image.toUri().lastPathSegment}"
-                        val imageRef = storage.reference.child("images/${fileName}")
-
-                        val downloadUrl = imageRef.downloadUrl.toString()
-                        val imageDoc = hashMapOf("url" to downloadUrl)
-
-                        firestore.collection("images").document(fileName).set(imageDoc)
-                        hashMapOf(
-                            "customer_image" to downloadUrl
-                        )
-                    }) as Map<String, Any>
-                ).addOnSuccessListener {
-                    firestore.collection("customers").document(documentRef.id).update(
-                        hashMapOf(
-                            "id" to documentRef.id,
-                        ) as Map<String, Any>
-                    ).addOnCompleteListener { ValueOrException.Success(true) }
-                }
+                    hashMapOf(
+                        "id" to documentRef.id,
+                        "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
+                    ) as Map<String, Any>
+                ).addOnCompleteListener { ValueOrException.Success(true) }
+            }.await()
+            if (!customer.image.startsWith("https")) {
+                storage.uploadAndGetDownloadUrl("customers", docId, "customer_image", customer.image)
             }
             ValueOrException.Success(true)
         } catch (e: Exception) {
@@ -141,13 +127,11 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
                 "last_name" to customer.lastName,
                 "customer_address" to customer.address,
                 "phone_number" to customer.phoneNumber,
-                "customer_image" to if (customer.image.startsWith("https")) {
-                    customer.image.toUri()
-                } else {
-                    customer.image
-                }
             )
             firestore.collection("customers").document(customer.id!!).update(customerToUpdate).await()
+            if (!customer.image.startsWith("https")) {
+                storage.uploadAndGetDownloadUrl("customers", customer.id, "customer_image", customer.image)
+            }
             return ValueOrException.Success(true)
         } catch (e: Exception) {
             return ValueOrException.Failure(e)

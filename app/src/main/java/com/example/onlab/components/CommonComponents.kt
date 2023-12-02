@@ -287,22 +287,22 @@ fun ImagePickerButton(permissionRequester: PermissionRequester, onImageSelected:
 
     when {
         openAlertDialog.value -> {
-            permissionRequester.NotificationPermissionRationaleDialog(
-                icon = painterResource(id = R.drawable.cloud_storage),
-                headline = "Tölts fel képeket!",
-                strapline = "Ahhoz hogy képeket tudj feltölteni engedélyezned kell a fotók elérését.",
-                image = painterResource(id = R.drawable.gallery),
-                onSkip = {
-                    openAlertDialog.value = false
-                }
-            ) {
-                openAlertDialog.value = false
-                val intent: Intent = Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", context.packageName, null)
-                )
-                startActivity(context,intent, Bundle.EMPTY)
-            }
+//            permissionRequester.NotificationPermissionRationaleDialog(
+//                icon = painterResource(id = R.drawable.cloud_storage),
+//                headline = "Tölts fel képeket!",
+//                strapline = "Ahhoz hogy képeket tudj feltölteni engedélyezned kell a fotók elérését.",
+//                image = painterResource(id = R.drawable.gallery),
+//                onSkip = {
+//                    openAlertDialog.value = false
+//                }
+//            ) {
+//                openAlertDialog.value = false
+//                val intent: Intent = Intent(
+//                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+//                    Uri.fromParts("package", context.packageName, null)
+//                )
+//                startActivity(context,intent, Bundle.EMPTY)
+//            }
         }
     }
 }

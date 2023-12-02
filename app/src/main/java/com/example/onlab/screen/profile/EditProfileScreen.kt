@@ -1,5 +1,8 @@
 package com.example.onlab.screen.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -33,6 +37,7 @@ import com.example.onlab.screen.customer.ValidationUtils
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
+    applicationContext: Context,
     viewModel: EditProfileViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     navigateFromTo:(String, String) -> Unit,
@@ -42,7 +47,17 @@ fun EditProfileScreen(
 
     val singlePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> viewModel.onImageChange(uri.toString())
+        onResult = { uri -> if (uri!=null) viewModel.onImageChange(uri.toString())
+        }
+    )
+
+    val filesPermissionResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            viewModel.onPermissionResult(
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE,
+                isGranted = isGranted
+            )
         }
     )
 
@@ -88,8 +103,11 @@ fun EditProfileScreen(
             UserDataList(
                 userResponse = viewModel.userResponse,
                 onClick = {
-                    singlePhotoPicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    if(ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                        singlePhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
+                    filesPermissionResultLauncher.launch(
+                        Manifest.permission.READ_EXTERNAL_STORAGE
                     )
                 },
                 uiState =  uiState,

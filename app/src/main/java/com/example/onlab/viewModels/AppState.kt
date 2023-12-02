@@ -15,6 +15,7 @@ class AppState(
     val navController: NavHostController,
     val permissionRequester: PermissionRequester,
     val scaffoldState: ScaffoldState,
+    val context: Context,
     private val snackbarManager: SnackbarManager,
     private val resources: Resources,
     coroutineScope: CoroutineScope

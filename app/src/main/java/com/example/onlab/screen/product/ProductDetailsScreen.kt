@@ -1,5 +1,12 @@
 package com.example.onlab.screen.product
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import com.example.onlab.screen.profile.ProfileImage
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -20,22 +27,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Product
 import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.screen.customer.ValidationUtils
 import java.util.*
-
 @ExperimentalMaterialApi
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
 fun ProductDetailsScreen(
+    applicationContext: Context,
     navigateFromTo: (String, String) -> Unit,
     navigateBack:() -> Unit,
     viewModel: ProductDetailsViewModel= hiltViewModel()
@@ -46,7 +57,16 @@ fun ProductDetailsScreen(
 
     val singlePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> viewModel.onImageChange(uri.toString())
+        onResult = { uri-> if (uri!=null) viewModel.onImageChange(uri.toString()) }
+    )
+
+    val filesPermissionResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            viewModel.onPermissionResult(
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE,
+                isGranted = isGranted
+            )
         }
     )
 
@@ -107,8 +127,11 @@ fun ProductDetailsScreen(
         ) {
             Spacer(modifier = Modifier.height(paddingValue.calculateTopPadding()))
             ProfileImage(uiState.image.toUri()) {
-                singlePhotoPicker.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                if(ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                    singlePhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }
+                filesPermissionResultLauncher.launch(
+                    Manifest.permission.READ_EXTERNAL_STORAGE
                 )
             }
             ProductData(
@@ -133,6 +156,30 @@ fun ProductDetailsScreen(
                 showDialog.value = false
             }
         )
+
+        viewModel.visiblePermissionDialogQueue.forEach{ permission ->
+            when(permission){
+                Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                    NotificationPermissionRationaleDialog(
+                        icon = painterResource(id = R.drawable.cloud_storage),
+                        headline = "Tölts fel képeket!",
+                        strapline = "A termékekről és ügyfelekről képeket tölthetsz fel, így később könnyebben megtalálod őket." +
+                        "Most sajnos úgy döntöttél, hogy nem engedélyezed a fájlok elérését. " +
+                                "Sajnos enélkül nem lesz lehetőséged képeket feltölteni",
+                        image = painterResource(id = R.drawable.gallery),
+                        isPermanentlyDeclined = !shouldShowRequestPermissionRationale(applicationContext as Activity, permission),
+                        onDismiss = viewModel::dismissDialog,
+                        onOkClick = {
+                            viewModel.dismissDialog()
+                        },
+                        onGoToAppSettingsClick = {
+                            openAppSettings(applicationContext)
+                            viewModel.dismissDialog()
+                        }
+                    )
+                }
+            }
+        }
 
         BackHandler {
             viewModel.onNavigateBack({
@@ -267,6 +314,13 @@ fun BasicField(
     )
 }
 
+fun openAppSettings(activity: Activity) {
+    val intent = Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", activity.packageName, null)
+    )
+    activity.startActivity(intent)
+}
 
 
 

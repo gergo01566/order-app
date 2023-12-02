@@ -62,6 +62,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             composable(DestinationEditProfile){
                 logBackStack(it, appState.navController)
                 EditProfileScreen(
+                    applicationContext = appState.context,
                     onNavigateBack = { appState.navigateBack() },
                     navigateFromTo = { from , to ->
                         appState.navController.navigate(to) {
@@ -132,6 +133,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             //New Customer Route
             composable(route = DestinationCustomerDetails) {
                 CustomerDetailsScreen(
+                    context = appState.context,
                     navigateFromTo = { from, to ->
                         appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
@@ -146,6 +148,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             //Existing Customer Route
             composable(DestinationCustomerDetailsRoute){
                 CustomerDetailsScreen(
+                    context = appState.context,
                     navigateFromTo = { from , to ->
                         appState.navController.navigate(to) {
                             popUpTo(from) {
@@ -198,6 +201,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             //New Product Route
             composable(route = DestinationProductDetails) {
                 ProductDetailsScreen(
+                    applicationContext = appState.context,
                     navigateFromTo = { from, to ->
                         appState.navController.navigate(to) {
                             popUpTo(from) { inclusive = true }
@@ -212,6 +216,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             //Exisitng Product Route
             composable(DestinationProductDetailsRoute){
                 ProductDetailsScreen(
+                    applicationContext = appState.context,
                     navigateFromTo = { from , to ->
                         appState.navController.navigate(to) {
                             popUpTo(from) {

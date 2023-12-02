@@ -1,5 +1,6 @@
 package com.example.onlab.notification
 
+import android.Manifest
 import android.R
 import android.app.Notification
 import android.app.NotificationChannel
@@ -7,13 +8,22 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.onlab.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -38,6 +48,21 @@ class NotificationService : FirebaseMessagingService() {
             .setSmallIcon(R.drawable.picture_frame)
             .setShowWhen(true)
             .setAutoCancel(true)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         NotificationManagerCompat.from(this).notify(1, notification.build())
         super.onMessageReceived(remoteMessage)
     }
@@ -45,25 +70,4 @@ class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
     }
-
-    private fun sendLocalNotification(notificationTitle: String, notificationBody: String) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-
-        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val notificationBuilder = NotificationCompat.Builder(this, "")
-            .setAutoCancel(true)   // Automatically delete the notification
-            .setSmallIcon(R.drawable.sym_def_app_icon) // Notification icon
-            .setContentIntent(pendingIntent)
-            .setContentTitle(notificationTitle)
-            .setContentText(notificationBody)
-            .setSound(defaultSoundUri)
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        notificationManager.notify(1234, notificationBuilder.build())
-    }
-
-
 }

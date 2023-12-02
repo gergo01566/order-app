@@ -121,6 +121,7 @@ class OrderDetailsViewModel @Inject constructor(
                             _orderItemListstate.value = ValueOrException.Success(memoryOrderItemsRepository.getOrderItems())
                         }
                         is ValueOrException.Failure -> {
+                            memoryOrderItemsRepository.initOrderItems()
                             _orderItemListstate.value = ValueOrException.Success(memoryOrderItemsRepository.getOrderItems())
                         }
                         else -> {}
@@ -302,7 +303,6 @@ class OrderDetailsViewModel @Inject constructor(
 
                 pdfDocument.finishPage(myPage)
 
-                // Save the PDF file
                 try {
                     FileOutputStream(file).use { outputStream ->
                         pdfDocument.writeTo(outputStream)
@@ -313,7 +313,6 @@ class OrderDetailsViewModel @Inject constructor(
                     Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
                 }
 
-                // Close the PDF document
                 pdfDocument.close()
                 if(sikerult){
                     Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()

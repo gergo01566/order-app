@@ -1,5 +1,9 @@
 package com.example.onlab.screen.customer
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
 import com.example.onlab.screen.profile.ProfileImage
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,19 +20,25 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.onlab.R
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Customer
 import com.example.onlab.screen.product.BasicField
+import com.example.onlab.screen.product.openAppSettings
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalPermissionsApi
 @Composable
 fun CustomerDetailsScreen(
+    context: Context,
     navigateFromTo:(String, String) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: CustomerDetailsViewModel = hiltViewModel(),
@@ -37,9 +47,19 @@ fun CustomerDetailsScreen(
     val showDialog = remember { mutableStateOf(false) }
     val showNavigationDialog = remember { mutableStateOf(false) }
 
+    val filesPermissionResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            viewModel.onPermissionResult(
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE,
+                isGranted = isGranted
+            )
+        }
+    )
+
     val singlePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> viewModel.onImageChange(uri.toString())
+        onResult = { uri -> if (uri!=null) viewModel.onImageChange(uri.toString())
         }
     )
 
@@ -100,8 +120,11 @@ fun CustomerDetailsScreen(
         ){
             Spacer(modifier = Modifier.height(paddingValues.calculateTopPadding()))
             ProfileImage(uiState.image.toUri()) {
-                singlePhotoPicker.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                if(ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                    singlePhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }
+                filesPermissionResultLauncher.launch(
+                    Manifest.permission.READ_EXTERNAL_STORAGE
                 )
             }
             CustomerData(
@@ -116,11 +139,36 @@ fun CustomerDetailsScreen(
             AddCustomer(addCustomerResponse = viewModel.addCustomerResponse)
             DeleteCustomer(deleteCustomerResponse = viewModel.deleteCustomerResponse)
             BackHandler {
-
                 viewModel.onNavigateBack({
                     showNavigationDialog.value = true
                 }){
                     onNavigateBack()
+                }
+            }
+            viewModel.visiblePermissionDialogQueue.forEach{ permission ->
+                when(permission){
+                    Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                        NotificationPermissionRationaleDialog(
+                            icon = painterResource(id = R.drawable.cloud_storage),
+                            headline = "Tölts fel képeket!",
+                            strapline = "A termékekről és ügyfelekről képeket tölthetsz fel, így később könnyebben megtalálod őket." +
+                                    "Most sajnos úgy döntöttél, hogy nem engedélyezed a fájlok elérését. " +
+                                    "Sajnos enélkül nem lesz lehetőséged képeket feltölteni",
+                            image = painterResource(id = R.drawable.gallery),
+                            isPermanentlyDeclined = !ActivityCompat.shouldShowRequestPermissionRationale(
+                                context as Activity,
+                                permission
+                            ),
+                            onDismiss = viewModel::dismissDialog,
+                            onOkClick = {
+                                viewModel.dismissDialog()
+                            },
+                            onGoToAppSettingsClick = {
+                                openAppSettings(context)
+                                viewModel.dismissDialog()
+                            }
+                        )
+                    }
                 }
             }
         }
