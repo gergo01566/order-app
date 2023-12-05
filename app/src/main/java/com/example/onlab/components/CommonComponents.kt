@@ -1,9 +1,6 @@
 package com.example.onlab.components
 
-import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,8 +24,6 @@ import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -43,7 +38,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -54,11 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.onlab.PermissionRequester
-import com.example.onlab.R
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
 import com.example.onlab.model.getCategoryTypes
@@ -84,7 +76,7 @@ fun CreateIcon(icons: ImageVector, modifier: Modifier = Modifier, clickEnabled: 
         ) {
         Icon(
             icons,
-            contentDescription = "Icon",
+            contentDescription = if(icons == Icons.Default.Delete) "törlés" else icons.name,
             modifier = modifier
                 .size(11.dp)
                 .clickable(
@@ -131,7 +123,7 @@ fun BottomNavBar(
                             .padding(bottom = 8.dp)
                             .size(30.dp),
                         imageVector = item.icon,
-                        contentDescription = "Bottom Nav Icon",
+                        contentDescription = item.name,
                         tint = if (selectedItem == item) Color.White else Color.White.copy(alpha = 0.4f)
                     )
                 },
@@ -407,7 +399,7 @@ fun FullScreenDialog(
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = "Localized description"
+                                contentDescription = "Back"
                             )
                         }
                     },
@@ -417,7 +409,7 @@ fun FullScreenDialog(
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Localized description"
+                                contentDescription = "Save"
                             )
                         }
                     },

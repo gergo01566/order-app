@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.onlab.R
+
 import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Customer
@@ -145,17 +146,17 @@ fun CustomerDetailsScreen(
                     onNavigateBack()
                 }
             }
-            viewModel.visiblePermissionDialogQueue.forEach{ permission ->
+            viewModel.permissionsToAsk.forEach{ permission ->
                 when(permission){
                     Manifest.permission.READ_EXTERNAL_STORAGE -> {
                         NotificationPermissionRationaleDialog(
                             icon = painterResource(id = R.drawable.cloud_storage),
                             headline = "Tölts fel képeket!",
                             strapline = "A termékekről és ügyfelekről képeket tölthetsz fel, így később könnyebben megtalálod őket." +
-                                    "Most sajnos úgy döntöttél, hogy nem engedélyezed a fájlok elérését. " +
+                                    "Sajnos úgy döntöttél, hogy nem engedélyezed a fájlok elérését. " +
                                     "Sajnos enélkül nem lesz lehetőséged képeket feltölteni",
                             image = painterResource(id = R.drawable.gallery),
-                            isPermanentlyDeclined = !ActivityCompat.shouldShowRequestPermissionRationale(
+                            isPermanentlyDeclined = ActivityCompat.shouldShowRequestPermissionRationale(
                                 context as Activity,
                                 permission
                             ),

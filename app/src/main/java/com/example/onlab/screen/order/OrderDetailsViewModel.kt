@@ -1,17 +1,16 @@
 package com.example.onlab.screen.order
 
-import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfDocument
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
+import com.example.onlab.OnlabApplication
 import com.example.onlab.R
 import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
@@ -22,10 +21,7 @@ import com.example.onlab.model.Product
 import com.example.onlab.navigation.DestinationOneArg
 import com.example.onlab.navigation.DestinationTwoArg
 import com.example.onlab.repository.OrderItemsRepository
-import com.example.onlab.service.CustomerStorageService
-import com.example.onlab.service.OrderItemStorageService
-import com.example.onlab.service.OrderStorageService
-import com.example.onlab.service.ProductStorageService
+import com.example.onlab.service.*
 import com.example.onlab.viewModels.OrderAppViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +32,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import com.example.onlab.R.string as AppText
 
@@ -47,6 +42,7 @@ class OrderDetailsViewModel @Inject constructor(
     private val productStorageService: ProductStorageService,
     private val memoryOrderItemsRepository: OrderItemsRepository,
     private val customerStorageService: CustomerStorageService,
+    private val authService: AuthService,
     savedStateHandle: SavedStateHandle
 ): OrderAppViewModel() {
 
@@ -113,7 +109,7 @@ class OrderDetailsViewModel @Inject constructor(
             try {
                 _orderItemListstate.value = ValueOrException.Loading
                 delay(1000)
-                orderItemStorageService.getOrderItemsByOrderId(orderId!!).collect{ response->
+                orderItemStorageService.getOrderItemsByOrderId(orderId.toString()).collect{ response->
                     orderItemsResponse = response
                     when (response) {
                         is ValueOrException.Success<List<OrderItem>> -> {
@@ -124,7 +120,7 @@ class OrderDetailsViewModel @Inject constructor(
                             memoryOrderItemsRepository.initOrderItems()
                             _orderItemListstate.value = ValueOrException.Success(memoryOrderItemsRepository.getOrderItems())
                         }
-                        else -> {}
+                        else -> Unit
                     }
                 }
             } catch (e: Exception){
@@ -159,11 +155,11 @@ class OrderDetailsViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun addNewOrder(){
+        SnackbarManager.displayMessage(R.string.adding)
         saveOrderItemResponse = ValueOrException.Loading
         launchCatching {
-            val newOrderId = UUID.randomUUID().toString()
             val newOrder = Order(
-                orderId = newOrderId,
+                orderId = orderId.toString(),
                 date = LocalDate.now().toString(),
                 customerID = customerId.toString(),
                 status = 0,
@@ -171,7 +167,7 @@ class OrderDetailsViewModel @Inject constructor(
             )
             saveOrderItemResponse = orderStorageService.addOrder(newOrder)
             memoryOrderItemsRepository.getOrderItems().forEach { orderItem ->
-                orderItem.orderID = newOrderId
+                orderItem.orderID = orderId.toString()
                 orderItem.statusID = 3
                 saveOrderItemResponse = orderItemStorageService.addOrderItem(orderItem)
             }
@@ -183,13 +179,9 @@ class OrderDetailsViewModel @Inject constructor(
         launchCatching {
             memoryOrderItemsRepository.getOrderItems().forEach {
                 if (it.statusID == 0) {
-                    try {
-                        saveOrderItemResponse = orderItemStorageService.updateOrderItem(it)
-                    } catch (e: Exception) {
-                    }
+                    saveOrderItemResponse = orderItemStorageService.updateOrderItem(it)
                 }
                 if (it.statusID == -1){
-                    it.statusID = 3
                     saveOrderItemResponse = orderItemStorageService.addOrderItem(it)
                 }
                 if (it.amount == 0){
@@ -217,7 +209,7 @@ class OrderDetailsViewModel @Inject constructor(
     }
 
     fun generatePDF(
-        context: Context,
+        //context: Context,
     ) {
         var orderItems = emptyList<OrderItem>()
         when(val orderItemsResponse = orderItemsResponse){
@@ -244,31 +236,32 @@ class OrderDetailsViewModel @Inject constructor(
 
         when(val customerApiResponse = customerResponse){
             is ValueOrException.Success -> {
+
                 val pageHeight = 1120
                 val pageWidth = 792
-                lateinit var scaledbmp: Bitmap
                 val pdfDocument = PdfDocument()
                 val paint = Paint()
                 val title = Paint()
+                var folder = File(OnlabApplication.applicationContext().filesDir, "Documents")
 
-                val directoryPath = "/storage/emulated/0/Documents"
-                val directory = File(directoryPath)
-                if (!directory.exists()) {
-                    directory.mkdirs()
-                }
+                if (!folder.exists())
+                    folder.mkdir()
+
                 val fileName = "order_${orderItems[0].orderID}.pdf"
-                val file = File(directory, fileName)
+                val file = File(folder, fileName)
 
-                val bmp = BitmapFactory.decodeResource(context.resources, R.drawable.picture_placeholder)
-                scaledbmp = Bitmap.createScaledBitmap(bmp, 140, 140, false)
                 val myPageInfo: PdfDocument.PageInfo? =
                     PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+
+                val bmp = BitmapFactory.decodeResource(OnlabApplication.applicationContext().resources, R.drawable.picture_placeholder)
+                var scaledbmp: Bitmap = Bitmap.createScaledBitmap(bmp, 140, 140, false)
+
                 val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
                 val canvas: Canvas = myPage.canvas
                 canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
                 title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 title.textSize = 20F
-                title.color = ContextCompat.getColor(context, R.color.black)
+                title.color = ContextCompat.getColor(OnlabApplication.applicationContext(), R.color.black)
                 canvas.drawText("Ügyfél neve: ${customerApiResponse.data.firstName} ${customerApiResponse.data.lastName}", 209F, 40F, title)
                 canvas.drawText("Ügyfél címe: ${customerApiResponse.data.address} ", 209F, 75F, title)
                 canvas.drawText("Ügyfél telefonszáma: ${customerApiResponse.data.phoneNumber} ", 209F, 110F, title)
@@ -276,7 +269,7 @@ class OrderDetailsViewModel @Inject constructor(
                 canvas.drawText("Rendelési azonosító: ${orderItems[0].orderID}", 209F, 145F, title)
                 canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
                 title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                title.color = ContextCompat.getColor(context, R.color.black)
+                title.color = ContextCompat.getColor(OnlabApplication.applicationContext(), R.color.black)
                 title.textSize = 15F
                 title.textAlign = Paint.Align.CENTER
 
@@ -299,27 +292,24 @@ class OrderDetailsViewModel @Inject constructor(
                     canvas.drawLine(70F, yPosition + 30, 722F, yPosition + 30, paint)
                     yPosition += 60F
                 }
-                var sikerult = false
-
                 pdfDocument.finishPage(myPage)
 
                 try {
                     FileOutputStream(file).use { outputStream ->
                         pdfDocument.writeTo(outputStream)
                     }
-                    sikerult = true
+                    SnackbarManager.displayMessage(R.string.pdf_saved)
                 } catch (e: IOException) {
-                    e.printStackTrace()
-                    Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+                    Log.d("PdfError", "generatePDF: $e")
+                    SnackbarManager.displayMessage(R.string.pdf_error)
                 }
 
                 pdfDocument.close()
-                if(sikerult){
-                    Toast.makeText(context, "PDF elmentve", Toast.LENGTH_SHORT).show()
-                }
+
             }
             else -> {}
         }
 
     }
+
 }

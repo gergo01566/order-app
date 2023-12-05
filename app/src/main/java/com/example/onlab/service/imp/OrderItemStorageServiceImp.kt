@@ -1,11 +1,9 @@
 package com.example.onlab.service.imp
 
-import android.util.Log
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.OrderItem
 import com.example.onlab.service.OrderItemStorageService
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
@@ -43,6 +41,7 @@ constructor(private val firestore: FirebaseFirestore):
                     .update(
                         hashMapOf(
                             "id" to docId,
+                            "status_id" to 3
                         ) as Map<String, Any>
                     )
                     .addOnCompleteListener { task ->

@@ -10,7 +10,6 @@ import javax.inject.Inject
 
 open class FirebaseStorage @Inject constructor(private val storage: FirebaseStorage, private val firestore: FirebaseFirestore){
     suspend fun uploadAndGetDownloadUrl(collectionName: String, id: String, fieldName: String, image: String) {
-
         val fileName =
             "${System.currentTimeMillis()}_${image.toUri().lastPathSegment}"
         val imageRef = storage.reference.child("images/${fileName}")

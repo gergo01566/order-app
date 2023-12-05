@@ -18,4 +18,7 @@
     <string name="invalid_password">Helytelen jelszó formátum.</string>
     <string name="invalid_customer_inputs">Kérlek ellenőrízd az ügyfél adatait.</string>
     <string name="invalid_product_input">Kérjük ellenőrízd a termék adatait!</string>
+    <string name="pdf_saved">Sikeres PDF mentés.</string>
+    <string name="pdf_error">Sikertelen PDF mentés</string>
+    <string name="adding">Adding new order</string>
 </resources>

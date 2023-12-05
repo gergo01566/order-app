@@ -7,19 +7,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -97,7 +94,7 @@ fun CustomerScreen(
                             onEditCustomerDetails = {
                                 onNavigateToCustomer(it)
                             },
-                            onClickOnOpenNewOrderIcon = { customerId, orderId ->
+                            onClickOnOpenNewOrder = { customerId, orderId ->
                                 onNavigateToOrder(customerId, orderId)
                             }
                         )
@@ -152,14 +149,14 @@ fun CustomerList(
     data: List<Customer>,
     onDelete: (Customer)-> Unit,
     onEditCustomerDetails: (String)-> Unit,
-    onClickOnOpenNewOrderIcon: (String, String) -> Unit,
+    onClickOnOpenNewOrder: (String, String) -> Unit,
 ){
     CreateList(
         data = data.sortedBy { it.firstName },
         onClick = { customer ->
             val orderID: String = UUID.randomUUID().toString()
             customer.id?.let {
-                    _customer -> onClickOnOpenNewOrderIcon(_customer, orderID)
+                    _customer -> onClickOnOpenNewOrder(_customer, orderID)
             }
         },
         icons = listOf(
@@ -210,6 +207,7 @@ fun SearchBar(onSearchTextChanged: (String) -> Unit){
         .fillMaxWidth()
     ) {
         BasicField(
+            modifier = Modifier.testTag("SearchBar"),
             text = "Keresés",
             label = "Keresés",
             value = searchText,

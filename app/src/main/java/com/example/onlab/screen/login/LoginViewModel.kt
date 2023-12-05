@@ -1,7 +1,6 @@
 package com.example.onlab.viewModels
 
 import androidx.compose.runtime.mutableStateOf
-import com.example.onlab.R
 import com.example.onlab.components.SnackbarManager
 import com.example.onlab.model.User
 import com.example.onlab.navigation.DestinationLogin
@@ -49,7 +48,7 @@ class LoginViewModel @Inject constructor(
         }
     }
     fun onSignUpClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit) {
-        var user = User()
+        //var user = User("user123")
         if (email.isBlank()) {
             return
         }
@@ -62,7 +61,7 @@ class LoginViewModel @Inject constructor(
             authService.createUser(email, password, onFailure) {
                 navigateFromTo(DestinationLogin, DestinationOrderList)
             }
-            userStorageService.addUser(user)
+            //userStorageService.addUser(user)
         }
     }
 

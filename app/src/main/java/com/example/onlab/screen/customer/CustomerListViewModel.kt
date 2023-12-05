@@ -12,7 +12,7 @@ import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.onlab.R.string as AppText
+import com.example.onlab.R as AppText
 
 @HiltViewModel
 class CustomerListViewModel @Inject constructor(
@@ -39,7 +39,7 @@ class CustomerListViewModel @Inject constructor(
             }
         }
         when(customerResponse){
-            is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.data_loading_error)
+            is ValueOrException.Failure -> SnackbarManager.displayMessage(AppText.string.data_loading_error)
             else -> Unit
         }
     }

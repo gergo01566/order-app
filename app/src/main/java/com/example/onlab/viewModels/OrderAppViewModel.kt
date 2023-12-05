@@ -1,9 +1,6 @@
 package com.example.onlab.viewModels
 
-import android.Manifest
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,20 +17,19 @@ open class OrderAppViewModel: ViewModel() {
             block = block
         )
 
-    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+    val permissionsToAsk = mutableStateListOf<String>()
 
     fun dismissDialog() {
-        visiblePermissionDialogQueue.removeFirst()
+        permissionsToAsk.removeFirst()
     }
 
     fun onPermissionResult(
         permission: String,
         isGranted: Boolean
     ) {
-        if(!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
-            visiblePermissionDialogQueue.add(permission)
+        if(!isGranted && !permissionsToAsk.contains(permission)) {
+            permissionsToAsk.add(permission)
         }
     }
-
 
 }

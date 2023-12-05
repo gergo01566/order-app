@@ -242,11 +242,9 @@ object ValidationUtils {
         return true
     }
 
-    fun inputIsValidPassword(input: String):Boolean {
-        val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d).{6,}\$")
-        if (!passwordRegex.matches(input) || input.isBlank()) {
-            return false
-        }
-        return true
+    fun inputIsValidPassword(input: String): Boolean {
+        val passwordRegex = Regex("^(?=.*[A-Za-z])(?=.*\\d).{6,}$")
+        return passwordRegex.matches(input) && input.isNotBlank()
     }
+
 }

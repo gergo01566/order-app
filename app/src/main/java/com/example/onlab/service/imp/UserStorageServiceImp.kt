@@ -1,12 +1,10 @@
 package com.example.onlab.service.imp
 
-import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.User
 import com.example.onlab.service.UserStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.UploadTask
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 

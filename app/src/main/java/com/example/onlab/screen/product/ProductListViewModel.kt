@@ -2,7 +2,6 @@ package com.example.onlab.screen.product
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.SavedStateHandle
-import com.example.onlab.R
 import com.example.onlab.components.SnackbarManager
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Category
@@ -16,6 +15,8 @@ import com.example.onlab.service.ProductStorageService
 import com.example.onlab.viewModels.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import com.example.onlab.R
+
 
 @HiltViewModel
 class ProductListViewModel @Inject constructor(

@@ -33,22 +33,6 @@ import java.util.*
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalPermissionsApi::class)
 
 fun NavGraphBuilder.appNavigation(appState: AppState) {
-//    val permissionRequester = PermissionRequester()
-//
-//    val startDestination : String = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
-//        DestinationLogin
-//    } else {
-//        DestinationCustomerList
-//    }
-//
-//    NavHost(
-//        navController = appState.navController,
-//        startDestination = "orderAppRoute"
-//    ) {
-//        navigation(
-//            startDestination = startDestination,
-//            route = "orderAppRoute"
-//        ) {
 
             composable(DestinationLogin){
                 LoginScreen(
@@ -119,9 +103,8 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                             popUpTo(0) { inclusive = true }
                         }
                     },
-                    onNavigateToCustomer = {
-                        Log.d("TAG", "AppNavigation: $it")
-                        appState.navController.navigate(buildCustomerDetailsRoute(it))
+                    onNavigateToCustomer = { customerId ->
+                        appState.navController.navigate(buildCustomerDetailsRoute(customerId))
                     },
                 ) { from, to ->
                     appState.navController.navigate(to) {
@@ -164,7 +147,6 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
                 logBackStack(it, appState.navController)
                 ProductListScreen(
                     onNavigate = {
-                        Log.d("Nav", "productId: $it") // Log the value
                         appState.navController.navigate(buildProductDetailsRoute(it))
                     },
                     navigateFromTo = { from, to ->
@@ -242,8 +224,8 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
 }
 
 fun buildProductDetailsRoute(argument: String) = "${DestinationProductDetails}/$argument"
-fun buildCustomerDetailsRoute(argument: String) = "${DestinationCustomerDetails}/$argument"
-fun buildNewOrderRoute(customerId: String, orderId: String) = "${DestinationNewOrder}/$customerId/$orderId"
+fun buildCustomerDetailsRoute(customerId: String) = "${DestinationCustomerDetails}/$customerId"
+fun buildNewOrderRoute(customerId: String, orderId: String) = "${DestionationOrderDetails}/$customerId/$orderId"
 //fun buildOrderDetailsRoute(customerId: String, orderId: String) = "${DestinationNewOrder}/$orderId/$customerId"
 fun buildProductListRoute(orderId: String, isOrdering: String, customerId: String) = "${DestinationProductList}/$orderId/$isOrdering/$customerId"
 

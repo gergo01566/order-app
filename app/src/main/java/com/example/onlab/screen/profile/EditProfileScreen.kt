@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -161,6 +162,7 @@ fun UserDataList(
             }
             Spacer(modifier = Modifier.height(paddingValue.calculateStartPadding(LayoutDirection.Ltr)))
             EditTextField(
+
                 value = uiState.name,
                 isError = !ValidationUtils.inputIsNotEmpty(uiState.name),
                 label = "Név"
@@ -213,5 +215,6 @@ fun EditTextField(value: String, label: String, readOnly: Boolean = false, isErr
             .padding(5.dp)
             .fillMaxWidth()
             .height(56.dp)
+            .testTag(label)
     )
 }

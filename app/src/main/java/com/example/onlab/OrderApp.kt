@@ -1,4 +1,4 @@
-package com.example.onlab
+package com.example.onlab.OrderApp
 
 import AppState
 import android.Manifest
@@ -20,6 +20,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.example.onlab.PermissionRequester
 import com.example.onlab.components.NotificationPermissionRationaleDialog
 import com.example.onlab.components.SnackbarManager
 import com.example.onlab.navigation.DestinationCustomerList
@@ -35,17 +36,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 fun OrderApp () {
     val appState = rememberAppState()
 
-//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//        permissionRequester.requestPermission(
-//            context = LocalContext.current,
-//            permission = android.Manifest.permission.POST_NOTIFICATIONS,
-//            showRationale = { },
-//            onPermissionDenied = {
-//                //state.snackBarText = "Permission denied"
-//            },
-//            onPermissionGranted = { }
-//        )
-//    }
 
     var hasNotificationPermission by remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

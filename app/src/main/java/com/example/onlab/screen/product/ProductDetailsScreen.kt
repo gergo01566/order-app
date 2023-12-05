@@ -157,7 +157,7 @@ fun ProductDetailsScreen(
             }
         )
 
-        viewModel.visiblePermissionDialogQueue.forEach{ permission ->
+        viewModel.permissionsToAsk.forEach{ permission ->
             when(permission){
                 Manifest.permission.READ_EXTERNAL_STORAGE -> {
                     NotificationPermissionRationaleDialog(
@@ -263,7 +263,7 @@ fun ProductData(
                 onNewValue = { onTitleChange(it) })
 
             BasicField(
-                label = "Add meg a termék árát!",
+                label = "Add meg a termék árát! (darab)",
                 text = "Termék ára (darab)",
                 value = uiState.pricePerPiece,
                 isError = !ValidationUtils.inputContaintsOnlyNumbers(uiState.pricePerPiece) || !ValidationUtils.inputIsNotEmpty(uiState.pricePerPiece),
@@ -271,7 +271,7 @@ fun ProductData(
                 keyboardType = KeyboardType.Number
             )
             BasicField(
-                label = "Add meg a termék árát!",
+                label = "Add meg a termék árát! (karton)",
                 text = "Termék ára (karton)",
                 value = uiState.pricePerCarton,
                 isError = !ValidationUtils.inputContaintsOnlyNumbers(uiState.pricePerCarton) || !ValidationUtils.inputIsNotEmpty(uiState.pricePerCarton),

@@ -1,6 +1,7 @@
 package com.example.onlab.screen.order
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -25,7 +26,7 @@ import com.example.onlab.components.*
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.*
 import com.example.onlab.navigation.DestinationCustomerList
-import com.example.onlab.navigation.DestinationNewOrder
+import com.example.onlab.navigation.DestionationOrderDetails
 import com.example.onlab.screen.customer.LoadingScreen
 import com.example.onlab.viewModels.*
 import java.util.*
@@ -50,7 +51,7 @@ fun NewOrderScreen(
             onNavigateBack()
         },
         onFloatingButtonClick = { onNavigateTo(viewModel.orderId.toString(), "true", viewModel.customerId.toString()) },
-        onGeneratePDFClick = { viewModel.generatePDF(context = currentContext) },
+        onGeneratePDFClick = { viewModel.generatePDF() },
         onNavigateBack = {
             viewModel.onNavigateBack(
                 { onNavigateBack() }
@@ -66,11 +67,12 @@ fun NewOrderScreen(
         },
     )
     DeleteOrder(apiResponse = viewModel.deleteOrderItemResponse)
+    AddOrder(apiResponse = viewModel.saveOrderItemResponse)
 
     if (dismissChangesDialog.value) {
         DismissChangesDialog(onDismiss = { dismissChangesDialog.value = false }) {
             dismissChangesDialog.value = false
-            navigateFromTo(DestinationNewOrder, DestinationCustomerList)
+            navigateFromTo(DestionationOrderDetails, DestinationCustomerList)
         }
     }
 }
@@ -215,10 +217,6 @@ fun OrderItemList(
                                 style = MaterialTheme.typography.caption
                             )
                         }
-                        Text(
-                            text = "${orderItem.statusID} status",
-                            style = MaterialTheme.typography.caption
-                        )
                     }
                 }
             }
@@ -308,6 +306,15 @@ fun ProductImage(
             )
         }
         else -> LoadingScreen()
+    }
+}
+
+@Composable
+fun AddOrder(apiResponse: ValueOrException<Boolean>){
+    when(apiResponse){
+        is ValueOrException.Success -> Unit
+        is ValueOrException.Failure -> Log.d("log", "AddOrder: ${apiResponse.e}")
+        else -> Unit
     }
 }
 

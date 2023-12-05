@@ -29,7 +29,13 @@ class AuthServiceImp @Inject constructor(
 
             val querySnapshot = query.get().await()
 
-            var currentUser = User()
+            var currentUser = User(
+                "user123",
+                "John Doe",
+                "123 Main Street",
+                "john.doe@example.com",
+                "https://example.com/image.jpg"
+            )
 
             if (!querySnapshot.isEmpty) {
                 val documentSnapshot = querySnapshot.documents[0]

@@ -1,6 +1,5 @@
 package com.example.onlab.service.imp
 
-import androidx.core.net.toUri
 import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.Category
 import com.example.onlab.model.Product
@@ -8,7 +7,6 @@ import com.example.onlab.service.ProductStorageService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.tasks.await
