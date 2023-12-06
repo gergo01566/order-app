@@ -133,6 +133,32 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="-971171641">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Galaxy_S23_Ultra_API_30" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="-915644257">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Galaxy_S23_Ultra_API_30" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="-903171150">
           <value>
             <AndroidTestResultsTableState>
@@ -459,6 +485,19 @@
           </value>
         </entry>
         <entry key="1817072343">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Galaxy_S23_Ultra_API_30" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1920502365">
           <value>
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">

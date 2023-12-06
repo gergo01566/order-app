@@ -13,11 +13,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val AuthService: AuthService,
+    private val authService: AuthService,
     private val userStorageService: UserStorageService
 ) : OrderAppViewModel() {
 
     var userResponse by mutableStateOf<ValueOrException<User>>(ValueOrException.Loading)
+        private set
+
+    var logOutResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
+        private set
+
+    var deleteProfileResponse by mutableStateOf<ValueOrException<Boolean>>(ValueOrException.Success(false))
         private set
 
     var uiState = mutableStateOf(ProfileUiState())
@@ -26,7 +32,7 @@ class ProfileViewModel @Inject constructor(
     init {
         launchCatching {
             userResponse = ValueOrException.Loading
-                userResponse = userStorageService.getUser(AuthService.currentUserId)
+                userResponse = userStorageService.getUser(authService.currentUserId)
                 when(userResponse){
                     is ValueOrException.Success<User> -> {
                         val data = (userResponse as ValueOrException.Success<User>).data
@@ -47,13 +53,24 @@ class ProfileViewModel @Inject constructor(
 
     fun onLogout(){
         launchCatching {
-            AuthService.signOut()
+            logOutResponse = ValueOrException.Loading
+            logOutResponse = authService.signOut()
+            when(val response = logOutResponse){
+                is ValueOrException.Success -> Unit
+                else -> Unit
+            }
         }
     }
 
     fun onDeleteProfile(){
         launchCatching {
-            AuthService.deleteProfile()
+            deleteProfileResponse = ValueOrException.Loading
+            deleteProfileResponse = authService.deleteProfile()
+            when(val response = deleteProfileResponse){
+                is ValueOrException.Success -> Unit
+                else -> Unit
+            }
+
         }
     }
 }

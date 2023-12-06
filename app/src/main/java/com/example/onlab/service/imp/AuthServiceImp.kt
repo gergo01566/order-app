@@ -1,8 +1,10 @@
 package com.example.onlab.service.imp
 
 import android.util.Log
+import com.example.onlab.data.ValueOrException
 import com.example.onlab.model.User
 import com.example.onlab.service.AuthService
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -60,43 +62,49 @@ class AuthServiceImp @Inject constructor(
             close() // close the flow when done
         }
 
-    override suspend fun signInWithEmailAndPassowrd(email: String, password: String, onFailure: () -> Unit, onComplete: () -> Unit){
-        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                onComplete()
-            } else {
-                onFailure()
-            }
-        }
-        Log.d("log", "signInWithEmailAndPassowrd: ${Firebase.auth.currentUser}")
-    }
-
-    override suspend fun createUser(email: String, password: String, onFailure: () -> Unit, onComplete: () -> Unit) {
-        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                onComplete()
-            } else {
-                onFailure()
-            }
+    override suspend fun signInWithEmailAndPassowrd(email: String, password: String): ValueOrException<Boolean> {
+        return try {
+            auth.signInWithEmailAndPassword(email, password).await()
+            ValueOrException.Success(true)
+        } catch (e: Exception) {
+            ValueOrException.Failure(e)
         }
     }
 
-    override suspend fun resetPassword(email: String, onFailure: () -> Unit, onComplete: () -> Unit) {
-        auth.sendPasswordResetEmail(email).addOnCompleteListener {
-            if (it.isSuccessful) {
-                onComplete()
-            } else {
-                onFailure()
-            }
+    override suspend fun createUser(email: String, password: String): ValueOrException<Boolean> {
+        return try {
+            auth.createUserWithEmailAndPassword(email, password).await()
+            ValueOrException.Success(true)
+        } catch (e: Exception){
+            ValueOrException.Failure(e)
         }
     }
 
-    override suspend fun signOut() {
-        auth.signOut()
+    override suspend fun resetPassword(email: String): ValueOrException<Boolean> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            ValueOrException.Success(true)
+        } catch (e: Exception){
+            ValueOrException.Failure(e)
+        }
     }
 
-    override suspend fun deleteProfile() {
-        auth.currentUser?.delete()
+    override suspend fun signOut(): ValueOrException<Boolean> {
+        return try {
+            auth.signOut()
+            ValueOrException.Success(true)
+        } catch (e: Exception){
+            ValueOrException.Failure(e)
+        }
+    }
+
+    override suspend fun deleteProfile(): ValueOrException<Boolean> {
+        return try {
+            auth.currentUser?.delete()
+            ValueOrException.Success(true)
+        } catch (e: Exception){
+            ValueOrException.Failure(e)
+        }
     }
 
 }

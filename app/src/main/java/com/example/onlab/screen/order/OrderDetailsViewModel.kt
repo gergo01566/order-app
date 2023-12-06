@@ -162,7 +162,8 @@ class OrderDetailsViewModel @Inject constructor(
                 orderId = orderId.toString(),
                 date = LocalDate.now().toString(),
                 customerID = customerId.toString(),
-                status = 0,
+                //status = false,
+                isCompleted = false,
                 madeby = FirebaseAuth.getInstance().currentUser!!.email!!
             )
             saveOrderItemResponse = orderStorageService.addOrder(newOrder)
@@ -253,21 +254,17 @@ class OrderDetailsViewModel @Inject constructor(
                 val myPageInfo: PdfDocument.PageInfo? =
                     PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
 
-                val bmp = BitmapFactory.decodeResource(OnlabApplication.applicationContext().resources, R.drawable.picture_placeholder)
-                var scaledbmp: Bitmap = Bitmap.createScaledBitmap(bmp, 140, 140, false)
-
                 val myPage: PdfDocument.Page = pdfDocument.startPage(myPageInfo)
                 val canvas: Canvas = myPage.canvas
-                canvas.drawBitmap(scaledbmp, 56F, 40F, paint)
                 title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 title.textSize = 20F
                 title.color = ContextCompat.getColor(OnlabApplication.applicationContext(), R.color.black)
-                canvas.drawText("Ügyfél neve: ${customerApiResponse.data.firstName} ${customerApiResponse.data.lastName}", 209F, 40F, title)
-                canvas.drawText("Ügyfél címe: ${customerApiResponse.data.address} ", 209F, 75F, title)
-                canvas.drawText("Ügyfél telefonszáma: ${customerApiResponse.data.phoneNumber} ", 209F, 110F, title)
+                canvas.drawText("Ügyfél neve: ${customerApiResponse.data.firstName} ${customerApiResponse.data.lastName}", 70F, 40F, title)
+                canvas.drawText("Ügyfél címe: ${customerApiResponse.data.address} ", 70F, 75F, title)
+                canvas.drawText("Ügyfél telefonszáma: ${customerApiResponse.data.phoneNumber} ", 70F, 110F, title)
                 title.textSize = 15F
-                canvas.drawText("Rendelési azonosító: ${orderItems[0].orderID}", 209F, 145F, title)
-                canvas.drawText("Rendelés kelte: ${order.date}", 209F, 180F, title)
+                canvas.drawText("Rendelési azonosító: ${orderItems[0].orderID}", 70F, 145F, title)
+                canvas.drawText("Rendelés kelte: 2023.12.01", 70F, 180F, title)
                 title.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
                 title.color = ContextCompat.getColor(OnlabApplication.applicationContext(), R.color.black)
                 title.textSize = 15F

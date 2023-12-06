@@ -21,4 +21,6 @@
     <string name="pdf_saved">Sikeres PDF mentés.</string>
     <string name="pdf_error">Sikertelen PDF mentés</string>
     <string name="adding">Adding new order</string>
+    <string name="sign_in_error">Az e-mail cím vagy jelszó formátuma nem megfelelő vagy ezzel az e-maillel már regisztráltak!</string>
+    <string name="sign_up_error">Helytelen adatok.</string>
 </resources>

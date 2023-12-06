@@ -34,7 +34,7 @@ class OrdersListViewModel @Inject constructor(
     var customersResponse by mutableStateOf<ValueOrException<List<Customer>>>(ValueOrException.Loading)
         private set
 
-    var status = mutableStateOf(0)
+    var status = mutableStateOf(false)
         private set
 
     init {
@@ -90,7 +90,7 @@ class OrdersListViewModel @Inject constructor(
     }
 
     fun switchToCompletedOrIncompleteOrders(_status: Int){
-        status.value = _status
+        status.value = _status != 0
         getOrders()
     }
 

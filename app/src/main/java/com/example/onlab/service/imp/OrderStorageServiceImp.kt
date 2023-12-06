@@ -17,7 +17,7 @@ class OrderStorageServiceImp
 constructor(private val firestore: FirebaseFirestore) :
     OrderStorageService {
 
-    override fun getOrdersByStatus(status: MutableState<Int>) = callbackFlow {
+    override fun getOrdersByStatus(status: MutableState<Boolean>) = callbackFlow {
         val query = firestore.collection("orders")
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
@@ -29,7 +29,7 @@ constructor(private val firestore: FirebaseFirestore) :
             val response = if (snapshot != null && !snapshot.isEmpty) {
                 val orders = snapshot.toObjects(Order::class.java)
                     .filter { order ->
-                        order.status == status.value
+                        order.isCompleted == status.value
                     }
                 ValueOrException.Success(orders)
             } else {
@@ -86,13 +86,9 @@ constructor(private val firestore: FirebaseFirestore) :
     }
 
     override suspend fun updateOrder(order: Order):ValueOrException<Boolean> {
-        var status = 0
-        if (order.status == 0){
-            status = 1
-        }
         return try {
             val orderToUpdate = mapOf(
-                "order_status" to status
+                "is_completed" to !order.isCompleted
             )
             FirebaseFirestore.getInstance().collection("orders").document(order.id!!).update(orderToUpdate).await()
             ValueOrException.Success(true)

@@ -20,13 +20,13 @@ data class Order(
     @set:PropertyName("customer_id")
     var customerID: String,
 
-    @get:PropertyName("order_status")
-    @set:PropertyName("order_status")
-    var status: Int,
+    @get:PropertyName("is_completed")
+    @set:PropertyName("is_completed")
+    var isCompleted: Boolean,
 
     @get:PropertyName("made_by")
     @set:PropertyName("made_by")
     var madeby: String,
 ){
-    constructor() : this("", "", "", "", 0, "")
+    constructor() : this("", "", "", "", false, "")
 }

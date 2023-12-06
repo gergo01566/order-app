@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface OrderStorageService {
 
-    fun getOrdersByStatus(status: MutableState<Int>): Flow<ValueOrException<List<Order>>>
+    fun getOrdersByStatus(status: MutableState<Boolean>): Flow<ValueOrException<List<Order>>>
 
     suspend fun getOrder(orderId: String): ValueOrException<Order>
 

@@ -14,7 +14,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 
@@ -41,7 +40,7 @@ internal class EditProfileViewModelTest {
 
     @ExperimentalCoroutinesApi
     @Test
-    fun initTest() = runBlocking {
+    fun onEditProfileScreenInit() = runBlocking {
         `when`(authService.currentUserId).thenReturn("user123")
         val user = User(
             userId = "user123",

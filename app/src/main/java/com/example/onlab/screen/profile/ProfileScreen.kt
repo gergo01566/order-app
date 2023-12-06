@@ -52,6 +52,7 @@ fun ProfileScreen(
         message = "Biztos törölni szeretnéd a profilodat?",
         onConfirm = {
             viewModel.onDeleteProfile()
+            navigateFromTo("ProfileScreen", DestinationLogin)
         },
         onDismiss = {
             showDialog.value = false

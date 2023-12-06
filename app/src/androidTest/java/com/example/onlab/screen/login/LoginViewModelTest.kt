@@ -1,4 +1,3 @@
-import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import com.example.onlab.screen.customer.ValidationUtils
 import com.example.onlab.service.AuthService
 import com.example.onlab.service.UserStorageService
@@ -26,9 +25,6 @@ class LoginViewModelTest {
     @Mock
     private lateinit var authService: AuthService
 
-    @Mock
-    private lateinit var userStorageService: UserStorageService
-
     // Create an instance of LoginViewModel
     private lateinit var loginViewModel: LoginViewModel
 
@@ -36,7 +32,7 @@ class LoginViewModelTest {
     fun setup() {
         MockitoAnnotations.initMocks(this)
         Dispatchers.setMain(testDispatcher)
-        loginViewModel = LoginViewModel(authService, userStorageService)
+        loginViewModel = LoginViewModel(authService)
     }
 
     @After

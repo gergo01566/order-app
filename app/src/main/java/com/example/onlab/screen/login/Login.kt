@@ -80,12 +80,7 @@ fun LoginScreen(
                         uiState = uiState,
                         onEmailChange = {viewModel.onEmailChange(it)},
                         onPasswordChange = {viewModel.onPasswordChange(it)}){ email, password ->
-                        viewModel.onSignUpClick(navigateFromTo,
-                            onFailure = {
-                                showDialog.value = true
-                            },
-                            onComplete = {
-                            })
+                        viewModel.onSignUpClick(navigateFromTo)
                     }
 
                 Row(
@@ -123,18 +118,18 @@ fun LoginScreen(
         }
     )
 
-    if (showDialog.value && showLoginFrom.value) {
-        AlertDialogExample(title = "Hiba", onDismissRequest = { /*TODO*/ }) {
-            showDialog.value = false
-        }
-    } else if (showDialog.value && !showLoginFrom.value) {
-        AlertDialogExample(
-            title = "Hiba",
-            text = "Az e-mail cím vagy jelszó formátuma nem megfelelő vagy ezzel az e-maillel már regisztráltak!",
-            onDismissRequest = { /*TODO*/ }) {
-            showDialog.value = false
-        }
-    }
+//    if (showDialog.value && showLoginFrom.value) {
+//        AlertDialogExample(title = "Hiba", onDismissRequest = { /*TODO*/ }) {
+//            showDialog.value = false
+//        }
+//    } else if (showDialog.value && !showLoginFrom.value) {
+//        AlertDialogExample(
+//            title = "Hiba",
+//            text = "Az e-mail cím vagy jelszó formátuma nem megfelelő vagy ezzel az e-maillel már regisztráltak!",
+//            onDismissRequest = { /*TODO*/ }) {
+//            showDialog.value = false
+//        }
+//    }
 
     if (passwordReset.value) {
         PasswordResetDialog(
@@ -142,14 +137,9 @@ fun LoginScreen(
             onDismissRequest = { passwordReset.value = false },
             onCompleteRequest = {
                 viewModel.onResetPassword(
-                    email = it,
-                    onFailure = {
-                        passwordReset.value = false
-                    },
-                    onComplete = {
-                        passwordReset.value = false
-                    }
+                    email = it
                 )
+                passwordReset.value = false
             }
         )
     }
@@ -175,10 +165,13 @@ fun PasswordResetDialog(
                 Text(text = "Elfelejtett jelszó")
             },
             text = {
-                Column() {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(text = "Jelszavad helyreállításához add meg az e-mail címedet!", textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.padding(10.dp))
                     androidx.compose.material3.TextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = email,
                         maxLines = 1,
                         onValueChange = { email = it },
@@ -202,7 +195,7 @@ fun PasswordResetDialog(
                         onDismissRequest()
                     }
                 ) {
-                    Text("MégRsem")
+                    Text("Mégsem")
                 }
             })
     }
@@ -314,7 +307,9 @@ fun SubmitButton(
         onClick = onClick,
         modifier = Modifier
             .padding(3.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .testTag("Submit")
+        ,
         enabled = !loading && validInputs,
         shape = CircleShape
     ) {
@@ -342,6 +337,7 @@ fun PasswordInput(
         textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
         modifier = modifier
             .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
+            .testTag("Password")
             .fillMaxWidth(),
         enabled = enabled,
         keyboardOptions = KeyboardOptions(
