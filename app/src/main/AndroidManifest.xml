@@ -11,6 +11,7 @@
     <application
         android:name=".OnlabApplication"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -33,7 +34,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.onlab.fileprovider"
+            android:authorities="com.example.orderapp.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -42,7 +43,7 @@
         </provider>
 
         <service
-            android:name=".notification.NotificationService"
+            android:name=".model.service.imp.NotificationService"
             android:exported="false">
             <intent-filter>
                 <action
