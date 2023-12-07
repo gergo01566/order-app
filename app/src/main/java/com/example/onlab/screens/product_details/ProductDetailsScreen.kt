@@ -7,12 +7,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import com.example.onlab.screens.edit_profile.ProfileImage
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,14 +23,23 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -44,6 +54,8 @@ import com.example.onlab.model.ValueOrException
 import com.example.onlab.model.Product
 import com.example.onlab.screens.customers.LoadingScreen
 import java.util.*
+import kotlin.reflect.KFunction0
+
 @ExperimentalMaterialApi
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
@@ -170,7 +182,10 @@ fun ProductDetailsScreen(
                         "Most sajnos úgy döntöttél, hogy nem engedélyezed a fájlok elérését. " +
                                 "Sajnos enélkül nem lesz lehetőséged képeket feltölteni",
                         image = painterResource(id = R.drawable.gallery),
-                        isPermanentlyDeclined = !shouldShowRequestPermissionRationale(applicationContext as Activity, permission),
+                        isPermanentlyDeclined = ActivityCompat.shouldShowRequestPermissionRationale(
+                            applicationContext as Activity,
+                            permission
+                        ),
                         onDismiss = viewModel::dismissDialog,
                         onGoToAppSettingsClick = {
                             openAppSettings(applicationContext)

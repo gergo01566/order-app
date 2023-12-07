@@ -6,7 +6,6 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.navigation.NavHostController
-import com.example.onlab.common.composables.PermissionRequester
 import com.example.onlab.common.snackbar.SnackbarManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filterNotNull
@@ -15,7 +14,6 @@ import kotlinx.coroutines.launch
 @Stable
 class AppState(
     val navController: NavHostController,
-    val permissionRequester: PermissionRequester,
     val scaffoldState: ScaffoldState,
     val context: Context,
     private val snackbarManager: SnackbarManager,
@@ -38,23 +36,6 @@ class AppState(
 
     fun navigateBack() {
         navController.popBackStack()
-    }
-
-    @Composable
-    fun RequestPermission(
-        context: Context,
-        permission: String,
-        showRationale: () -> Unit,
-        onPermissionDenied: () -> Unit,
-        onPermissionGranted: () -> Unit
-    ) {
-        permissionRequester.requestPermission(
-            context = context,
-            permission = permission,
-            showRationale = showRationale,
-            onPermissionDenied = onPermissionDenied,
-            onPermissionGranted = onPermissionGranted
-        )
     }
 }
 

@@ -16,7 +16,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.example.onlab.common.composables.PermissionRequester
 import com.example.onlab.common.snackbar.SnackbarManager
 import com.example.onlab.navigation.DestinationCustomerList
 import com.example.onlab.navigation.DestinationLogin
@@ -80,7 +79,6 @@ fun OrderApp () {
 @Composable
 fun rememberAppState(): AppState {
     val navController = rememberNavController()
-    val permissionRequester = PermissionRequester()
     val snackbarHostState = remember { SnackbarHostState() }
     val scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val coroutineScope = rememberCoroutineScope()
@@ -89,6 +87,6 @@ fun rememberAppState(): AppState {
     val resources = LocalContext.current.resources
 
     return remember {
-        AppState(navController = navController, permissionRequester = permissionRequester, scaffoldState = scaffoldState, snackbarManager = snackbarManager, coroutineScope = coroutineScope, resources = resources, context = context)
+        AppState(navController = navController, scaffoldState = scaffoldState, snackbarManager = snackbarManager, coroutineScope = coroutineScope, resources = resources, context = context)
     }
 }
