@@ -43,7 +43,7 @@
         </provider>
 
         <service
-            android:name=".notification.NotificationService"
+            android:name=".model.service.imp.NotificationService"
             android:exported="false">
             <intent-filter>
                 <action

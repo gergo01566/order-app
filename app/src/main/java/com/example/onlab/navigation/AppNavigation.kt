@@ -2,8 +2,8 @@
 
 package com.example.onlab.navigation
 
-import AppState
-import com.example.onlab.screen.profile.EditProfileScreen
+import com.example.onlab.AppState
+import com.example.onlab.screens.edit_profile.EditProfileScreen
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -15,16 +15,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
 import androidx.navigation.compose.composable
-import com.example.onlab.screen.customer.CustomerDetailsScreen
+import com.example.onlab.screens.customer_details.CustomerDetailsScreen
 
-import com.example.onlab.screen.product.ProductListScreen
-import com.example.onlab.screen.customer.CustomerScreen
-import com.example.onlab.screen.order.NewOrderScreen
-import com.example.onlab.screen.order.OrdersScreen
-import com.example.onlab.screen.product.ProductDetailsScreen
-import com.example.onlab.screen.profile.ProfileScreen
+import com.example.onlab.screens.product.ProductListScreen
+import com.example.onlab.screens.customers.CustomerScreen
+import com.example.onlab.screens.order_details.NewOrderScreen
+import com.example.onlab.screens.order.OrdersScreen
+import com.example.onlab.screens.product_details.ProductDetailsScreen
+import com.example.onlab.screens.profile.ProfileScreen
 import com.example.onlab.screens.login.LoginScreen
-import com.example.onlab.viewModels.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import java.util.*
 

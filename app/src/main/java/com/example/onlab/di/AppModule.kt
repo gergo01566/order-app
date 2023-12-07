@@ -1,9 +1,9 @@
 package com.example.onlab.di
 
-import com.example.onlab.repository.MemoryOrderItemRepository
-import com.example.onlab.repository.OrderItemsRepository
-import com.example.onlab.service.*
-import com.example.onlab.service.imp.*
+import com.example.onlab.model.service.*
+import com.example.onlab.model.service.imp.*
+import com.example.onlab.model.repository.MemoryOrderItemRepositoryImp
+import com.example.onlab.model.repository.OrderItemsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,7 +29,7 @@ abstract class AppModule {
     abstract fun bindOrderItemStorageService(imp: OrderItemStorageServiceImp): OrderItemStorageService
 
     @Binds
-    abstract fun bindProductRepository(imp: MemoryOrderItemRepository): OrderItemsRepository
+    abstract fun bindProductRepository(imp: MemoryOrderItemRepositoryImp): OrderItemsRepository
 
     @Binds
     abstract fun bindUserStorageService(imp: UserStorageServiceImp): UserStorageService

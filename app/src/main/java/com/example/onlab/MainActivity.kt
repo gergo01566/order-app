@@ -1,7 +1,6 @@
 
 package com.example.onlab
 
-import com.example.onlab.components.*
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.onlab.OrderApp.OrderApp
 import com.example.onlab.ui.theme.OnlabTheme
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 

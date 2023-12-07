@@ -1,6 +1,6 @@
 package com.example.onlab.model
 
-import com.example.onlab.screen.product.ProductUiState
+import com.example.onlab.screens.product_details.ProductUiState
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 import java.util.*

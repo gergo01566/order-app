@@ -1,6 +1,6 @@
 package com.example.onlab.di
 
-import com.example.onlab.repository.*
+import com.example.onlab.model.repository.MemoryOrderItemRepositoryImp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,5 +25,5 @@ object FirebaseModule {
 
     @Singleton
     @Provides
-    fun provideMemoryOrderItemRepository() = MemoryOrderItemRepository()
+    fun provideMemoryOrderItemRepository() = MemoryOrderItemRepositoryImp()
 }
