@@ -34,7 +34,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.onlab.fileprovider"
+            android:authorities="com.example.orderapp.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
