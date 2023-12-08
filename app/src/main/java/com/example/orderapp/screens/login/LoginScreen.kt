@@ -43,7 +43,6 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ){
     val showLoginFrom = rememberSaveable { mutableStateOf(true) }
-    val showDialog = remember { mutableStateOf(false) }
     val passwordReset = remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState
@@ -64,13 +63,7 @@ fun LoginScreen(
                         uiState = uiState,
                         onEmailChange = { viewModel.onEmailChange(it) },
                         onPasswordChange = {viewModel.onPasswordChange(it)} ){ email, password ->
-                        viewModel.onSignInClick(navigateFromTo,
-                            onFailure = {
-                                showDialog.value = true
-                            },
-                            onComplete = {
-
-                            })
+                        viewModel.onSignInClick(navigateFromTo)
                     }
                 else
                     UserForm(

@@ -17,8 +17,8 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.orderapp.common.snackbar.SnackbarManager
-import com.example.orderapp.navigation.DestinationCustomerList
 import com.example.orderapp.navigation.DestinationLogin
+import com.example.orderapp.navigation.DestinationOrderList
 import com.example.orderapp.navigation.appNavigation
 import com.google.firebase.auth.FirebaseAuth
 
@@ -64,7 +64,7 @@ fun OrderApp () {
                 startDestination = if(FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()){
                     DestinationLogin
                 } else {
-                    DestinationCustomerList
+                    DestinationOrderList
                 },
                 modifier = Modifier.padding(innerPadding)
             ){

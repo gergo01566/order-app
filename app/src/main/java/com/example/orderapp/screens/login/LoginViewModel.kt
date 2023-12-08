@@ -7,9 +7,9 @@ import com.example.orderapp.R
 import com.example.orderapp.common.snackbar.SnackbarManager
 import com.example.orderapp.common.utils.ValidationUtils
 import com.example.orderapp.model.ValueOrException
-import com.example.orderapp.navigation.DestinationCustomerList
 import com.example.orderapp.navigation.DestinationLogin
 import com.example.orderapp.model.service.AuthService
+import com.example.orderapp.navigation.DestinationOrderList
 import com.example.orderapp.screens.OrderAppViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +44,7 @@ class LoginViewModel @Inject constructor(
         uiState.value = uiState.value.copy(password = newValue)
     }
 
-    fun onSignInClick(navigateFromTo: (String, String) -> Unit, onFailure: () -> Unit, onComplete: () -> Unit ) {
+    fun onSignInClick(navigateFromTo: (String, String) -> Unit) {
         if (email.isBlank()) {
             SnackbarManager.displayMessage(R.string.invalid_email_error)
             return
@@ -65,7 +65,7 @@ class LoginViewModel @Inject constructor(
                     is ValueOrException.Success -> {
                         if (response.data) {
                             withContext(Dispatchers.Main) {
-                                navigateFromTo(DestinationLogin, DestinationCustomerList)
+                                navigateFromTo(DestinationLogin, DestinationOrderList)
                             }
                         }
                     }
@@ -99,7 +99,7 @@ class LoginViewModel @Inject constructor(
                     is ValueOrException.Success -> {
                         if (response.data) {
                             withContext(Dispatchers.Main) {
-                                navigateFromTo(DestinationLogin, DestinationCustomerList)
+                                navigateFromTo(DestinationLogin, DestinationOrderList)
                             }
                         }
                     }
