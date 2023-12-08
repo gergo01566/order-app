@@ -212,6 +212,7 @@ fun NavGraphBuilder.appNavigation(appState: AppState) {
             composable(DestinationProfile){
                 logBackStack(it, appState.navController)
                 ProfileScreen(
+                    context = appState.context,
                     navigateFromTo = { from , to ->
                         appState.navController.navigate(to)
                     }

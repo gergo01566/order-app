@@ -1,5 +1,7 @@
 package com.example.orderapp.screens.profile
 
+import android.app.Activity
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,9 +39,11 @@ import com.example.orderapp.model.ValueOrException
 import com.example.orderapp.navigation.DestinationEditProfile
 import com.example.orderapp.navigation.DestinationLogin
 import com.example.orderapp.navigation.DestinationProfile
+import com.example.orderapp.screens.product_details.openAppSettings
 
 @Composable
 fun ProfileScreen(
+    context: Context,
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateFromTo: (String, String) -> Unit
 ) {
@@ -93,10 +97,9 @@ fun ProfileScreen(
                                 navigateFromTo(DestinationProfile, DestinationEditProfile)
                             },
                             onNotificationClick = {
-                                //TODO
+                                openAppSettings(context as Activity)
                             },
                             onLogoutClick = {
-                                //TODO
                                 viewModel.onLogout()
                                 navigateFromTo(DestinationProfile, DestinationLogin)
                             },

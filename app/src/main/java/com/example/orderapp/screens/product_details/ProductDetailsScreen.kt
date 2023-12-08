@@ -288,7 +288,7 @@ fun BasicField(
         modifier = modifier
             .fillMaxWidth()
             .padding(10.dp),
-        value = if (value == "0") "" else value,
+        value = value,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         label = { Text(label) },
         onValueChange = { onNewValue(it) },
