@@ -195,9 +195,6 @@ fun UserForm(
     val valid = validateInputs(uiState.email, uiState.password)
 
     val modifier = Modifier
-        .height(500.dp)
-        .background(MaterialTheme.colors.background)
-        .verticalScroll(rememberScrollState())
 
     Column(
         modifier = modifier,
