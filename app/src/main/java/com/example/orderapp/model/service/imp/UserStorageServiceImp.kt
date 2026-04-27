@@ -36,12 +36,8 @@ class UserStorageServiceImp
 
     override suspend fun addUser(user: User): ValueOrException<Boolean> {
         return try {
-            firestore.collection("users").add(user).addOnCompleteListener {
-                ValueOrException.Success(true)
-            }.addOnFailureListener{
-                ValueOrException.Failure(e = it)
-            }
-            ValueOrException.Success(false)
+            firestore.collection("users").add(user).await()
+            ValueOrException.Success(true)
         } catch (e: Exception){
             ValueOrException.Failure(e = e)
         }

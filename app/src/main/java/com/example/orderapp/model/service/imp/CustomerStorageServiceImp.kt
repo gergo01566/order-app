@@ -23,9 +23,8 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
 
         val snapshotListener = query.addSnapshotListener { snapshot, e ->
             if (e != null) {
-                if (e.equals(FirebaseFirestoreException.Code.UNAVAILABLE)){
-                    ValueOrException.Failure(e)
-                }
+                trySend(ValueOrException.Failure(e))
+                return@addSnapshotListener
             }
             val response = if (snapshot != null && !snapshot.isEmpty) {
                 val customers = snapshot.toObjects(Customer::class.java)
@@ -53,7 +52,7 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
             val response = if (snapshot != null) {
                 val customers = snapshot.toObjects(Customer::class.java)
                     .filter { customer ->
-                        text!!.isEmpty() || customer.doesMatchSearchQuery(text)
+                        text.isNullOrEmpty() || customer.doesMatchSearchQuery(text)
                     }
                 ValueOrException.Success(customers)
             } else {
@@ -86,16 +85,14 @@ constructor(private val firestore: FirebaseFirestore, private val storage: Fireb
         customer: Customer,
     ): ValueOrException<Boolean> {
         return try {
-            var docId = ""
-            firestore.collection("customers").add(customer).addOnSuccessListener { documentRef ->
-                docId = documentRef.id
-                firestore.collection("customers").document(documentRef.id).update(
-                    hashMapOf(
-                        "id" to documentRef.id,
-                        "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
-                    ) as Map<String, Any>
-                ).addOnCompleteListener { ValueOrException.Success(true) }
-            }.await()
+            val documentRef = firestore.collection("customers").add(customer).await()
+            val docId = documentRef.id
+            firestore.collection("customers").document(docId).update(
+                mapOf(
+                    "id" to docId,
+                    "customer_image" to "https://firebasestorage.googleapis.com/v0/b/orderapp-7d65f.appspot.com/o/images%2F1684741663752_image_08c2f5eb-e131-424d-9d52-5490dff6d3de.jpg?alt=media&token=63251bd3-1549-4534-ad1e-30239d40cc0d"
+                )
+            ).await()
             if (!customer.image.startsWith("https")) {
                 storage.uploadAndGetDownloadUrl("customers", docId, "customer_image", customer.image)
             }

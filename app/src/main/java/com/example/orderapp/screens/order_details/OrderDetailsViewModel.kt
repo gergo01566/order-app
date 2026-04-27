@@ -164,7 +164,7 @@ class OrderDetailsViewModel @Inject constructor(
                 customerID = customerId.toString(),
                 //status = false,
                 isCompleted = false,
-                madeby = FirebaseAuth.getInstance().currentUser!!.email!!
+                madeby = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
             )
             saveOrderItemResponse = orderStorageService.addOrder(newOrder)
             memoryOrderItemsRepository.getOrderItems().forEach { orderItem ->

@@ -20,7 +20,9 @@ open class OrderAppViewModel: ViewModel() {
     val permissionsToAsk = mutableStateListOf<String>()
 
     fun dismissDialog() {
-        permissionsToAsk.removeFirst()
+        if (permissionsToAsk.isNotEmpty()) {
+            permissionsToAsk.removeFirst()
+        }
     }
 
     fun onPermissionResult(

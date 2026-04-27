@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
 
         FirebaseMessaging.getInstance().isAutoInitEnabled = true
         FirebaseMessaging.getInstance().subscribeToTopic("pushNotifications")
-        FirebaseMessaging.getInstance().subscribeToTopic("pushNotificatio")
 
         setContent {
             OrderApp()

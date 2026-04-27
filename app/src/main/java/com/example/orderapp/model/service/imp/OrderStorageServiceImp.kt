@@ -60,15 +60,10 @@ constructor(private val firestore: FirebaseFirestore) :
 
     override suspend fun addOrder(order: Order): ValueOrException<Boolean> {
         return try {
-            firestore.collection("orders").add(order).addOnSuccessListener { documentRef ->
-                firestore.collection("orders").document(documentRef.id).update(hashMapOf(
-                    "id" to documentRef.id) as Map<String, Any>).addOnCompleteListener {
-                        ValueOrException.Success(true)
-                }
-            }.addOnFailureListener{
-                ValueOrException.Failure(e = it)
-            }
-            ValueOrException.Success(false)
+            val documentRef = firestore.collection("orders").add(order).await()
+            firestore.collection("orders").document(documentRef.id)
+                .update(mapOf("id" to documentRef.id)).await()
+            ValueOrException.Success(true)
         } catch (e: Exception){
             ValueOrException.Failure(e = e)
         }

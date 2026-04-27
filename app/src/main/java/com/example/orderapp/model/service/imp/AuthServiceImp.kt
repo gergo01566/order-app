@@ -25,17 +25,10 @@ class AuthServiceImp @Inject constructor(
 
             val query = firestore.collection("users")
                 .whereEqualTo("user_id", currentUserId)
-                .limit(1) // Assuming there should be only one document with the given user_id
+                .limit(1)
 
             val querySnapshot = query.get().await()
-
-            var currentUser = User(
-                "user123",
-                "John Doe",
-                "123 Main Street",
-                "john.doe@example.com",
-                "https://example.com/image.jpg"
-            )
+            var latestUser: User? = null
 
             if (!querySnapshot.isEmpty) {
                 val documentSnapshot = querySnapshot.documents[0]
@@ -45,17 +38,16 @@ class AuthServiceImp @Inject constructor(
                 val email = documentSnapshot.getString("email") ?: ""
                 val image = documentSnapshot.getString("image") ?: ""
 
-                currentUser = User(null, userId, displayName, address, email, image)
-                this.trySend(currentUser)
+                latestUser = User(null, userId, displayName, address, email, image)
+                trySend(latestUser)
             }
 
             val listener = FirebaseAuth.AuthStateListener {
-                auth.currentUser?.let { currentUser }?.let { it1 -> this.trySend(it1) }
+                latestUser?.let { user -> trySend(user) }
             }
+            auth.addAuthStateListener(listener)
 
-            awaitClose{ Firebase.auth.removeAuthStateListener { listener } }
-
-            close()
+            awaitClose { auth.removeAuthStateListener(listener) }
         }
 
     override suspend fun signInWithEmailAndPassowrd(email: String, password: String): ValueOrException<Boolean> {
